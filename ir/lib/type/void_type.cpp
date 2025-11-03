@@ -1,0 +1,16 @@
+#include <scc/ir/type.hpp>
+
+scc::ir::VoidType::VoidType(Context &context)
+    : Type(context, Kind_Void)
+{
+}
+
+unsigned scc::ir::VoidType::GenerateHash() const
+{
+    return 0u;
+}
+
+bool scc::ir::VoidType::Equals(const TypePtr &type) const
+{
+    return type->GetKind() == Kind_Void;
+}
