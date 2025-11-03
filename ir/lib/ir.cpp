@@ -1,1 +1,1 @@
-#include <ir/ir.hpp>
+#include <scc/ir/ir.hpp>

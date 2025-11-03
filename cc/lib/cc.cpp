@@ -1,1 +1,1 @@
-#include <cc/cc.hpp>
+#include <scc/cc/cc.hpp>

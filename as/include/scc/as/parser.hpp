@@ -35,9 +35,9 @@ namespace scc::as
         Token &Next();
         Token Skip();
 
-        Token Expect(const TokenTypeE type, const std::string &value = {});
-        bool At(const TokenTypeE type, const std::string &value = {}) const;
-        bool SkipIf(const TokenTypeE type, const std::string &value = {});
+        Token Expect(TokenTypeE type, const std::string &value = {});
+        [[nodiscard]] bool At(TokenTypeE type, const std::string &value = {}) const;
+        bool SkipIf(TokenTypeE type, const std::string &value = {});
 
         void Parse();
         void ParseLine();
