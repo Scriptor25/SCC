@@ -3,28 +3,29 @@
 #include <unordered_map>
 #include <vector>
 #include <scc/ir/ir.hpp>
+#include <scc/ir/type.hpp>
 
 namespace scc::ir
 {
     class Context final
     {
     public:
-        TypePtr GetVoidType();
+        VoidType::Ptr GetVoidType();
 
-        TypePtr GetI8Type();
-        TypePtr GetI16Type();
-        TypePtr GetI32Type();
-        TypePtr GetI64Type();
+        IntType::Ptr GetI8Type();
+        IntType::Ptr GetI16Type();
+        IntType::Ptr GetI32Type();
+        IntType::Ptr GetI64Type();
 
-        TypePtr GetF32Type();
-        TypePtr GetF64Type();
+        FloatType::Ptr GetF32Type();
+        FloatType::Ptr GetF64Type();
 
-        TypePtr GetPointerType(TypePtr base);
+        PointerType::Ptr GetPointerType(TypePtr base);
 
-        TypePtr GetArrayType(TypePtr base, unsigned length);
-        TypePtr GetVectorType(TypePtr base, unsigned length);
+        ArrayType::Ptr GetArrayType(TypePtr base, unsigned length);
+        VectorType::Ptr GetVectorType(TypePtr base, unsigned length);
 
-        TypePtr GetStructType(std::vector<TypePtr> elements);
+        StructType::Ptr GetStructType(std::vector<TypePtr> elements);
 
     private:
         template<typename T, typename... Args> requires std::is_base_of_v<Type, T>

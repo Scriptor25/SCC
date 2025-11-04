@@ -9,13 +9,13 @@ namespace scc::ir
     class Module final
     {
     public:
-        bool HasSymbol(const std::string &name) const;
-        Global::Ptr GetSymbol(const std::string &name) const;
+        [[nodiscard]] bool HasSymbol(const std::string &name) const;
+        [[nodiscard]] GlobalPtr GetSymbol(const std::string &name) const;
 
         Variable::Ptr CreateVariable(TypePtr type, const std::string &name);
         Function::Ptr CreateFunction(TypePtr type, const std::string &name);
 
     private:
-        std::unordered_map<std::string, Global::Ptr> m_Symbols;
+        std::unordered_map<std::string, GlobalPtr> m_Symbols;
     };
 }

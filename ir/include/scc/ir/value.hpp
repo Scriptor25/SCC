@@ -2,18 +2,19 @@
 
 #include <vector>
 #include <scc/ir/ir.hpp>
+#include <scc/ir/type.hpp>
 
 namespace scc::ir
 {
     class Value
     {
     public:
-        using Ptr = std::shared_ptr<Value>;
-
         explicit Value(TypePtr type);
         virtual ~Value() = default;
 
         virtual std::ostream &Print(std::ostream &stream) const = 0;
+
+        [[nodiscard]] TypePtr GetType() const;
 
     protected:
         TypePtr m_Type;
@@ -22,29 +23,26 @@ namespace scc::ir
     class Global : public Value
     {
     public:
-        using Ptr = std::shared_ptr<Global>;
-
         explicit Global(TypePtr type, std::string name);
 
     protected:
         std::string m_Name;
     };
 
-    class Variable final : public Global
+    class Variable final : public Global, public Shared<Variable>
     {
     public:
-        using Ptr = std::shared_ptr<Variable>;
-
         explicit Variable(TypePtr type, std::string name);
 
         std::ostream &Print(std::ostream &stream) const override;
+
+    private:
+        ConstantPtr m_Initializer;
     };
 
-    class Function final : public Global
+    class Function final : public Global, public Shared<Function>
     {
     public:
-        using Ptr = std::shared_ptr<Function>;
-
         explicit Function(TypePtr type, std::string name);
 
         std::ostream &Print(std::ostream &stream) const override;
@@ -53,17 +51,13 @@ namespace scc::ir
     class Constant : public Value
     {
     public:
-        using Ptr = std::shared_ptr<Constant>;
-
         explicit Constant(TypePtr type);
     };
 
-    class ConstantInt final : public Constant
+    class ConstantInt final : public Constant, public Shared<ConstantInt>
     {
     public:
-        using Ptr = std::shared_ptr<ConstantInt>;
-
-        explicit ConstantInt(TypePtr type, uint64_t value);
+        explicit ConstantInt(IntType::Ptr type, uint64_t value);
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -71,12 +65,10 @@ namespace scc::ir
         uint64_t m_Value;
     };
 
-    class ConstantFloat final : public Constant
+    class ConstantFloat final : public Constant, public Shared<ConstantFloat>
     {
     public:
-        using Ptr = std::shared_ptr<ConstantFloat>;
-
-        explicit ConstantFloat(TypePtr type, double value);
+        explicit ConstantFloat(FloatType::Ptr type, double value);
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -84,42 +76,36 @@ namespace scc::ir
         double m_Value;
     };
 
-    class ConstantArray final : public Constant
+    class ConstantArray final : public Constant, public Shared<ConstantArray>
     {
     public:
-        using Ptr = std::shared_ptr<ConstantArray>;
-
-        explicit ConstantArray(TypePtr type, std::vector<Constant::Ptr> elements);
+        explicit ConstantArray(ArrayType::Ptr type, std::vector<ConstantPtr> values);
 
         std::ostream &Print(std::ostream &stream) const override;
 
     private:
-        std::vector<Constant::Ptr> m_Elements;
+        std::vector<ConstantPtr> m_Values;
     };
 
-    class ConstantVector final : public Constant
+    class ConstantVector final : public Constant, public Shared<ConstantVector>
     {
     public:
-        using Ptr = std::shared_ptr<ConstantVector>;
-
-        explicit ConstantVector(TypePtr type, std::vector<Constant::Ptr> elements);
+        explicit ConstantVector(VectorType::Ptr type, std::vector<ConstantPtr> values);
 
         std::ostream &Print(std::ostream &stream) const override;
 
     private:
-        std::vector<Constant::Ptr> m_Elements;
+        std::vector<ConstantPtr> m_Values;
     };
 
-    class ConstantStruct final : public Constant
+    class ConstantStruct final : public Constant, public Shared<ConstantStruct>
     {
     public:
-        using Ptr = std::shared_ptr<ConstantStruct>;
-
-        explicit ConstantStruct(TypePtr type, std::vector<Constant::Ptr> elements);
+        explicit ConstantStruct(StructType::Ptr type, std::vector<ConstantPtr> values);
 
         std::ostream &Print(std::ostream &stream) const override;
 
     private:
-        std::vector<Constant::Ptr> m_Elements;
+        std::vector<ConstantPtr> m_Values;
     };
 }

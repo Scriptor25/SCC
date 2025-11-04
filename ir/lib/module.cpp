@@ -6,7 +6,7 @@ bool scc::ir::Module::HasSymbol(const std::string &name) const
     return m_Symbols.contains(name);
 }
 
-scc::ir::Global::Ptr scc::ir::Module::GetSymbol(const std::string &name) const
+scc::ir::GlobalPtr scc::ir::Module::GetSymbol(const std::string &name) const
 {
     Assert(m_Symbols.contains(name), "symbol {} does not exist", name);
     return m_Symbols.at(name);

@@ -1,18 +1,18 @@
 #include <scc/ir/type.hpp>
 #include <scc/ir/value.hpp>
 
-scc::ir::ConstantVector::ConstantVector(TypePtr type, std::vector<Constant::Ptr> elements)
+scc::ir::ConstantVector::ConstantVector(VectorType::Ptr type, std::vector<ConstantPtr> values)
     : Constant(std::move(type)),
-      m_Elements(std::move(elements))
+      m_Values(std::move(values))
 {
 }
 
 std::ostream &scc::ir::ConstantVector::Print(std::ostream &stream) const
 {
     m_Type->Print(stream) << " const <";
-    for (auto i = m_Elements.begin(); i != m_Elements.end(); ++i)
+    for (auto i = m_Values.begin(); i != m_Values.end(); ++i)
     {
-        if (i != m_Elements.begin())
+        if (i != m_Values.begin())
         {
             stream << ", ";
         }

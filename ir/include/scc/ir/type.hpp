@@ -19,8 +19,6 @@ namespace scc::ir
     class Type
     {
     public:
-        using Ptr = std::shared_ptr<Type>;
-
         explicit Type(Context &context, Kind kind);
         virtual ~Type() = default;
 
@@ -37,11 +35,9 @@ namespace scc::ir
         Kind m_Kind;
     };
 
-    class VoidType final : public Type
+    class VoidType final : public Type, public Shared<VoidType>
     {
     public:
-        using Ptr = std::shared_ptr<VoidType>;
-
         explicit VoidType(Context &context);
 
         [[nodiscard]] unsigned GenerateHash() const override;
@@ -50,11 +46,9 @@ namespace scc::ir
         std::ostream &Print(std::ostream &stream) const override;
     };
 
-    class IntType final : public Type
+    class IntType final : public Type, public Shared<IntType>
     {
     public:
-        using Ptr = std::shared_ptr<IntType>;
-
         explicit IntType(Context &context, unsigned size_bytes);
 
         [[nodiscard]] unsigned GenerateHash() const override;
@@ -68,11 +62,9 @@ namespace scc::ir
         unsigned m_SizeBytes;
     };
 
-    class FloatType final : public Type
+    class FloatType final : public Type, public Shared<FloatType>
     {
     public:
-        using Ptr = std::shared_ptr<FloatType>;
-
         explicit FloatType(Context &context, unsigned size_bytes);
 
         [[nodiscard]] unsigned GenerateHash() const override;
@@ -86,11 +78,9 @@ namespace scc::ir
         unsigned m_SizeBytes;
     };
 
-    class PointerType final : public Type
+    class PointerType final : public Type, public Shared<PointerType>
     {
     public:
-        using Ptr = std::shared_ptr<PointerType>;
-
         explicit PointerType(Context &context, TypePtr base);
 
         [[nodiscard]] unsigned GenerateHash() const override;
@@ -104,11 +94,9 @@ namespace scc::ir
         TypePtr m_Base;
     };
 
-    class ArrayType final : public Type
+    class ArrayType final : public Type, public Shared<ArrayType>
     {
     public:
-        using Ptr = std::shared_ptr<ArrayType>;
-
         explicit ArrayType(Context &context, TypePtr base, unsigned length);
 
         [[nodiscard]] unsigned GenerateHash() const override;
@@ -124,11 +112,9 @@ namespace scc::ir
         unsigned m_Length;
     };
 
-    class VectorType final : public Type
+    class VectorType final : public Type, public Shared<VectorType>
     {
     public:
-        using Ptr = std::shared_ptr<VectorType>;
-
         explicit VectorType(Context &context, TypePtr base, unsigned length);
 
         [[nodiscard]] unsigned GenerateHash() const override;
@@ -144,11 +130,9 @@ namespace scc::ir
         unsigned m_Length;
     };
 
-    class StructType final : public Type
+    class StructType final : public Type, public Shared<StructType>
     {
     public:
-        using Ptr = std::shared_ptr<StructType>;
-
         explicit StructType(Context &context, std::vector<TypePtr> elements);
 
         [[nodiscard]] unsigned GenerateHash() const override;
