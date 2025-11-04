@@ -27,6 +27,8 @@ namespace scc::ir
         [[nodiscard]] virtual unsigned GenerateHash() const = 0;
         [[nodiscard]] virtual bool Equals(const TypePtr &) const = 0;
 
+        virtual std::ostream &Print(std::ostream &stream) const = 0;
+
         [[nodiscard]] Context &GetContext() const;
         [[nodiscard]] Kind GetKind() const;
 
@@ -44,6 +46,8 @@ namespace scc::ir
 
         [[nodiscard]] unsigned GenerateHash() const override;
         [[nodiscard]] bool Equals(const TypePtr &type) const override;
+
+        std::ostream &Print(std::ostream &stream) const override;
     };
 
     class IntType final : public Type
@@ -55,6 +59,8 @@ namespace scc::ir
 
         [[nodiscard]] unsigned GenerateHash() const override;
         [[nodiscard]] bool Equals(const TypePtr &type) const override;
+
+        std::ostream &Print(std::ostream &stream) const override;
 
         [[nodiscard]] unsigned GetSizeBytes() const;
 
@@ -72,6 +78,8 @@ namespace scc::ir
         [[nodiscard]] unsigned GenerateHash() const override;
         [[nodiscard]] bool Equals(const TypePtr &type) const override;
 
+        std::ostream &Print(std::ostream &stream) const override;
+
         [[nodiscard]] unsigned GetSizeBytes() const;
 
     private:
@@ -88,6 +96,8 @@ namespace scc::ir
         [[nodiscard]] unsigned GenerateHash() const override;
         [[nodiscard]] bool Equals(const TypePtr &type) const override;
 
+        std::ostream &Print(std::ostream &stream) const override;
+
         [[nodiscard]] TypePtr GetBase() const;
 
     private:
@@ -103,6 +113,8 @@ namespace scc::ir
 
         [[nodiscard]] unsigned GenerateHash() const override;
         [[nodiscard]] bool Equals(const TypePtr &type) const override;
+
+        std::ostream &Print(std::ostream &stream) const override;
 
         [[nodiscard]] TypePtr GetBase() const;
         [[nodiscard]] unsigned GetLength() const;
@@ -122,6 +134,8 @@ namespace scc::ir
         [[nodiscard]] unsigned GenerateHash() const override;
         [[nodiscard]] bool Equals(const TypePtr &type) const override;
 
+        std::ostream &Print(std::ostream &stream) const override;
+
         [[nodiscard]] TypePtr GetBase() const;
         [[nodiscard]] unsigned GetLength() const;
 
@@ -139,6 +153,8 @@ namespace scc::ir
 
         [[nodiscard]] unsigned GenerateHash() const override;
         [[nodiscard]] bool Equals(const TypePtr &type) const override;
+
+        std::ostream &Print(std::ostream &stream) const override;
 
         [[nodiscard]] unsigned GetElementCount() const;
         [[nodiscard]] TypePtr GetElement(unsigned index) const;

@@ -26,6 +26,11 @@ bool scc::ir::FloatType::Equals(const TypePtr &type) const
     return false;
 }
 
+std::ostream &scc::ir::FloatType::Print(std::ostream &stream) const
+{
+    return stream << "f" << (m_SizeBytes * 8u);
+}
+
 unsigned scc::ir::FloatType::GetSizeBytes() const
 {
     return m_SizeBytes;

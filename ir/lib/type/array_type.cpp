@@ -27,6 +27,11 @@ bool scc::ir::ArrayType::Equals(const TypePtr &type) const
     return false;
 }
 
+std::ostream &scc::ir::ArrayType::Print(std::ostream &stream) const
+{
+    return m_Base->Print(stream << '[' << m_Length << " x ") << ']';
+}
+
 scc::ir::TypePtr scc::ir::ArrayType::GetBase() const
 {
     return m_Base;

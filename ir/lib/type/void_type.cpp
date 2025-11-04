@@ -14,3 +14,8 @@ bool scc::ir::VoidType::Equals(const TypePtr &type) const
 {
     return type->GetKind() == Kind_Void;
 }
+
+std::ostream &scc::ir::VoidType::Print(std::ostream &stream) const
+{
+    return stream << "void";
+}

@@ -44,6 +44,20 @@ bool scc::ir::StructType::Equals(const TypePtr &type) const
     return false;
 }
 
+std::ostream &scc::ir::StructType::Print(std::ostream &stream) const
+{
+    stream << '{';
+    for (auto i = m_Elements.begin(); i != m_Elements.end(); ++i)
+    {
+        if (i != m_Elements.begin())
+        {
+            stream << ',';
+        }
+        (*i)->Print(stream);
+    }
+    return stream << '}';
+}
+
 unsigned scc::ir::StructType::GetElementCount() const
 {
     return m_Elements.size();

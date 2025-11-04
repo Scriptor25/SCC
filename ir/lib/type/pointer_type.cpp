@@ -26,6 +26,11 @@ bool scc::ir::PointerType::Equals(const TypePtr &type) const
     return false;
 }
 
+std::ostream &scc::ir::PointerType::Print(std::ostream &stream) const
+{
+    return m_Base->Print(stream << '[') << ']';
+}
+
 scc::ir::TypePtr scc::ir::PointerType::GetBase() const
 {
     return m_Base;

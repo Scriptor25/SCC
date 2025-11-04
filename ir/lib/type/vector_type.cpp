@@ -27,6 +27,11 @@ bool scc::ir::VectorType::Equals(const TypePtr &type) const
     return false;
 }
 
+std::ostream &scc::ir::VectorType::Print(std::ostream &stream) const
+{
+    return m_Base->Print(stream << '<' << m_Length << " x ") << '>';
+}
+
 scc::ir::TypePtr scc::ir::VectorType::GetBase() const
 {
     return m_Base;

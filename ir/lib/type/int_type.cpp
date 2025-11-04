@@ -26,6 +26,11 @@ bool scc::ir::IntType::Equals(const TypePtr &type) const
     return false;
 }
 
+std::ostream &scc::ir::IntType::Print(std::ostream &stream) const
+{
+    return stream << "i" << (m_SizeBytes * 8u);
+}
+
 unsigned scc::ir::IntType::GetSizeBytes() const
 {
     return m_SizeBytes;

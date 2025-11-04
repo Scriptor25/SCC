@@ -1,10 +1,11 @@
 file(GLOB_RECURSE lib-sources lib/*.cpp)
 file(GLOB_RECURSE bin-sources src/*.cpp)
 
-add_library(cclib STATIC ${lib-sources})
-target_include_directories(cclib PUBLIC include)
+add_library(cc ${lib-sources})
+target_include_directories(cc PUBLIC include)
+target_link_libraries(cc PUBLIC common)
 
-add_executable(cc ${bin-sources})
-target_include_directories(cc PRIVATE include)
+add_executable(scc ${bin-sources})
+target_include_directories(scc PRIVATE include)
 
-target_link_libraries(cc PRIVATE cclib)
+target_link_libraries(scc PRIVATE cc)

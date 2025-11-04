@@ -13,6 +13,8 @@ namespace scc::ir
         explicit Value(TypePtr type);
         virtual ~Value() = default;
 
+        virtual std::ostream &Print(std::ostream &stream) const = 0;
+
     protected:
         TypePtr m_Type;
     };
@@ -34,6 +36,8 @@ namespace scc::ir
         using Ptr = std::shared_ptr<Variable>;
 
         explicit Variable(TypePtr type, std::string name);
+
+        std::ostream &Print(std::ostream &stream) const override;
     };
 
     class Function final : public Global
@@ -42,6 +46,8 @@ namespace scc::ir
         using Ptr = std::shared_ptr<Function>;
 
         explicit Function(TypePtr type, std::string name);
+
+        std::ostream &Print(std::ostream &stream) const override;
     };
 
     class Constant : public Value
@@ -59,6 +65,8 @@ namespace scc::ir
 
         explicit ConstantInt(TypePtr type, uint64_t value);
 
+        std::ostream &Print(std::ostream &stream) const override;
+
     private:
         uint64_t m_Value;
     };
@@ -70,6 +78,8 @@ namespace scc::ir
 
         explicit ConstantFloat(TypePtr type, double value);
 
+        std::ostream &Print(std::ostream &stream) const override;
+
     private:
         double m_Value;
     };
@@ -79,10 +89,12 @@ namespace scc::ir
     public:
         using Ptr = std::shared_ptr<ConstantArray>;
 
-        explicit ConstantArray(TypePtr type, std::vector<Constant> elements);
+        explicit ConstantArray(TypePtr type, std::vector<Constant::Ptr> elements);
+
+        std::ostream &Print(std::ostream &stream) const override;
 
     private:
-        std::vector<Constant> m_Elements;
+        std::vector<Constant::Ptr> m_Elements;
     };
 
     class ConstantVector final : public Constant
@@ -90,10 +102,12 @@ namespace scc::ir
     public:
         using Ptr = std::shared_ptr<ConstantVector>;
 
-        explicit ConstantVector(TypePtr type, std::vector<Constant> elements);
+        explicit ConstantVector(TypePtr type, std::vector<Constant::Ptr> elements);
+
+        std::ostream &Print(std::ostream &stream) const override;
 
     private:
-        std::vector<Constant> m_Elements;
+        std::vector<Constant::Ptr> m_Elements;
     };
 
     class ConstantStruct final : public Constant
@@ -101,9 +115,11 @@ namespace scc::ir
     public:
         using Ptr = std::shared_ptr<ConstantStruct>;
 
-        explicit ConstantStruct(TypePtr type, std::vector<Constant> elements);
+        explicit ConstantStruct(TypePtr type, std::vector<Constant::Ptr> elements);
+
+        std::ostream &Print(std::ostream &stream) const override;
 
     private:
-        std::vector<Constant> m_Elements;
+        std::vector<Constant::Ptr> m_Elements;
     };
 }
