@@ -46,6 +46,11 @@ namespace scc::ir
         explicit Function(TypePtr type, std::string name);
 
         std::ostream &Print(std::ostream &stream) const override;
+
+        void Append(BlockPtr block);
+
+    private:
+        std::vector<BlockPtr> m_Blocks;
     };
 
     class Constant : public Value

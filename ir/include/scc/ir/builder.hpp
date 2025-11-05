@@ -22,6 +22,8 @@ namespace scc::ir
         [[nodiscard]] ConstantVector::Ptr CreateVector(std::vector<ConstantPtr> values) const;
         [[nodiscard]] ConstantStruct::Ptr CreateStruct(std::vector<ConstantPtr> values) const;
 
+        [[nodiscard]] BlockPtr CreateBlock(const Function::Ptr &function, std::string name) const;
+
     private:
         Context &m_Context;
     };

@@ -1,4 +1,5 @@
 #include <scc/assert.hpp>
+#include <scc/ir/block.hpp>
 #include <scc/ir/builder.hpp>
 #include <scc/ir/context.hpp>
 
@@ -77,4 +78,14 @@ scc::ir::ConstantStruct::Ptr scc::ir::Builder::CreateStruct(std::vector<Constant
     }
     auto type = m_Context.GetStructType(std::move(elements));
     return std::make_shared<ConstantStruct>(std::move(type), std::move(values));
+}
+
+scc::ir::BlockPtr scc::ir::Builder::CreateBlock(const Function::Ptr &function, std::string name) const
+{
+    Assert(!!function, "function must not be null");
+    Assert(!name.empty(), "name must not be empty");
+
+    auto block = std::make_shared<Block>(function, std::move(name));
+    function->Append(block);
+    return block;
 }
