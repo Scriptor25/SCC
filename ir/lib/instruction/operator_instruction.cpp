@@ -3,9 +3,10 @@
 scc::ir::OperatorInstruction::OperatorInstruction(
     TypePtr type,
     std::string name,
+    Block::WeakPtr block,
     const Operator operator_,
     std::vector<ValuePtr> operands)
-    : Instruction(std::move(type), std::move(name)),
+    : Instruction(std::move(type), std::move(name), std::move(block)),
       m_Operator(operator_),
       m_Operands(std::move(operands))
 {

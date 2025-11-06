@@ -47,7 +47,7 @@ namespace scc::ir
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        void Append(BlockPtr block);
+        void Insert(BlockPtr block);
 
     private:
         std::vector<BlockPtr> m_Blocks;

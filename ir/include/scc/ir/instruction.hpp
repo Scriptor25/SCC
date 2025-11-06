@@ -1,5 +1,6 @@
 #pragma once
 
+#include <scc/ir/block.hpp>
 #include <scc/ir/value.hpp>
 
 namespace scc::ir
@@ -7,10 +8,11 @@ namespace scc::ir
     class Instruction : public Value
     {
     public:
-        explicit Instruction(TypePtr type, std::string name);
+        explicit Instruction(TypePtr type, std::string name, Block::WeakPtr block);
 
     protected:
         std::string m_Name;
+        Block::WeakPtr m_Block;
     };
 
     enum Operator
@@ -25,12 +27,13 @@ namespace scc::ir
         Operator_Xor,
     };
 
-    class OperatorInstruction final : public Instruction
+    class OperatorInstruction final : public Instruction, public Shared<OperatorInstruction>
     {
     public:
         explicit OperatorInstruction(
             TypePtr type,
             std::string name,
+            Block::WeakPtr block,
             Operator operator_,
             std::vector<ValuePtr> operands);
 
@@ -51,12 +54,13 @@ namespace scc::ir
         Comparator_NE,
     };
 
-    class ComparatorInstruction final : public Instruction
+    class ComparatorInstruction final : public Instruction, public Shared<ComparatorInstruction>
     {
     public:
         explicit ComparatorInstruction(
             TypePtr type,
             std::string name,
+            Block::WeakPtr block,
             Comparator comparator,
             ValuePtr lhs,
             ValuePtr rhs);
@@ -68,11 +72,11 @@ namespace scc::ir
         ValuePtr m_LHS, m_RHS;
     };
 
-    class BranchInstruction final : public Instruction
+    class BranchInstruction final : public Instruction, public Shared<BranchInstruction>
     {
     public:
-        explicit BranchInstruction(BlockPtr destination);
-        explicit BranchInstruction(ValuePtr condition, BlockPtr then, BlockPtr else_);
+        explicit BranchInstruction(Block::WeakPtr block, BlockPtr destination);
+        explicit BranchInstruction(Block::WeakPtr block, ValuePtr condition, BlockPtr then, BlockPtr else_);
 
         std::ostream &Print(std::ostream &stream) const override;
 

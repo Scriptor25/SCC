@@ -11,7 +11,7 @@ std::ostream &scc::ir::Function::Print(std::ostream &stream) const
     return m_Type->Print(stream) << " @" << m_Name;
 }
 
-void scc::ir::Function::Append(BlockPtr block)
+void scc::ir::Function::Insert(BlockPtr block)
 {
     m_Blocks.emplace_back(std::move(block));
 }

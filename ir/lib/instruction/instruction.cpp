@@ -3,8 +3,10 @@
 
 scc::ir::Instruction::Instruction(
     TypePtr type,
-    std::string name)
+    std::string name,
+    Block::WeakPtr block)
     : Value(std::move(type)),
-      m_Name(std::move(name))
+      m_Name(std::move(name)),
+      m_Block(std::move(block))
 {
 }

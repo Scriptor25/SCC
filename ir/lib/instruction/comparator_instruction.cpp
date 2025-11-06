@@ -3,10 +3,11 @@
 scc::ir::ComparatorInstruction::ComparatorInstruction(
     TypePtr type,
     std::string name,
+    Block::WeakPtr block,
     const Comparator comparator,
     ValuePtr lhs,
     ValuePtr rhs)
-    : Instruction(std::move(type), std::move(name)),
+    : Instruction(std::move(type), std::move(name), std::move(block)),
       m_Comparator(comparator),
       m_LHS(std::move(lhs)),
       m_RHS(std::move(rhs))

@@ -46,7 +46,7 @@ scc::ir::ConstantFloat::Ptr scc::ir::Builder::CreateF64(double value) const
 
 scc::ir::ConstantArray::Ptr scc::ir::Builder::CreateArray(std::vector<ConstantPtr> values) const
 {
-    Assert(!values.empty(), "elements must not be empty");
+    Assert(!values.empty(), "values must not be empty");
     auto base = values.front()->GetType();
     for (const auto &value : values)
     {
@@ -58,7 +58,7 @@ scc::ir::ConstantArray::Ptr scc::ir::Builder::CreateArray(std::vector<ConstantPt
 
 scc::ir::ConstantVector::Ptr scc::ir::Builder::CreateVector(std::vector<ConstantPtr> values) const
 {
-    Assert(!values.empty(), "elements must not be empty");
+    Assert(!values.empty(), "values must not be empty");
     auto base = values.front()->GetType();
     for (const auto &value : values)
     {
@@ -70,7 +70,7 @@ scc::ir::ConstantVector::Ptr scc::ir::Builder::CreateVector(std::vector<Constant
 
 scc::ir::ConstantStruct::Ptr scc::ir::Builder::CreateStruct(std::vector<ConstantPtr> values) const
 {
-    Assert(!values.empty(), "elements must not be empty");
+    Assert(!values.empty(), "values must not be empty");
     std::vector<TypePtr> elements;
     for (const auto &value : values)
     {
@@ -85,7 +85,99 @@ scc::ir::BlockPtr scc::ir::Builder::CreateBlock(const Function::Ptr &function, s
     Assert(!!function, "function must not be null");
     Assert(!name.empty(), "name must not be empty");
 
-    auto block = std::make_shared<Block>(function, std::move(name));
-    function->Append(block);
+    auto block = std::make_shared<Block>(std::move(name), function);
+    function->Insert(block);
     return block;
+}
+
+void scc::ir::Builder::SetInsertBlock(BlockPtr block)
+{
+    m_InsertBlock = std::move(block);
+}
+
+scc::ir::BlockPtr scc::ir::Builder::GetInsertBlock() const
+{
+    return m_InsertBlock;
+}
+
+scc::ir::Shared<scc::ir::OperatorInstruction>::Ptr scc::ir::Builder::CreateOperator(
+    TypePtr type,
+    std::string name,
+    Operator operator_,
+    std::vector<ValuePtr> operands)
+{
+    Assert(!!type, "type must not be null");
+    Assert(!name.empty(), "name must not be empty");
+    Assert(!operands.empty(), "operands must not be empty");
+
+    auto instruction = std::make_shared<OperatorInstruction>(
+        std::move(type),
+        std::move(name),
+        m_InsertBlock,
+        operator_,
+        std::move(operands));
+    if (m_InsertBlock)
+    {
+        m_InsertBlock->Insert(instruction);
+    }
+    return instruction;
+}
+
+scc::ir::Shared<scc::ir::ComparatorInstruction>::Ptr scc::ir::Builder::CreateComparator(
+    TypePtr type,
+    std::string name,
+    Comparator comparator,
+    ValuePtr lhs,
+    ValuePtr rhs)
+{
+    Assert(!!type, "type must not be null");
+    Assert(!name.empty(), "name must not be empty");
+    Assert(!!lhs, "lhs must not be null");
+    Assert(!!rhs, "rhs must not be null");
+
+    auto instruction = std::make_shared<ComparatorInstruction>(
+        std::move(type),
+        std::move(name),
+        m_InsertBlock,
+        comparator,
+        std::move(lhs),
+        std::move(rhs));
+    if (m_InsertBlock)
+    {
+        m_InsertBlock->Insert(instruction);
+    }
+    return instruction;
+}
+
+scc::ir::Shared<scc::ir::BranchInstruction>::Ptr scc::ir::Builder::CreateBranch(BlockPtr destination)
+{
+    Assert(!!destination, "destination must not be null");
+
+    auto instruction = std::make_shared<BranchInstruction>(m_InsertBlock, std::move(destination));
+    if (m_InsertBlock)
+    {
+        m_InsertBlock->Insert(instruction);
+    }
+    return instruction;
+}
+
+scc::ir::Shared<scc::ir::BranchInstruction>::Ptr scc::ir::Builder::CreateBranch(
+    ValuePtr condition,
+    BlockPtr then,
+    BlockPtr else_)
+{
+    Assert(!!condition, "condition must not be null");
+    Assert(!!then, "then must not be null");
+    Assert(!!else_, "else must not be null");
+
+    auto instruction = std::make_shared<BranchInstruction>(
+        m_InsertBlock,
+        std::move(condition),
+        std::move(then),
+        std::move(else_));
+    if (m_InsertBlock)
+    {
+        m_InsertBlock->Insert(instruction);
+    }
+    return instruction;
 }

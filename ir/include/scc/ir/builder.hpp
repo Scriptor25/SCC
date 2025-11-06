@@ -1,5 +1,6 @@
 #pragma once
 
+#include <scc/ir/instruction.hpp>
 #include <scc/ir/ir.hpp>
 #include <scc/ir/value.hpp>
 
@@ -24,7 +25,25 @@ namespace scc::ir
 
         [[nodiscard]] BlockPtr CreateBlock(const Function::Ptr &function, std::string name) const;
 
+        void SetInsertBlock(BlockPtr block);
+        [[nodiscard]] BlockPtr GetInsertBlock() const;
+
+        OperatorInstruction::Ptr CreateOperator(
+            TypePtr type,
+            std::string name,
+            Operator operator_,
+            std::vector<ValuePtr> operands);
+        ComparatorInstruction::Ptr CreateComparator(
+            TypePtr type,
+            std::string name,
+            Comparator comparator,
+            ValuePtr lhs,
+            ValuePtr rhs);
+        BranchInstruction::Ptr CreateBranch(BlockPtr destination);
+        BranchInstruction::Ptr CreateBranch(ValuePtr condition, BlockPtr then, BlockPtr else_);
+
     private:
         Context &m_Context;
+        BlockPtr m_InsertBlock;
     };
 }

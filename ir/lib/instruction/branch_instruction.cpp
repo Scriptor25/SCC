@@ -1,16 +1,16 @@
 #include <scc/ir/block.hpp>
 #include <scc/ir/instruction.hpp>
 
-scc::ir::BranchInstruction::BranchInstruction(BlockPtr destination)
-    : Instruction(nullptr, ""),
+scc::ir::BranchInstruction::BranchInstruction(Block::WeakPtr block, BlockPtr destination)
+    : Instruction(nullptr, "", std::move(block)),
       m_Condition(nullptr),
       m_Then(std::move(destination)),
       m_Else(nullptr)
 {
 }
 
-scc::ir::BranchInstruction::BranchInstruction(ValuePtr condition, BlockPtr then, BlockPtr else_)
-    : Instruction(nullptr, ""),
+scc::ir::BranchInstruction::BranchInstruction(Block::WeakPtr block, ValuePtr condition, BlockPtr then, BlockPtr else_)
+    : Instruction(nullptr, "", std::move(block)),
       m_Condition(std::move(condition)),
       m_Then(std::move(then)),
       m_Else(std::move(else_))

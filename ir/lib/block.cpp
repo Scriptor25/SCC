@@ -1,8 +1,8 @@
 #include <scc/ir/block.hpp>
 
-scc::ir::Block::Block(Function::WeakPtr function, std::string name)
-    : m_Function(std::move(function)),
-      m_Name(std::move(name))
+scc::ir::Block::Block(std::string name, Function::WeakPtr function)
+    : m_Name(std::move(name)),
+      m_Function(std::move(function))
 {
 }
 
@@ -39,4 +39,9 @@ std::vector<scc::ir::InstructionPtr>::const_iterator scc::ir::Block::begin() con
 std::vector<scc::ir::InstructionPtr>::const_iterator scc::ir::Block::end() const
 {
     return m_Instructions.end();
+}
+
+void scc::ir::Block::Insert(InstructionPtr instruction)
+{
+    m_Instructions.emplace_back(std::move(instruction));
 }
