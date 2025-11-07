@@ -7,15 +7,15 @@
 
 namespace scc::ir
 {
-    class Block final : public Shared<Block>
+    class Block final : public NamedValue, public Shared<Block>
     {
     public:
         explicit Block(std::string name, Function::WeakPtr function);
 
-        std::ostream &Print(std::ostream &stream) const;
+        std::ostream &Print(std::ostream &stream) const override;
+        std::ostream &PrintOperand(std::ostream &stream) const override;
 
         [[nodiscard]] Function::Ptr GetFunction() const;
-        [[nodiscard]] std::string GetName() const;
         [[nodiscard]] unsigned GetInstructionCount() const;
         [[nodiscard]] InstructionPtr GetInstruction(unsigned index) const;
 
@@ -25,7 +25,6 @@ namespace scc::ir
         void Insert(InstructionPtr instruction);
 
     private:
-        std::string m_Name;
         Function::WeakPtr m_Function;
         std::vector<InstructionPtr> m_Instructions;
     };

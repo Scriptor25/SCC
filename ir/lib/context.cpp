@@ -6,6 +6,11 @@ scc::ir::VoidType::Ptr scc::ir::Context::GetVoidType()
     return GetType<VoidType>();
 }
 
+scc::ir::Shared<scc::ir::IntType>::Ptr scc::ir::Context::GetI1Type()
+{
+    return GetType<IntType>(0u);
+}
+
 scc::ir::IntType::Ptr scc::ir::Context::GetI8Type()
 {
     return GetType<IntType>(1u);
@@ -54,4 +59,12 @@ scc::ir::VectorType::Ptr scc::ir::Context::GetVectorType(TypePtr base, unsigned 
 scc::ir::StructType::Ptr scc::ir::Context::GetStructType(std::vector<TypePtr> elements)
 {
     return GetType<StructType>(std::move(elements));
+}
+
+scc::ir::Shared<scc::ir::FunctionType>::Ptr scc::ir::Context::GetFunctionType(
+    TypePtr result,
+    std::vector<TypePtr> arguments,
+    bool variadic)
+{
+    return GetType<FunctionType>(std::move(result), std::move(arguments), variadic);
 }

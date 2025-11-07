@@ -5,14 +5,24 @@
 
 namespace scc::ir
 {
-    class Instruction : public Value
+    class Instruction
     {
     public:
-        explicit Instruction(TypePtr type, std::string name, Block::WeakPtr block);
+        explicit Instruction(Block::WeakPtr block);
+        virtual ~Instruction() = default;
+
+        virtual std::ostream &Print(std::ostream &stream) const = 0;
 
     protected:
-        std::string m_Name;
         Block::WeakPtr m_Block;
+    };
+
+    class NamedInstruction : public Instruction, public NamedValue
+    {
+    public:
+        NamedInstruction(TypePtr type, std::string name, Block::WeakPtr block);
+
+        std::ostream &PrintOperand(std::ostream &stream) const override;
     };
 
     enum Operator
@@ -27,7 +37,7 @@ namespace scc::ir
         Operator_Xor,
     };
 
-    class OperatorInstruction final : public Instruction, public Shared<OperatorInstruction>
+    class OperatorInstruction final : public NamedInstruction, public Shared<OperatorInstruction>
     {
     public:
         explicit OperatorInstruction(
@@ -54,7 +64,7 @@ namespace scc::ir
         Comparator_NE,
     };
 
-    class ComparatorInstruction final : public Instruction, public Shared<ComparatorInstruction>
+    class ComparatorInstruction final : public NamedInstruction, public Shared<ComparatorInstruction>
     {
     public:
         explicit ComparatorInstruction(
@@ -83,5 +93,124 @@ namespace scc::ir
     private:
         ValuePtr m_Condition;
         BlockPtr m_Then, m_Else;
+    };
+
+    class RetInstruction final : public Instruction, public Shared<RetInstruction>
+    {
+    public:
+        explicit RetInstruction(Block::WeakPtr block);
+        explicit RetInstruction(Block::WeakPtr block, ValuePtr value);
+
+        std::ostream &Print(std::ostream &stream) const override;
+
+    private:
+        ValuePtr m_Value;
+    };
+
+    class SelectInstruction final : public NamedInstruction, public Shared<SelectInstruction>
+    {
+    public:
+        explicit SelectInstruction(
+            TypePtr type,
+            std::string name,
+            Block::WeakPtr block,
+            std::vector<std::pair<BlockPtr, ValuePtr>> options);
+
+        std::ostream &Print(std::ostream &stream) const override;
+
+    private:
+        std::vector<std::pair<BlockPtr, ValuePtr>> m_Options;
+    };
+
+    class AllocInstruction final : public NamedInstruction, public Shared<AllocInstruction>
+    {
+    public:
+        explicit AllocInstruction(TypePtr type, std::string name, Block::WeakPtr block);
+
+        std::ostream &Print(std::ostream &stream) const override;
+    };
+
+    class LoadInstruction final : public NamedInstruction, public Shared<LoadInstruction>
+    {
+    public:
+        explicit LoadInstruction(TypePtr type, std::string name, Block::WeakPtr block, ValuePtr pointer);
+
+        std::ostream &Print(std::ostream &stream) const override;
+
+    private:
+        ValuePtr m_Pointer;
+    };
+
+    class StoreInstruction final : public Instruction, public Shared<StoreInstruction>
+    {
+    public:
+        explicit StoreInstruction(Block::WeakPtr block, ValuePtr pointer, ValuePtr value);
+
+        std::ostream &Print(std::ostream &stream) const override;
+
+    private:
+        ValuePtr m_Pointer;
+        ValuePtr m_Value;
+    };
+
+    class OffsetInstruction final : public NamedInstruction, public Shared<OffsetInstruction>
+    {
+    public:
+        explicit OffsetInstruction(
+            TypePtr type,
+            std::string name,
+            Block::WeakPtr block,
+            ValuePtr base,
+            std::vector<ValuePtr> offsets);
+
+        std::ostream &Print(std::ostream &stream) const override;
+
+    private:
+        ValuePtr m_Base;
+        std::vector<ValuePtr> m_Offsets;
+    };
+
+    class CallInstruction final : public NamedInstruction, public Shared<CallInstruction>
+    {
+    public:
+        explicit CallInstruction(
+            TypePtr type,
+            std::string name,
+            Block::WeakPtr block,
+            ValuePtr callee,
+            std::vector<ValuePtr> arguments);
+
+        std::ostream &Print(std::ostream &stream) const override;
+
+    private:
+        ValuePtr m_Callee;
+        std::vector<ValuePtr> m_Arguments;
+    };
+
+    class CallVoidInstruction final : public Instruction, public Shared<CallVoidInstruction>
+    {
+    public:
+        explicit CallVoidInstruction(Block::WeakPtr block, ValuePtr callee, std::vector<ValuePtr> arguments);
+
+        std::ostream &Print(std::ostream &stream) const override;
+
+    private:
+        ValuePtr m_Callee;
+        std::vector<ValuePtr> m_Arguments;
+    };
+
+    class CastInstruction final : public NamedInstruction, public Shared<CastInstruction>
+    {
+    public:
+        explicit CastInstruction(
+            TypePtr type,
+            std::string name,
+            Block::WeakPtr block,
+            ValuePtr value);
+
+        std::ostream &Print(std::ostream &stream) const override;
+
+    private:
+        ValuePtr m_Value;
     };
 }

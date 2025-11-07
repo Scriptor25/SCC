@@ -14,6 +14,7 @@ namespace scc::ir
         Kind_Array,
         Kind_Vector,
         Kind_Struct,
+        Kind_Function,
     };
 
     class Type
@@ -148,5 +149,31 @@ namespace scc::ir
 
     private:
         std::vector<TypePtr> m_Elements;
+    };
+
+    class FunctionType final : public Type, public Shared<FunctionType>
+    {
+    public:
+        explicit FunctionType(Context &context, TypePtr result, std::vector<TypePtr> arguments, bool variadic);
+
+        [[nodiscard]] unsigned GenerateHash() const override;
+        [[nodiscard]] bool Equals(const TypePtr &type) const override;
+
+        std::ostream &Print(std::ostream &stream) const override;
+
+        [[nodiscard]] TypePtr GetResult() const;
+
+        [[nodiscard]] unsigned GetArgumentCount() const;
+        [[nodiscard]] TypePtr GetArgument(unsigned index) const;
+
+        [[nodiscard]] std::vector<TypePtr>::const_iterator begin() const;
+        [[nodiscard]] std::vector<TypePtr>::const_iterator end() const;
+
+        [[nodiscard]] bool IsVariadic() const;
+
+    private:
+        TypePtr m_Result;
+        std::vector<TypePtr> m_Arguments;
+        bool m_Variadic;
     };
 }

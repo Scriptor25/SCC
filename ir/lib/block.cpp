@@ -1,24 +1,30 @@
 #include <scc/ir/block.hpp>
+#include <scc/ir/instruction.hpp>
 
 scc::ir::Block::Block(std::string name, Function::WeakPtr function)
-    : m_Name(std::move(name)),
+    : NamedValue(nullptr, std::move(name)),
       m_Function(std::move(function))
 {
 }
 
 std::ostream &scc::ir::Block::Print(std::ostream &stream) const
 {
-    return stream << '$' << m_Name;
+    stream << m_Name << ':';
+    for (auto &instruction : m_Instructions)
+    {
+        instruction->Print(stream << std::endl << "    ");
+    }
+    return stream;
+}
+
+std::ostream &scc::ir::Block::PrintOperand(std::ostream &stream) const
+{
+    return stream << '%' << m_Name;
 }
 
 scc::ir::Shared<scc::ir::Function>::Ptr scc::ir::Block::GetFunction() const
 {
     return m_Function.lock();
-}
-
-std::string scc::ir::Block::GetName() const
-{
-    return m_Name;
 }
 
 unsigned scc::ir::Block::GetInstructionCount() const

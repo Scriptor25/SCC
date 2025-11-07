@@ -1,7 +1,11 @@
 #include <scc/ir/value.hpp>
 
 scc::ir::Global::Global(TypePtr type, std::string name)
-    : Value(std::move(type)),
-      m_Name(std::move(name))
+    : NamedValue(std::move(type), std::move(name))
 {
+}
+
+std::ostream &scc::ir::Global::PrintOperand(std::ostream &stream) const
+{
+    return stream << '@' << m_Name;
 }

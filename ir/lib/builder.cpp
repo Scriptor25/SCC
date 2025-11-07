@@ -1,7 +1,10 @@
+#include <ranges>
 #include <scc/assert.hpp>
 #include <scc/ir/block.hpp>
 #include <scc/ir/builder.hpp>
 #include <scc/ir/context.hpp>
+#include <scc/ir/instruction.hpp>
+#include <scc/ir/module.hpp>
 
 scc::ir::Builder::Builder(Context &context)
     : m_Context(context)
@@ -80,6 +83,22 @@ scc::ir::ConstantStruct::Ptr scc::ir::Builder::CreateStruct(std::vector<Constant
     return std::make_shared<ConstantStruct>(std::move(type), std::move(values));
 }
 
+scc::ir::Variable::Ptr scc::ir::Builder::CreateString(
+    Module &module,
+    std::string name,
+    const std::string &value) const
+{
+    std::vector<ConstantPtr> elements;
+    for (unsigned i = 0; i < value.size(); ++i)
+    {
+        elements.emplace_back(CreateI8(value.at(i)));
+    }
+    elements.emplace_back(CreateI8(0));
+    auto type = m_Context.GetArrayType(m_Context.GetI8Type(), elements.size());
+    auto initializer = CreateArray(std::move(elements));
+    return module.CreateVariable(std::move(type), std::move(name), std::move(initializer));
+}
+
 scc::ir::BlockPtr scc::ir::Builder::CreateBlock(const Function::Ptr &function, std::string name) const
 {
     Assert(!!function, "function must not be null");
@@ -92,7 +111,13 @@ scc::ir::BlockPtr scc::ir::Builder::CreateBlock(const Function::Ptr &function, s
 
 void scc::ir::Builder::SetInsertBlock(BlockPtr block)
 {
+    Assert(!!block, "block must not be null");
     m_InsertBlock = std::move(block);
+}
+
+void scc::ir::Builder::ClearInsertBlock()
+{
+    m_InsertBlock = nullptr;
 }
 
 scc::ir::BlockPtr scc::ir::Builder::GetInsertBlock() const
@@ -100,15 +125,19 @@ scc::ir::BlockPtr scc::ir::Builder::GetInsertBlock() const
     return m_InsertBlock;
 }
 
-scc::ir::Shared<scc::ir::OperatorInstruction>::Ptr scc::ir::Builder::CreateOperator(
-    TypePtr type,
+scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateOperator(
     std::string name,
     Operator operator_,
     std::vector<ValuePtr> operands)
 {
-    Assert(!!type, "type must not be null");
     Assert(!name.empty(), "name must not be empty");
     Assert(!operands.empty(), "operands must not be empty");
+
+    auto type = operands.front()->GetType();
+    for (const auto &operand : operands)
+    {
+        Assert(operand->GetType() == type, "non-uniform operands");
+    }
 
     auto instruction = std::make_shared<OperatorInstruction>(
         std::move(type),
@@ -123,20 +152,19 @@ scc::ir::Shared<scc::ir::OperatorInstruction>::Ptr scc::ir::Builder::CreateOpera
     return instruction;
 }
 
-scc::ir::Shared<scc::ir::ComparatorInstruction>::Ptr scc::ir::Builder::CreateComparator(
-    TypePtr type,
+scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateComparator(
     std::string name,
     Comparator comparator,
     ValuePtr lhs,
     ValuePtr rhs)
 {
-    Assert(!!type, "type must not be null");
     Assert(!name.empty(), "name must not be empty");
     Assert(!!lhs, "lhs must not be null");
     Assert(!!rhs, "rhs must not be null");
+    Assert(lhs->GetType() == rhs->GetType(), "rhs type must be same as lhs type");
 
     auto instruction = std::make_shared<ComparatorInstruction>(
-        std::move(type),
+        m_Context.GetI1Type(),
         std::move(name),
         m_InsertBlock,
         comparator,
@@ -149,7 +177,7 @@ scc::ir::Shared<scc::ir::ComparatorInstruction>::Ptr scc::ir::Builder::CreateCom
     return instruction;
 }
 
-scc::ir::Shared<scc::ir::BranchInstruction>::Ptr scc::ir::Builder::CreateBranch(BlockPtr destination)
+scc::ir::BranchInstruction::Ptr scc::ir::Builder::CreateBranch(BlockPtr destination)
 {
     Assert(!!destination, "destination must not be null");
 
@@ -161,12 +189,13 @@ scc::ir::Shared<scc::ir::BranchInstruction>::Ptr scc::ir::Builder::CreateBranch(
     return instruction;
 }
 
-scc::ir::Shared<scc::ir::BranchInstruction>::Ptr scc::ir::Builder::CreateBranch(
+scc::ir::BranchInstruction::Ptr scc::ir::Builder::CreateBranch(
     ValuePtr condition,
     BlockPtr then,
     BlockPtr else_)
 {
     Assert(!!condition, "condition must not be null");
+    Assert(condition->GetType() == m_Context.GetI1Type(), "condition type must be i1");
     Assert(!!then, "then must not be null");
     Assert(!!else_, "else must not be null");
 
@@ -175,6 +204,224 @@ scc::ir::Shared<scc::ir::BranchInstruction>::Ptr scc::ir::Builder::CreateBranch(
         std::move(condition),
         std::move(then),
         std::move(else_));
+    if (m_InsertBlock)
+    {
+        m_InsertBlock->Insert(instruction);
+    }
+    return instruction;
+}
+
+scc::ir::RetInstruction::Ptr scc::ir::Builder::CreateRet()
+{
+    auto instruction = std::make_shared<RetInstruction>(m_InsertBlock);
+    if (m_InsertBlock)
+    {
+        m_InsertBlock->Insert(instruction);
+    }
+    return instruction;
+}
+
+scc::ir::RetInstruction::Ptr scc::ir::Builder::CreateRet(ValuePtr value)
+{
+    Assert(!!value, "value must not be null");
+
+    auto instruction = std::make_shared<RetInstruction>(m_InsertBlock, std::move(value));
+    if (m_InsertBlock)
+    {
+        m_InsertBlock->Insert(instruction);
+    }
+    return instruction;
+}
+
+scc::ir::SelectInstruction::Ptr scc::ir::Builder::CreateSelect(
+    std::string name,
+    std::vector<std::pair<BlockPtr, ValuePtr>> options)
+{
+    Assert(!name.empty(), "name must not be empty");
+    Assert(!options.empty(), "options must not be empty");
+
+    auto type = options.front().second->GetType();
+    for (const auto &value : options | std::views::values)
+    {
+        Assert(value->GetType() == type, "non-uniform options");
+    }
+
+    auto instruction = std::make_shared<SelectInstruction>(
+        std::move(type),
+        std::move(name),
+        m_InsertBlock,
+        std::move(options));
+    if (m_InsertBlock)
+    {
+        m_InsertBlock->Insert(instruction);
+    }
+    return instruction;
+}
+
+scc::ir::AllocInstruction::Ptr scc::ir::Builder::CreateAlloc(std::string name, TypePtr type)
+{
+    Assert(!name.empty(), "name must not be empty");
+    Assert(!!type, "type must not be null");
+
+    auto instruction = std::make_shared<AllocInstruction>(
+        m_Context.GetPointerType(std::move(type)),
+        std::move(name),
+        m_InsertBlock);
+    if (m_InsertBlock)
+    {
+        m_InsertBlock->Insert(instruction);
+    }
+    return instruction;
+}
+
+scc::ir::LoadInstruction::Ptr scc::ir::Builder::CreateLoad(std::string name, ValuePtr pointer)
+{
+    Assert(!name.empty(), "name must not be empty");
+    Assert(!!pointer, "pointer must not be null");
+    Assert(pointer->GetType()->GetKind() == Kind_Pointer, "pointer type must be a kind of pointer");
+
+    auto type = std::dynamic_pointer_cast<PointerType>(pointer->GetType())->GetBase();
+    auto instruction = std::make_shared<LoadInstruction>(
+        std::move(type),
+        std::move(name),
+        m_InsertBlock,
+        std::move(pointer));
+    if (m_InsertBlock)
+    {
+        m_InsertBlock->Insert(instruction);
+    }
+    return instruction;
+}
+
+scc::ir::StoreInstruction::Ptr scc::ir::Builder::CreateStore(ValuePtr pointer, ValuePtr value)
+{
+    Assert(!!pointer, "pointer must not be null");
+    Assert(!!value, "value must not be null");
+    Assert(pointer->GetType()->GetKind() == Kind_Pointer, "pointer type must be a kind of pointer");
+
+    const auto type = std::dynamic_pointer_cast<PointerType>(pointer->GetType())->GetBase();
+    Assert(value->GetType() == type, "value type must be the same as pointer base type");
+
+    auto instruction = std::make_shared<StoreInstruction>(
+        m_InsertBlock,
+        std::move(pointer),
+        std::move(value));
+    if (m_InsertBlock)
+    {
+        m_InsertBlock->Insert(instruction);
+    }
+    return instruction;
+}
+
+scc::ir::OffsetInstruction::Ptr scc::ir::Builder::CreateOffset(
+    std::string name,
+    ValuePtr base,
+    std::vector<ValuePtr> offsets)
+{
+    Assert(!name.empty(), "name must not be empty");
+    Assert(!!base, "base must not be null");
+    Assert(!offsets.empty(), "offsets must not be empty");
+
+    Assert(base->GetType()->GetKind() == Kind_Pointer, "base type must be a kind of pointer");
+
+    for (const auto &offset : offsets)
+    {
+        Assert(offset->GetType()->GetKind() == Kind_Int, "offset type must be a kind of int");
+    }
+
+    auto instruction = std::make_shared<OffsetInstruction>(
+        base->GetType(),
+        std::move(name),
+        m_InsertBlock,
+        std::move(base),
+        std::move(offsets));
+    if (m_InsertBlock)
+    {
+        m_InsertBlock->Insert(instruction);
+    }
+    return instruction;
+}
+
+scc::ir::CallInstruction::Ptr scc::ir::Builder::CreateCall(
+    std::string name,
+    ValuePtr callee,
+    std::vector<ValuePtr> arguments)
+{
+    Assert(!name.empty(), "name must not be empty");
+    Assert(!!callee, "callee must not be null");
+    Assert(!arguments.empty(), "arguments must not be empty");
+
+    Assert(callee->GetType()->GetKind() == Kind_Function, "callee type must be a kind of function");
+
+    const auto function_type = std::dynamic_pointer_cast<FunctionType>(callee->GetType());
+
+    const auto count = function_type->GetArgumentCount();
+    Assert(count <= arguments.size(), "not enough arguments");
+    Assert(function_type->IsVariadic() || count == arguments.size(), "too many arguments");
+
+    for (unsigned i = 0; i < count; ++i)
+    {
+        Assert(function_type->GetArgument(i) == arguments.at(i)->GetType(), "invalid argument type");
+    }
+
+    auto instruction = std::make_shared<CallInstruction>(
+        function_type->GetResult(),
+        std::move(name),
+        m_InsertBlock,
+        std::move(callee),
+        std::move(arguments));
+    if (m_InsertBlock)
+    {
+        m_InsertBlock->Insert(instruction);
+    }
+    return instruction;
+}
+
+scc::ir::CallVoidInstruction::Ptr scc::ir::Builder::CreateCallVoid(
+    ValuePtr callee,
+    std::vector<ValuePtr> arguments)
+{
+    Assert(!!callee, "callee must not be null");
+    Assert(!arguments.empty(), "arguments must not be empty");
+
+    Assert(callee->GetType()->GetKind() == Kind_Function, "callee type must be a kind of function");
+
+    const auto function_type = std::dynamic_pointer_cast<FunctionType>(callee->GetType());
+
+    const auto count = function_type->GetArgumentCount();
+    Assert(count <= arguments.size(), "not enough arguments");
+    Assert(function_type->IsVariadic() || count == arguments.size(), "too many arguments");
+
+    for (unsigned i = 0; i < count; ++i)
+    {
+        Assert(function_type->GetArgument(i) == arguments.at(i)->GetType(), "invalid argument type");
+    }
+
+    auto instruction = std::make_shared<CallVoidInstruction>(
+        m_InsertBlock,
+        std::move(callee),
+        std::move(arguments));
+    if (m_InsertBlock)
+    {
+        m_InsertBlock->Insert(instruction);
+    }
+    return instruction;
+}
+
+scc::ir::CastInstruction::Ptr scc::ir::Builder::CreateCast(
+    std::string name,
+    ValuePtr value,
+    TypePtr type)
+{
+    Assert(!name.empty(), "name must not be empty");
+    Assert(!!value, "value must not be null");
+    Assert(!!type, "type must not be null");
+
+    auto instruction = std::make_shared<CastInstruction>(
+        std::move(type),
+        std::move(name),
+        m_InsertBlock,
+        std::move(value));
     if (m_InsertBlock)
     {
         m_InsertBlock->Insert(instruction);

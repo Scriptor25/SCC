@@ -6,7 +6,7 @@ scc::ir::OperatorInstruction::OperatorInstruction(
     Block::WeakPtr block,
     const Operator operator_,
     std::vector<ValuePtr> operands)
-    : Instruction(std::move(type), std::move(name), std::move(block)),
+    : NamedInstruction(std::move(type), std::move(name), std::move(block)),
       m_Operator(operator_),
       m_Operands(std::move(operands))
 {
@@ -14,7 +14,7 @@ scc::ir::OperatorInstruction::OperatorInstruction(
 
 std::ostream &scc::ir::OperatorInstruction::Print(std::ostream &stream) const
 {
-    m_Type->Print(stream << '%' << m_Name << " = ") << " op.";
+    stream << '%' << m_Name << " = ";
     switch (m_Operator)
     {
     case Operator_Add:
@@ -49,7 +49,7 @@ std::ostream &scc::ir::OperatorInstruction::Print(std::ostream &stream) const
         {
             stream << ", ";
         }
-        (*i)->Print(stream);
+        (*i)->PrintOperand(stream);
     }
     return stream;
 }

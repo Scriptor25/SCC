@@ -7,16 +7,26 @@ scc::ir::ConstantVector::ConstantVector(VectorType::Ptr type, std::vector<Consta
 {
 }
 
-std::ostream &scc::ir::ConstantVector::Print(std::ostream &stream) const
+std::ostream &scc::ir::ConstantVector::PrintOperand(std::ostream &stream) const
 {
-    m_Type->Print(stream) << " const <";
+    m_Type->Print(stream) << " <";
     for (auto i = m_Values.begin(); i != m_Values.end(); ++i)
     {
         if (i != m_Values.begin())
         {
             stream << ", ";
         }
-        (*i)->Print(stream);
+        (*i)->PrintOperand(stream);
     }
     return stream << '>';
+}
+
+unsigned scc::ir::ConstantVector::GetValueCount() const
+{
+    return m_Values.size();
+}
+
+scc::ir::ConstantPtr scc::ir::ConstantVector::GetValue(const unsigned index) const
+{
+    return m_Values.at(index);
 }

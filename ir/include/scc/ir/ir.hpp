@@ -4,6 +4,8 @@
 
 namespace scc::ir
 {
+    class Parser;
+
     class Module;
     class Context;
     class Builder;
@@ -13,6 +15,9 @@ namespace scc::ir
 
     class Value;
     using ValuePtr = std::shared_ptr<Value>;
+
+    class NamedValue;
+    using NamedValuePtr = std::shared_ptr<NamedValue>;
 
     class Global;
     using GlobalPtr = std::shared_ptr<Global>;

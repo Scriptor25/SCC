@@ -7,7 +7,12 @@ scc::ir::ConstantFloat::ConstantFloat(FloatType::Ptr type, const double value)
 {
 }
 
-std::ostream &scc::ir::ConstantFloat::Print(std::ostream &stream) const
+std::ostream &scc::ir::ConstantFloat::PrintOperand(std::ostream &stream) const
 {
-    return m_Type->Print(stream) << " const " << std::hexfloat << m_Value << std::defaultfloat;
+    return m_Type->Print(stream) << " 0x" << std::hexfloat << m_Value << std::defaultfloat;
+}
+
+double scc::ir::ConstantFloat::GetValue() const
+{
+    return m_Value;
 }

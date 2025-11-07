@@ -7,7 +7,7 @@ scc::ir::ComparatorInstruction::ComparatorInstruction(
     const Comparator comparator,
     ValuePtr lhs,
     ValuePtr rhs)
-    : Instruction(std::move(type), std::move(name), std::move(block)),
+    : NamedInstruction(std::move(type), std::move(name), std::move(block)),
       m_Comparator(comparator),
       m_LHS(std::move(lhs)),
       m_RHS(std::move(rhs))
@@ -16,7 +16,7 @@ scc::ir::ComparatorInstruction::ComparatorInstruction(
 
 std::ostream &scc::ir::ComparatorInstruction::Print(std::ostream &stream) const
 {
-    m_Type->Print(stream << '%' << m_Name << " = ") << " cmp.";
+    stream << '%' << m_Name << " = cmp.";
     switch (m_Comparator)
     {
     case Comparator_LT:
@@ -38,5 +38,5 @@ std::ostream &scc::ir::ComparatorInstruction::Print(std::ostream &stream) const
         stream << "ne";
         break;
     }
-    return m_RHS->Print(m_LHS->Print(stream << ' ') << ", ");
+    return m_RHS->PrintOperand(m_LHS->PrintOperand(stream << ' ') << ", ");
 }

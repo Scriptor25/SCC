@@ -1,0 +1,41 @@
+variable @format = [15 x i8] "fib(%d) = %d\x0d\x0a\x00"
+
+function i32 @atoi([i8])
+function i32 @printf([i8], ...)
+
+function i32 @fib(i32 %n) {
+entry:
+    %ap = i32 alloc
+    %bp = i32 alloc
+    %ip = i32 alloc
+    store %ap, i32 0x0
+    store %bp, i32 0x1
+    store %ip, i32 0x0
+    br %head
+head:
+    %i = load %ip
+    %lt = cmp.lt %i, %n
+    br %lt, %loop, %end
+loop:
+    %a = load %ap
+    %b = load %bp
+    %c = add %a, %b
+    store %ap, %b
+    store %bp, %c
+    %x = add %i, i32 0x1
+    store %ip, %x
+    br %head
+end:
+    ret %a
+}
+
+function i32 @main(i32 %argc, [[i8]] %argv) {
+entry:
+    %np = offset %argv, i64 0x1
+    %ns = load %np
+    %n = call @atoi, %ns
+    %r = call @fib, %n
+    %fp = [i8] cast @format
+    call @printf, %fp, %n, %r
+    ret %r
+}

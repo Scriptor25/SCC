@@ -12,6 +12,7 @@ namespace scc::ir
     public:
         VoidType::Ptr GetVoidType();
 
+        IntType::Ptr GetI1Type();
         IntType::Ptr GetI8Type();
         IntType::Ptr GetI16Type();
         IntType::Ptr GetI32Type();
@@ -26,6 +27,8 @@ namespace scc::ir
         VectorType::Ptr GetVectorType(TypePtr base, unsigned length);
 
         StructType::Ptr GetStructType(std::vector<TypePtr> elements);
+
+        FunctionType::Ptr GetFunctionType(TypePtr result, std::vector<TypePtr> arguments, bool variadic);
 
     private:
         template<typename T, typename... Args> requires std::is_base_of_v<Type, T>

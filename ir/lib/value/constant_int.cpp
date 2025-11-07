@@ -7,7 +7,12 @@ scc::ir::ConstantInt::ConstantInt(IntType::Ptr type, const uint64_t value)
 {
 }
 
-std::ostream &scc::ir::ConstantInt::Print(std::ostream &stream) const
+std::ostream &scc::ir::ConstantInt::PrintOperand(std::ostream &stream) const
 {
-    return m_Type->Print(stream) << " const " << std::hex << m_Value << std::dec;
+    return m_Type->Print(stream) << " 0x" << std::hex << m_Value << std::dec;
+}
+
+uint64_t scc::ir::ConstantInt::GetValue() const
+{
+    return m_Value;
 }
