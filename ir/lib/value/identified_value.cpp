@@ -19,10 +19,18 @@ void scc::ir::IdentifiedValue::SetRegister(RegisterFwd::Ptr register_)
 
 std::ostream &scc::ir::IdentifiedValue::Print(std::ostream &stream) const
 {
-    return m_Register->Print(stream) << " = <error>";
+    if (m_Register)
+    {
+        return m_Register->Print(stream) << " = <error>";
+    }
+    return stream << "<error>";
 }
 
 std::ostream &scc::ir::IdentifiedValue::PrintOperand(std::ostream &stream) const
 {
-    return m_Register->Print(stream);
+    if (m_Register)
+    {
+        return m_Register->Print(stream);
+    }
+    return stream << "<error>";
 }

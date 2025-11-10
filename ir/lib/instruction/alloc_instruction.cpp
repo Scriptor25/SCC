@@ -6,15 +6,23 @@ scc::ir::AllocInstruction::AllocInstruction(
     RegisterFwd::Ptr register_,
     BlockFwd::WeakPtr block,
     const unsigned count)
-    : IdentifiedInstruction(std::move(type), std::move(register_), std::move(block)),
+    : Instruction(std::move(type), std::move(register_), std::move(block)),
       m_Count(count)
+{
+}
+
+scc::ir::AllocInstruction::~AllocInstruction()
 {
 }
 
 std::ostream &scc::ir::AllocInstruction::Print(std::ostream &stream) const
 {
+    if (IsUsed())
+    {
+        m_Register->Print(stream) << " = ";
+    }
     const auto type = std::dynamic_pointer_cast<PointerType>(m_Type)->GetBase();
-    return type->Print(m_Register->Print(stream) << " = ") << " alloc " << m_Count;
+    return type->Print(stream) << " alloc " << m_Count;
 }
 
 unsigned scc::ir::AllocInstruction::GetCount() const

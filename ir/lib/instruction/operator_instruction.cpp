@@ -7,15 +7,30 @@ scc::ir::OperatorInstruction::OperatorInstruction(
     BlockFwd::WeakPtr block,
     const Operator operator_,
     std::vector<ValueFwd::Ptr> operands)
-    : IdentifiedInstruction(std::move(type), std::move(register_), std::move(block)),
+    : Instruction(std::move(type), std::move(register_), std::move(block)),
       m_Operator(operator_),
       m_Operands(std::move(operands))
 {
+    for (const auto &operand : m_Operands)
+    {
+        operand->Use();
+    }
+}
+
+scc::ir::OperatorInstruction::~OperatorInstruction()
+{
+    for (const auto &operand : m_Operands)
+    {
+        operand->Drop();
+    }
 }
 
 std::ostream &scc::ir::OperatorInstruction::Print(std::ostream &stream) const
 {
-    m_Register->Print(stream) << " = ";
+    if (IsUsed())
+    {
+        m_Register->Print(stream) << " = ";
+    }
     switch (m_Operator)
     {
     case Operator_Add:

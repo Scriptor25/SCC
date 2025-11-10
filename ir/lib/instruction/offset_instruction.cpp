@@ -7,15 +7,33 @@ scc::ir::OffsetInstruction::OffsetInstruction(
     BlockFwd::WeakPtr block,
     ValueFwd::Ptr base,
     std::vector<ValueFwd::Ptr> offsets)
-    : IdentifiedInstruction(std::move(type), std::move(register_), std::move(block)),
+    : Instruction(std::move(type), std::move(register_), std::move(block)),
       m_Base(std::move(base)),
       m_Offsets(std::move(offsets))
 {
+    m_Base->Use();
+    for (const auto &offset : m_Offsets)
+    {
+        offset->Use();
+    }
+}
+
+scc::ir::OffsetInstruction::~OffsetInstruction()
+{
+    m_Base->Drop();
+    for (const auto &offset : m_Offsets)
+    {
+        offset->Drop();
+    }
 }
 
 std::ostream &scc::ir::OffsetInstruction::Print(std::ostream &stream) const
 {
-    m_Base->PrintOperand(m_Type->Print(m_Register->Print(stream) << " = ") << " offset ");
+    if (IsUsed())
+    {
+        m_Register->Print(stream) << " = ";
+    }
+    m_Base->PrintOperand(m_Type->Print(stream) << " offset ");
     for (auto &offset : m_Offsets)
     {
         offset->PrintOperand(stream << ", ");

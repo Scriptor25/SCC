@@ -4,24 +4,15 @@
 
 namespace scc::ir
 {
-    class Instruction
+    class Instruction : public IdentifiedValue
     {
     public:
-        explicit Instruction(BlockFwd::WeakPtr block);
-        virtual ~Instruction() = default;
-
-        virtual std::ostream &Print(std::ostream &stream) const = 0;
+        explicit Instruction(TypeFwd::Ptr type, RegisterFwd::Ptr register_, BlockFwd::WeakPtr block);
 
         [[nodiscard]] BlockFwd::Ptr GetBlock() const;
 
     protected:
         BlockFwd::WeakPtr m_Block;
-    };
-
-    class IdentifiedInstruction : public Instruction, public IdentifiedValue
-    {
-    public:
-        explicit IdentifiedInstruction(TypeFwd::Ptr type, RegisterFwd::Ptr register_, BlockFwd::WeakPtr block);
     };
 
     enum Operator
@@ -36,7 +27,7 @@ namespace scc::ir
         Operator_Xor,
     };
 
-    class OperatorInstruction final : public IdentifiedInstruction, public Shared<OperatorInstruction>
+    class OperatorInstruction final : public Instruction, public Shared<OperatorInstruction>
     {
     public:
         explicit OperatorInstruction(
@@ -45,6 +36,7 @@ namespace scc::ir
             BlockFwd::WeakPtr block,
             Operator operator_,
             std::vector<ValueFwd::Ptr> operands);
+        ~OperatorInstruction() override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -67,7 +59,7 @@ namespace scc::ir
         Comparator_NE,
     };
 
-    class ComparatorInstruction final : public IdentifiedInstruction, public Shared<ComparatorInstruction>
+    class ComparatorInstruction final : public Instruction, public Shared<ComparatorInstruction>
     {
     public:
         explicit ComparatorInstruction(
@@ -77,6 +69,7 @@ namespace scc::ir
             Comparator comparator,
             ValueFwd::Ptr lhs,
             ValueFwd::Ptr rhs);
+        ~ComparatorInstruction() override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -92,12 +85,19 @@ namespace scc::ir
     class BranchInstruction final : public Instruction, public Shared<BranchInstruction>
     {
     public:
-        explicit BranchInstruction(BlockFwd::WeakPtr block, BlockFwd::Ptr destination);
         explicit BranchInstruction(
+            TypeFwd::Ptr type,
+            RegisterFwd::Ptr register_,
+            BlockFwd::WeakPtr block,
+            BlockFwd::Ptr destination);
+        explicit BranchInstruction(
+            TypeFwd::Ptr type,
+            RegisterFwd::Ptr register_,
             BlockFwd::WeakPtr block,
             ValueFwd::Ptr condition,
             BlockFwd::Ptr then,
             BlockFwd::Ptr else_);
+        ~BranchInstruction() override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -110,11 +110,15 @@ namespace scc::ir
         BlockFwd::Ptr m_Then, m_Else;
     };
 
-    class RetInstruction final : public Instruction, public Shared<RetInstruction>
+    class ReturnInstruction final : public Instruction, public Shared<ReturnInstruction>
     {
     public:
-        explicit RetInstruction(BlockFwd::WeakPtr block);
-        explicit RetInstruction(BlockFwd::WeakPtr block, ValueFwd::Ptr value);
+        explicit ReturnInstruction(
+            TypeFwd::Ptr type,
+            RegisterFwd::Ptr register_,
+            BlockFwd::WeakPtr block,
+            ValueFwd::Ptr value);
+        ~ReturnInstruction() override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -124,7 +128,7 @@ namespace scc::ir
         ValueFwd::Ptr m_Value;
     };
 
-    class SelectInstruction final : public IdentifiedInstruction, public Shared<SelectInstruction>
+    class SelectInstruction final : public Instruction, public Shared<SelectInstruction>
     {
     public:
         explicit SelectInstruction(
@@ -132,6 +136,7 @@ namespace scc::ir
             RegisterFwd::Ptr register_,
             BlockFwd::WeakPtr block,
             std::vector<std::pair<BlockFwd::Ptr, ValueFwd::Ptr>> options);
+        ~SelectInstruction() override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -142,7 +147,7 @@ namespace scc::ir
         std::vector<std::pair<BlockFwd::Ptr, ValueFwd::Ptr>> m_Options;
     };
 
-    class AllocInstruction final : public IdentifiedInstruction, public Shared<AllocInstruction>
+    class AllocInstruction final : public Instruction, public Shared<AllocInstruction>
     {
     public:
         explicit AllocInstruction(
@@ -150,6 +155,7 @@ namespace scc::ir
             RegisterFwd::Ptr register_,
             BlockFwd::WeakPtr block,
             unsigned count);
+        ~AllocInstruction() override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -159,7 +165,7 @@ namespace scc::ir
         unsigned m_Count;
     };
 
-    class LoadInstruction final : public IdentifiedInstruction, public Shared<LoadInstruction>
+    class LoadInstruction final : public Instruction, public Shared<LoadInstruction>
     {
     public:
         explicit LoadInstruction(
@@ -167,6 +173,7 @@ namespace scc::ir
             RegisterFwd::Ptr register_,
             BlockFwd::WeakPtr block,
             ValueFwd::Ptr pointer);
+        ~LoadInstruction() override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -179,7 +186,13 @@ namespace scc::ir
     class StoreInstruction final : public Instruction, public Shared<StoreInstruction>
     {
     public:
-        explicit StoreInstruction(BlockFwd::WeakPtr block, ValueFwd::Ptr pointer, ValueFwd::Ptr value);
+        explicit StoreInstruction(
+            TypeFwd::Ptr type,
+            RegisterFwd::Ptr register_,
+            BlockFwd::WeakPtr block,
+            ValueFwd::Ptr pointer,
+            ValueFwd::Ptr value);
+        ~StoreInstruction() override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -191,7 +204,7 @@ namespace scc::ir
         ValueFwd::Ptr m_Value;
     };
 
-    class OffsetInstruction final : public IdentifiedInstruction, public Shared<OffsetInstruction>
+    class OffsetInstruction final : public Instruction, public Shared<OffsetInstruction>
     {
     public:
         explicit OffsetInstruction(
@@ -200,6 +213,7 @@ namespace scc::ir
             BlockFwd::WeakPtr block,
             ValueFwd::Ptr base,
             std::vector<ValueFwd::Ptr> offsets);
+        ~OffsetInstruction() override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -212,7 +226,7 @@ namespace scc::ir
         std::vector<ValueFwd::Ptr> m_Offsets;
     };
 
-    class CallInstruction final : public IdentifiedInstruction, public Shared<CallInstruction>
+    class CallInstruction final : public Instruction, public Shared<CallInstruction>
     {
     public:
         explicit CallInstruction(
@@ -221,6 +235,7 @@ namespace scc::ir
             BlockFwd::WeakPtr block,
             ValueFwd::Ptr callee,
             std::vector<ValueFwd::Ptr> arguments);
+        ~CallInstruction() override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -233,26 +248,7 @@ namespace scc::ir
         std::vector<ValueFwd::Ptr> m_Arguments;
     };
 
-    class CallVoidInstruction final : public Instruction, public Shared<CallVoidInstruction>
-    {
-    public:
-        explicit CallVoidInstruction(
-            BlockFwd::WeakPtr block,
-            ValueFwd::Ptr callee,
-            std::vector<ValueFwd::Ptr> arguments);
-
-        std::ostream &Print(std::ostream &stream) const override;
-
-        [[nodiscard]] ValueFwd::Ptr GetCallee() const;
-        [[nodiscard]] unsigned GetArgumentCount() const;
-        [[nodiscard]] ValueFwd::Ptr GetArgument(unsigned index) const;
-
-    private:
-        ValueFwd::Ptr m_Callee;
-        std::vector<ValueFwd::Ptr> m_Arguments;
-    };
-
-    class CastInstruction final : public IdentifiedInstruction, public Shared<CastInstruction>
+    class CastInstruction final : public Instruction, public Shared<CastInstruction>
     {
     public:
         explicit CastInstruction(
@@ -260,6 +256,7 @@ namespace scc::ir
             RegisterFwd::Ptr register_,
             BlockFwd::WeakPtr block,
             ValueFwd::Ptr value);
+        ~CastInstruction() override;
 
         std::ostream &Print(std::ostream &stream) const override;
 

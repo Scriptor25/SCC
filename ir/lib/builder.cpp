@@ -127,9 +127,9 @@ scc::ir::BlockFwd::Ptr scc::ir::Builder::GetInsertBlock() const
 }
 
 scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateOperator(
-    std::string name,
     Operator operator_,
-    std::vector<ValueFwd::Ptr> operands)
+    std::vector<ValueFwd::Ptr> operands,
+    std::string name)
 {
     Assert(!operands.empty(), "operands must not be empty");
 
@@ -149,11 +149,67 @@ scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateOperator(
         std::move(operands));
 }
 
+scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateAdd(
+    std::vector<ValueFwd::Ptr> operands,
+    std::string name)
+{
+    return CreateOperator(Operator_Add, std::move(operands), std::move(name));
+}
+
+scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateSub(
+    std::vector<ValueFwd::Ptr> operands,
+    std::string name)
+{
+    return CreateOperator(Operator_Sub, std::move(operands), std::move(name));
+}
+
+scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateMul(
+    std::vector<ValueFwd::Ptr> operands,
+    std::string name)
+{
+    return CreateOperator(Operator_Mul, std::move(operands), std::move(name));
+}
+
+scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateDiv(
+    std::vector<ValueFwd::Ptr> operands,
+    std::string name)
+{
+    return CreateOperator(Operator_Div, std::move(operands), std::move(name));
+}
+
+scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateRem(
+    std::vector<ValueFwd::Ptr> operands,
+    std::string name)
+{
+    return CreateOperator(Operator_Rem, std::move(operands), std::move(name));
+}
+
+scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateAnd(
+    std::vector<ValueFwd::Ptr> operands,
+    std::string name)
+{
+    return CreateOperator(Operator_And, std::move(operands), std::move(name));
+}
+
+scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateOr(
+    std::vector<ValueFwd::Ptr> operands,
+    std::string name)
+{
+    return CreateOperator(Operator_Or, std::move(operands), std::move(name));
+}
+
+scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateXor(
+    std::vector<ValueFwd::Ptr> operands,
+    std::string name)
+{
+    return CreateOperator(Operator_Xor, std::move(operands), std::move(name));
+}
+
 scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateComparator(
-    std::string name,
     Comparator comparator,
     ValueFwd::Ptr lhs,
-    ValueFwd::Ptr rhs)
+    ValueFwd::Ptr rhs,
+    std::string name)
 {
     Assert(!!lhs, "lhs must not be null");
     Assert(!!rhs, "rhs must not be null");
@@ -170,11 +226,65 @@ scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateComparator(
         std::move(rhs));
 }
 
+scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateLT(
+    ValueFwd::Ptr lhs,
+    ValueFwd::Ptr rhs,
+    std::string name)
+{
+    return CreateComparator(Comparator_LT, std::move(lhs), std::move(rhs), std::move(name));
+}
+
+scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateGT(
+    ValueFwd::Ptr lhs,
+    ValueFwd::Ptr rhs,
+    std::string name)
+{
+    return CreateComparator(Comparator_GT, std::move(lhs), std::move(rhs), std::move(name));
+}
+
+scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateLE(
+    ValueFwd::Ptr lhs,
+    ValueFwd::Ptr rhs,
+    std::string name)
+{
+    return CreateComparator(Comparator_LE, std::move(lhs), std::move(rhs), std::move(name));
+}
+
+scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateGE(
+    ValueFwd::Ptr lhs,
+    ValueFwd::Ptr rhs,
+    std::string name)
+{
+    return CreateComparator(Comparator_GE, std::move(lhs), std::move(rhs), std::move(name));
+}
+
+scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateEQ(
+    ValueFwd::Ptr lhs,
+    ValueFwd::Ptr rhs,
+    std::string name)
+{
+    return CreateComparator(Comparator_EQ, std::move(lhs), std::move(rhs), std::move(name));
+}
+
+scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateNE(
+    ValueFwd::Ptr lhs,
+    ValueFwd::Ptr rhs,
+    std::string name)
+{
+    return CreateComparator(Comparator_NE, std::move(lhs), std::move(rhs), std::move(name));
+}
+
 scc::ir::BranchInstruction::Ptr scc::ir::Builder::CreateBranch(BlockFwd::Ptr destination)
 {
     Assert(!!destination, "destination must not be null");
 
-    return Create<BranchInstruction>(m_InsertBlock, std::move(destination));
+    auto register_ = m_InsertBlock->CreateRegister();
+
+    return Create<BranchInstruction>(
+        m_Context.GetVoidType(),
+        std::move(register_),
+        m_InsertBlock,
+        std::move(destination));
 }
 
 scc::ir::BranchInstruction::Ptr scc::ir::Builder::CreateBranch(
@@ -187,28 +297,36 @@ scc::ir::BranchInstruction::Ptr scc::ir::Builder::CreateBranch(
     Assert(!!then, "then must not be null");
     Assert(!!else_, "else must not be null");
 
+    auto register_ = m_InsertBlock->CreateRegister();
+
     return Create<BranchInstruction>(
+        m_Context.GetVoidType(),
+        std::move(register_),
         m_InsertBlock,
         std::move(condition),
         std::move(then),
         std::move(else_));
 }
 
-scc::ir::RetInstruction::Ptr scc::ir::Builder::CreateRet()
+scc::ir::ReturnInstruction::Ptr scc::ir::Builder::CreateRet()
 {
-    return Create<RetInstruction>(m_InsertBlock);
+    auto register_ = m_InsertBlock->CreateRegister();
+
+    return Create<ReturnInstruction>(m_Context.GetVoidType(), std::move(register_), m_InsertBlock, nullptr);
 }
 
-scc::ir::RetInstruction::Ptr scc::ir::Builder::CreateRet(ValueFwd::Ptr value)
+scc::ir::ReturnInstruction::Ptr scc::ir::Builder::CreateRet(ValueFwd::Ptr value)
 {
     Assert(!!value, "value must not be null");
 
-    return Create<RetInstruction>(m_InsertBlock, std::move(value));
+    auto register_ = m_InsertBlock->CreateRegister();
+
+    return Create<ReturnInstruction>(m_Context.GetVoidType(), std::move(register_), m_InsertBlock, std::move(value));
 }
 
 scc::ir::SelectInstruction::Ptr scc::ir::Builder::CreateSelect(
-    std::string name,
-    std::vector<std::pair<BlockFwd::Ptr, ValueFwd::Ptr>> options)
+    std::vector<std::pair<BlockFwd::Ptr, ValueFwd::Ptr>> options,
+    std::string name)
 {
     Assert(!options.empty(), "options must not be empty");
 
@@ -227,7 +345,7 @@ scc::ir::SelectInstruction::Ptr scc::ir::Builder::CreateSelect(
         std::move(options));
 }
 
-scc::ir::AllocInstruction::Ptr scc::ir::Builder::CreateAlloc(std::string name, TypeFwd::Ptr type, unsigned count)
+scc::ir::AllocInstruction::Ptr scc::ir::Builder::CreateAlloc(TypeFwd::Ptr type, std::string name, unsigned count)
 {
     Assert(!!type, "type must not be null");
 
@@ -240,7 +358,7 @@ scc::ir::AllocInstruction::Ptr scc::ir::Builder::CreateAlloc(std::string name, T
         count);
 }
 
-scc::ir::LoadInstruction::Ptr scc::ir::Builder::CreateLoad(std::string name, ValueFwd::Ptr pointer)
+scc::ir::LoadInstruction::Ptr scc::ir::Builder::CreateLoad(ValueFwd::Ptr pointer, std::string name)
 {
     Assert(!!pointer, "pointer must not be null");
     Assert(pointer->GetType()->GetKind() == Kind_Pointer, "pointer type must be a kind of pointer");
@@ -264,17 +382,21 @@ scc::ir::StoreInstruction::Ptr scc::ir::Builder::CreateStore(ValueFwd::Ptr point
     const auto type = std::dynamic_pointer_cast<PointerType>(pointer->GetType())->GetBase();
     Assert(value->GetType() == type, "value type must be the same as pointer base type");
 
+    auto register_ = m_InsertBlock->CreateRegister();
+
     return Create<StoreInstruction>(
+        m_Context.GetVoidType(),
+        std::move(register_),
         m_InsertBlock,
         std::move(pointer),
         std::move(value));
 }
 
 scc::ir::OffsetInstruction::Ptr scc::ir::Builder::CreateOffset(
-    std::string name,
     TypeFwd::Ptr type,
     ValueFwd::Ptr base,
-    std::vector<ValueFwd::Ptr> offsets)
+    std::vector<ValueFwd::Ptr> offsets,
+    std::string name)
 {
     Assert(!!type, "type must not be null");
     Assert(!!base, "base must not be null");
@@ -297,10 +419,10 @@ scc::ir::OffsetInstruction::Ptr scc::ir::Builder::CreateOffset(
         std::move(offsets));
 }
 
-scc::ir::Shared<scc::ir::OffsetInstruction>::Ptr scc::ir::Builder::CreateConstOffset(
-    std::string name,
+scc::ir::OffsetInstruction::Ptr scc::ir::Builder::CreateConstOffset(
     ValueFwd::Ptr base,
-    const std::vector<unsigned> &offsets)
+    const std::vector<unsigned> &offsets,
+    std::string name)
 {
     std::vector<ValueFwd::Ptr> values;
 
@@ -324,9 +446,9 @@ scc::ir::Shared<scc::ir::OffsetInstruction>::Ptr scc::ir::Builder::CreateConstOf
 }
 
 scc::ir::CallInstruction::Ptr scc::ir::Builder::CreateCall(
-    std::string name,
     ValueFwd::Ptr callee,
-    std::vector<ValueFwd::Ptr> arguments)
+    std::vector<ValueFwd::Ptr> arguments,
+    std::string name)
 {
     Assert(!!callee, "callee must not be null");
     Assert(!arguments.empty(), "arguments must not be empty");
@@ -354,39 +476,13 @@ scc::ir::CallInstruction::Ptr scc::ir::Builder::CreateCall(
         std::move(arguments));
 }
 
-scc::ir::CallVoidInstruction::Ptr scc::ir::Builder::CreateCallVoid(
-    ValueFwd::Ptr callee,
-    std::vector<ValueFwd::Ptr> arguments)
-{
-    Assert(!!callee, "callee must not be null");
-    Assert(!arguments.empty(), "arguments must not be empty");
-
-    Assert(callee->GetType()->GetKind() == Kind_Function, "callee type must be a kind of function");
-
-    const auto function_type = std::dynamic_pointer_cast<FunctionType>(callee->GetType());
-
-    const auto count = function_type->GetArgumentCount();
-    Assert(count <= arguments.size(), "not enough arguments");
-    Assert(function_type->IsVariadic() || count == arguments.size(), "too many arguments");
-
-    for (unsigned i = 0; i < count; ++i)
-    {
-        Assert(function_type->GetArgument(i) == arguments.at(i)->GetType(), "invalid argument type");
-    }
-
-    return Create<CallVoidInstruction>(
-        m_InsertBlock,
-        std::move(callee),
-        std::move(arguments));
-}
-
 scc::ir::CastInstruction::Ptr scc::ir::Builder::CreateCast(
-    std::string name,
+    TypeFwd::Ptr type,
     ValueFwd::Ptr value,
-    TypeFwd::Ptr type)
+    std::string name)
 {
-    Assert(!!value, "value must not be null");
     Assert(!!type, "type must not be null");
+    Assert(!!value, "value must not be null");
 
     auto register_ = m_InsertBlock->CreateRegister(std::move(name));
 

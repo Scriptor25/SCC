@@ -42,6 +42,9 @@ namespace scc::ir
     class Register;
     using RegisterFwd = Shared<Register>;
 
+    class Usable;
+    using UsableFwd = Shared<Usable>;
+
     struct TypeHash final
     {
         unsigned operator()(const TypeFwd::Ptr &) const noexcept;

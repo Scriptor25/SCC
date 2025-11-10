@@ -6,14 +6,24 @@ scc::ir::CastInstruction::CastInstruction(
     RegisterFwd::Ptr register_,
     BlockFwd::WeakPtr block,
     ValueFwd::Ptr value)
-    : IdentifiedInstruction(std::move(type), std::move(register_), std::move(block)),
+    : Instruction(std::move(type), std::move(register_), std::move(block)),
       m_Value(std::move(value))
 {
+    m_Value->Use();
+}
+
+scc::ir::CastInstruction::~CastInstruction()
+{
+    m_Value->Drop();
 }
 
 std::ostream &scc::ir::CastInstruction::Print(std::ostream &stream) const
 {
-    return m_Value->PrintOperand(m_Type->Print(m_Register->Print(stream) << " = ") << " cast ");
+    if (IsUsed())
+    {
+        m_Register->Print(stream) << " = ";
+    }
+    return m_Value->PrintOperand(m_Type->Print(stream) << " cast ");
 }
 
 scc::ir::ValueFwd::Ptr scc::ir::CastInstruction::GetValue() const

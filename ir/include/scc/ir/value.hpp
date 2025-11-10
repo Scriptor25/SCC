@@ -3,14 +3,14 @@
 #include <vector>
 #include <scc/ir/ir.hpp>
 #include <scc/ir/type.hpp>
+#include <scc/ir/usable.hpp>
 
 namespace scc::ir
 {
-    class Value
+    class Value : public Usable
     {
     public:
         explicit Value(TypeFwd::Ptr type);
-        virtual ~Value() = default;
 
         virtual std::ostream &Print(std::ostream &stream) const = 0;
         virtual std::ostream &PrintOperand(std::ostream &stream) const = 0;

@@ -33,27 +33,27 @@ int main()
         n->SetName("n");
 
         builder.SetInsertBlock(entry_block);
-        auto pt = builder.CreateAlloc("pt", context.GetI32Type(), 3);
-        auto ap = builder.CreateConstOffset("ap", pt, 0u);
-        auto bp = builder.CreateConstOffset("bp", pt, 1u);
-        auto ip = builder.CreateConstOffset("ip", pt, 2u);
+        auto pt = builder.CreateAlloc(context.GetI32Type(), "pt", 3);
+        auto ap = builder.CreateConstOffset(pt, { 0u }, "ap");
+        auto bp = builder.CreateConstOffset(pt, { 1u }, "bp");
+        auto ip = builder.CreateConstOffset(pt, { 2u }, "ip");
         builder.CreateStore(ap, builder.CreateI32(0));
         builder.CreateStore(bp, builder.CreateI32(1));
         builder.CreateStore(ip, builder.CreateI32(0));
         builder.CreateBranch(head_block);
 
         builder.SetInsertBlock(head_block);
-        auto i = builder.CreateLoad("i", ip);
-        auto lt = builder.CreateComparator("lt", scc::ir::Comparator_LT, i, n);
+        auto i = builder.CreateLoad(ip, "i");
+        auto lt = builder.CreateLT(i, n, "lt");
         builder.CreateBranch(lt, loop_block, end_block);
 
         builder.SetInsertBlock(loop_block);
-        auto a = builder.CreateLoad("a", ap);
-        auto b = builder.CreateLoad("b", bp);
-        auto c = builder.CreateOperator("c", scc::ir::Operator_Add, a, b);
+        auto a = builder.CreateLoad(ap, "a");
+        auto b = builder.CreateLoad(bp, "b");
+        auto c = builder.CreateAdd({ a, b }, "c");
         builder.CreateStore(ap, b);
         builder.CreateStore(bp, c);
-        auto x = builder.CreateOperator("x", scc::ir::Operator_Add, i, builder.CreateI32(1));
+        auto x = builder.CreateAdd({ i, builder.CreateI32(1) }, "x");
         builder.CreateStore(ip, x);
         builder.CreateBranch(head_block);
 
@@ -79,12 +79,12 @@ int main()
         const auto argv = main_function->GetArgument(1);
         argv->SetName("argv");
 
-        auto np = builder.CreateConstOffset("np", argv, 1u);
-        auto ns = builder.CreateLoad("ns", np);
-        auto n = builder.CreateCall("n", atoi_function, ns);
-        auto r = builder.CreateCall("r", fib_function, n);
-        auto fp = builder.CreateCast("fp", format, context.GetPointerType(context.GetI8Type()));
-        builder.CreateCallVoid(printf_function, fp, n, r);
+        auto np = builder.CreateConstOffset(argv, { 1u }, "np");
+        auto ns = builder.CreateLoad(np, "ns");
+        auto n = builder.CreateCall(atoi_function, { ns }, "n");
+        auto r = builder.CreateCall(fib_function, { n }, "r");
+        auto fp = builder.CreateCast(context.GetPointerType(context.GetI8Type()), format, "fp");
+        builder.CreateCall(printf_function, { fp, n, r });
         builder.CreateRet(r);
 
         builder.ClearInsertBlock();

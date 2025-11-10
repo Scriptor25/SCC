@@ -7,7 +7,7 @@
 
 namespace scc::ir
 {
-    class Block final : public Shared<Block>
+    class Block final : public Usable, public Shared<Block>
     {
     public:
         explicit Block(std::string name, Function::WeakPtr function);

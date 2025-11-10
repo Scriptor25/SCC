@@ -7,14 +7,32 @@ scc::ir::SelectInstruction::SelectInstruction(
     RegisterFwd::Ptr register_,
     BlockFwd::WeakPtr block,
     std::vector<std::pair<BlockFwd::Ptr, ValueFwd::Ptr>> options)
-    : IdentifiedInstruction(std::move(type), std::move(register_), std::move(block)),
+    : Instruction(std::move(type), std::move(register_), std::move(block)),
       m_Options(std::move(options))
 {
+    for (const auto &[key, value] : m_Options)
+    {
+        key->Use();
+        value->Use();
+    }
+}
+
+scc::ir::SelectInstruction::~SelectInstruction()
+{
+    for (const auto &[key, value] : m_Options)
+    {
+        key->Drop();
+        value->Drop();
+    }
 }
 
 std::ostream &scc::ir::SelectInstruction::Print(std::ostream &stream) const
 {
-    m_Register->Print(stream) << " = select ";
+    if (IsUsed())
+    {
+        m_Register->Print(stream) << " = ";
+    }
+    stream << "select ";
     for (auto i = m_Options.begin(); i != m_Options.end(); ++i)
     {
         if (i != m_Options.begin())

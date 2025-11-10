@@ -7,19 +7,6 @@
 #include <scc/ir/value.hpp>
 
 template<typename T>
-concept BlockValuePairLike = requires(T t)
-{
-    { std::get<0>(t) } -> std::convertible_to<scc::ir::BlockFwd::Ptr>;
-    { std::get<1>(t) } -> std::convertible_to<scc::ir::ValueFwd::Ptr>;
-};
-
-template<typename T>
-concept ValueLike = std::convertible_to<T, scc::ir::ValueFwd::Ptr>;
-
-template<typename T>
-concept OffsetLike = std::convertible_to<T, unsigned>;
-
-template<typename T>
 concept InstructionLike = std::is_base_of_v<scc::ir::Instruction, T>;
 
 namespace scc::ir
@@ -55,27 +42,31 @@ namespace scc::ir
         [[nodiscard]] BlockFwd::Ptr GetInsertBlock() const;
 
         OperatorInstruction::Ptr CreateOperator(
-            std::string name,
             Operator operator_,
-            std::vector<ValueFwd::Ptr> operands);
+            std::vector<ValueFwd::Ptr> operands,
+            std::string name = {});
 
-        template<ValueLike... Operands>
-        OperatorInstruction::Ptr CreateOperator(
-            std::string name,
-            const Operator operator_,
-            Operands &&... operands)
-        {
-            return CreateOperator(
-                std::move(name),
-                operator_,
-                std::vector<ValueFwd::Ptr>{ std::forward<Operands>(operands)... });
-        }
+        OperatorInstruction::Ptr CreateAdd(std::vector<ValueFwd::Ptr> operands, std::string name = {});
+        OperatorInstruction::Ptr CreateSub(std::vector<ValueFwd::Ptr> operands, std::string name = {});
+        OperatorInstruction::Ptr CreateMul(std::vector<ValueFwd::Ptr> operands, std::string name = {});
+        OperatorInstruction::Ptr CreateDiv(std::vector<ValueFwd::Ptr> operands, std::string name = {});
+        OperatorInstruction::Ptr CreateRem(std::vector<ValueFwd::Ptr> operands, std::string name = {});
+        OperatorInstruction::Ptr CreateAnd(std::vector<ValueFwd::Ptr> operands, std::string name = {});
+        OperatorInstruction::Ptr CreateOr(std::vector<ValueFwd::Ptr> operands, std::string name = {});
+        OperatorInstruction::Ptr CreateXor(std::vector<ValueFwd::Ptr> operands, std::string name = {});
 
         ComparatorInstruction::Ptr CreateComparator(
-            std::string name,
             Comparator comparator,
             ValueFwd::Ptr lhs,
-            ValueFwd::Ptr rhs);
+            ValueFwd::Ptr rhs,
+            std::string name = {});
+
+        ComparatorInstruction::Ptr CreateLT(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
+        ComparatorInstruction::Ptr CreateGT(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
+        ComparatorInstruction::Ptr CreateLE(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
+        ComparatorInstruction::Ptr CreateGE(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
+        ComparatorInstruction::Ptr CreateEQ(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
+        ComparatorInstruction::Ptr CreateNE(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
 
         BranchInstruction::Ptr CreateBranch(BlockFwd::Ptr destination);
         BranchInstruction::Ptr CreateBranch(
@@ -83,106 +74,44 @@ namespace scc::ir
             BlockFwd::Ptr then,
             BlockFwd::Ptr else_);
 
-        RetInstruction::Ptr CreateRet();
-        RetInstruction::Ptr CreateRet(ValueFwd::Ptr value);
+        ReturnInstruction::Ptr CreateRet();
+        ReturnInstruction::Ptr CreateRet(ValueFwd::Ptr value);
 
         SelectInstruction::Ptr CreateSelect(
-            std::string name,
-            std::vector<std::pair<BlockFwd::Ptr, ValueFwd::Ptr>> options);
-
-        template<BlockValuePairLike... Options>
-        SelectInstruction::Ptr CreateSelect(
-            std::string name,
-            Options &&... options)
-        {
-            return CreateSelect(
-                std::move(name),
-                std::vector<std::pair<BlockFwd::Ptr, ValueFwd::Ptr>>{ std::forward<Options>(options)... });
-        }
+            std::vector<std::pair<BlockFwd::Ptr, ValueFwd::Ptr>> options,
+            std::string name = {});
 
         AllocInstruction::Ptr CreateAlloc(
-            std::string name,
             TypeFwd::Ptr type,
+            std::string name = {},
             unsigned count = 1u);
         LoadInstruction::Ptr CreateLoad(
-            std::string name,
-            ValueFwd::Ptr pointer);
+            ValueFwd::Ptr pointer,
+            std::string name = {});
         StoreInstruction::Ptr CreateStore(
             ValueFwd::Ptr pointer,
             ValueFwd::Ptr value);
 
         OffsetInstruction::Ptr CreateOffset(
-            std::string name,
             TypeFwd::Ptr type,
             ValueFwd::Ptr base,
-            std::vector<ValueFwd::Ptr> offsets);
-
-        template<ValueLike... Offsets>
-        OffsetInstruction::Ptr CreateOffset(
-            std::string name,
-            TypeFwd::Ptr type,
-            ValueFwd::Ptr base,
-            Offsets &&... offsets)
-        {
-            return CreateOffset(
-                std::move(name),
-                std::move(type),
-                std::move(base),
-                std::vector<ValueFwd::Ptr>{ std::forward<Offsets>(offsets)... });
-        }
+            std::vector<ValueFwd::Ptr> offsets,
+            std::string name = {});
 
         OffsetInstruction::Ptr CreateConstOffset(
-            std::string name,
             ValueFwd::Ptr base,
-            const std::vector<unsigned> &offsets);
-
-        template<OffsetLike... Offsets>
-        OffsetInstruction::Ptr CreateConstOffset(
-            std::string name,
-            ValueFwd::Ptr base,
-            Offsets &&... offsets)
-        {
-            return CreateConstOffset(
-                std::move(name),
-                std::move(base),
-                std::vector<unsigned>{ std::forward<Offsets>(offsets)... });
-        }
+            const std::vector<unsigned> &offsets,
+            std::string name = {});
 
         CallInstruction::Ptr CreateCall(
-            std::string name,
             ValueFwd::Ptr callee,
-            std::vector<ValueFwd::Ptr> arguments);
-
-        template<ValueLike... Arguments>
-        CallInstruction::Ptr CreateCall(
-            std::string name,
-            ValueFwd::Ptr callee,
-            Arguments &&... arguments)
-        {
-            return CreateCall(
-                std::move(name),
-                std::move(callee),
-                std::vector<ValueFwd::Ptr>{ std::forward<Arguments>(arguments)... });
-        }
-
-        CallVoidInstruction::Ptr CreateCallVoid(
-            ValueFwd::Ptr callee,
-            std::vector<ValueFwd::Ptr> arguments);
-
-        template<ValueLike... Arguments>
-        CallVoidInstruction::Ptr CreateCallVoid(
-            ValueFwd::Ptr callee,
-            Arguments &&... arguments)
-        {
-            return CreateCallVoid(
-                std::move(callee),
-                std::vector<ValueFwd::Ptr>{ std::forward<Arguments>(arguments)... });
-        }
+            std::vector<ValueFwd::Ptr> arguments,
+            std::string name = {});
 
         CastInstruction::Ptr CreateCast(
-            std::string name,
+            TypeFwd::Ptr type,
             ValueFwd::Ptr value,
-            TypeFwd::Ptr type);
+            std::string name = {});
 
         template<InstructionLike T, typename... Args>
         T::Ptr Create(Args &&... args)

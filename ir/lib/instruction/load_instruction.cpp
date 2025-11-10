@@ -6,14 +6,24 @@ scc::ir::LoadInstruction::LoadInstruction(
     RegisterFwd::Ptr register_,
     BlockFwd::WeakPtr block,
     ValueFwd::Ptr pointer)
-    : IdentifiedInstruction(std::move(type), std::move(register_), std::move(block)),
+    : Instruction(std::move(type), std::move(register_), std::move(block)),
       m_Pointer(std::move(pointer))
 {
+    m_Pointer->Use();
+}
+
+scc::ir::LoadInstruction::~LoadInstruction()
+{
+    m_Pointer->Drop();
 }
 
 std::ostream &scc::ir::LoadInstruction::Print(std::ostream &stream) const
 {
-    return m_Pointer->PrintOperand(m_Register->Print(stream) << " = load ");
+    if (IsUsed())
+    {
+        m_Register->Print(stream) << " = ";
+    }
+    return m_Pointer->PrintOperand(stream << "load ");
 }
 
 scc::ir::ValueFwd::Ptr scc::ir::LoadInstruction::GetPointer() const

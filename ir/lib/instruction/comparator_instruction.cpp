@@ -8,16 +8,28 @@ scc::ir::ComparatorInstruction::ComparatorInstruction(
     const Comparator comparator,
     ValueFwd::Ptr lhs,
     ValueFwd::Ptr rhs)
-    : IdentifiedInstruction(std::move(type), std::move(register_), std::move(block)),
+    : Instruction(std::move(type), std::move(register_), std::move(block)),
       m_Comparator(comparator),
       m_LHS(std::move(lhs)),
       m_RHS(std::move(rhs))
 {
+    m_LHS->Use();
+    m_RHS->Use();
+}
+
+scc::ir::ComparatorInstruction::~ComparatorInstruction()
+{
+    m_LHS->Drop();
+    m_RHS->Drop();
 }
 
 std::ostream &scc::ir::ComparatorInstruction::Print(std::ostream &stream) const
 {
-    m_Register->Print(stream) << " = cmp.";
+    if (IsUsed())
+    {
+        m_Register->Print(stream) << " = ";
+    }
+    stream << "cmp.";
     switch (m_Comparator)
     {
     case Comparator_LT:

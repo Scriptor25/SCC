@@ -1,26 +1,43 @@
 #include <scc/ir/instruction.hpp>
+#include <scc/ir/register.hpp>
 
-scc::ir::RetInstruction::RetInstruction(BlockFwd::WeakPtr block)
-    : Instruction(std::move(block))
-{
-}
-
-scc::ir::RetInstruction::RetInstruction(BlockFwd::WeakPtr block, ValueFwd::Ptr value)
-    : Instruction(std::move(block)),
+scc::ir::ReturnInstruction::ReturnInstruction(
+    TypeFwd::Ptr type,
+    RegisterFwd::Ptr register_,
+    BlockFwd::WeakPtr block,
+    ValueFwd::Ptr value)
+    : Instruction(std::move(type), std::move(register_), std::move(block)),
       m_Value(std::move(value))
-{
-}
-
-std::ostream &scc::ir::RetInstruction::Print(std::ostream &stream) const
 {
     if (m_Value)
     {
-        return m_Value->PrintOperand(stream << "ret ");
+        m_Value->Use();
     }
-    return stream << "ret void";
 }
 
-scc::ir::ValueFwd::Ptr scc::ir::RetInstruction::GetValue() const
+scc::ir::ReturnInstruction::~ReturnInstruction()
+{
+    if (m_Value)
+    {
+        m_Value->Drop();
+    }
+}
+
+std::ostream &scc::ir::ReturnInstruction::Print(std::ostream &stream) const
+{
+    if (IsUsed())
+    {
+        m_Register->Print(stream) << " = ";
+    }
+    stream << "ret ";
+    if (m_Value)
+    {
+        return m_Value->PrintOperand(stream);
+    }
+    return stream << "void";
+}
+
+scc::ir::ValueFwd::Ptr scc::ir::ReturnInstruction::GetValue() const
 {
     return m_Value;
 }
