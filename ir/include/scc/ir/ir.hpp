@@ -4,6 +4,14 @@
 
 namespace scc::ir
 {
+    template<typename C>
+    class Shared
+    {
+    public:
+        using Ptr = std::shared_ptr<C>;
+        using WeakPtr = std::weak_ptr<C>;
+    };
+
     class Parser;
 
     class Module;
@@ -11,42 +19,35 @@ namespace scc::ir
     class Builder;
 
     class Type;
-    using TypePtr = std::shared_ptr<Type>;
+    using TypeFwd = Shared<Type>;
 
     class Value;
-    using ValuePtr = std::shared_ptr<Value>;
+    using ValueFwd = Shared<Value>;
 
-    class NamedValue;
-    using NamedValuePtr = std::shared_ptr<NamedValue>;
+    class IdentifiedValue;
+    using IdentifiedValueFwd = Shared<IdentifiedValue>;
 
     class Global;
-    using GlobalPtr = std::shared_ptr<Global>;
+    using GlobalFwd = Shared<Global>;
 
     class Constant;
-    using ConstantPtr = std::shared_ptr<Constant>;
+    using ConstantFwd = Shared<Constant>;
 
     class Block;
-    using BlockPtr = std::shared_ptr<Block>;
+    using BlockFwd = Shared<Block>;
 
     class Instruction;
-    using InstructionPtr = std::shared_ptr<Instruction>;
+    using InstructionFwd = Shared<Instruction>;
+
+    class Register;
+    using RegisterFwd = Shared<Register>;
 
     struct TypeHash final
     {
-        unsigned operator()(const TypePtr &) const noexcept;
+        unsigned operator()(const TypeFwd::Ptr &) const noexcept;
     };
 
-    bool operator==(const TypePtr &, const TypePtr &);
+    bool operator==(const TypeFwd::Ptr &, const TypeFwd::Ptr &);
 
     unsigned CombineHash(unsigned a, unsigned b);
-
-    template<typename C>
-    class Shared
-    {
-    public:
-        using Ptr = std::shared_ptr<C>;
-        using ConstPtr = std::shared_ptr<const C>;
-        using WeakPtr = std::weak_ptr<C>;
-        using ConstWeakPtr = std::weak_ptr<const C>;
-    };
 }

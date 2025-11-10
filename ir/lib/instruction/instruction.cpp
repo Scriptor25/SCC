@@ -1,18 +1,21 @@
-#include <scc/ir/block.hpp>
 #include <scc/ir/instruction.hpp>
+#include <scc/ir/register.hpp>
 
-scc::ir::Instruction::Instruction(Block::WeakPtr block)
+scc::ir::Instruction::Instruction(BlockFwd::WeakPtr block)
     : m_Block(std::move(block))
 {
 }
 
-scc::ir::NamedInstruction::NamedInstruction(TypePtr type, std::string name, Block::WeakPtr block)
-    : Instruction(std::move(block)),
-      NamedValue(std::move(type), std::move(name))
+scc::ir::BlockFwd::Ptr scc::ir::Instruction::GetBlock() const
 {
+    return m_Block.lock();
 }
 
-std::ostream &scc::ir::NamedInstruction::PrintOperand(std::ostream &stream) const
+scc::ir::IdentifiedInstruction::IdentifiedInstruction(
+    TypeFwd::Ptr type,
+    RegisterFwd::Ptr register_,
+    BlockFwd::WeakPtr block)
+    : Instruction(std::move(block)),
+      IdentifiedValue(std::move(type), std::move(register_))
 {
-    return stream << '%' << m_Name;
 }

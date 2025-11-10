@@ -1,17 +1,17 @@
 #include <scc/ir/type.hpp>
 
-scc::ir::FloatType::FloatType(Context &context, const unsigned size_bytes)
+scc::ir::FloatType::FloatType(Context &context, const unsigned size_bits)
     : Type(context, Kind_Float),
-      m_SizeBytes(size_bytes)
+      m_SizeBits(size_bits)
 {
 }
 
 unsigned scc::ir::FloatType::GenerateHash() const
 {
-    return CombineHash(2, m_SizeBytes);
+    return CombineHash(2, m_SizeBits);
 }
 
-bool scc::ir::FloatType::Equals(const TypePtr &type) const
+bool scc::ir::FloatType::Equals(const TypeFwd::Ptr &type) const
 {
     if (type->GetKind() != Kind_Float)
     {
@@ -20,7 +20,7 @@ bool scc::ir::FloatType::Equals(const TypePtr &type) const
 
     if (const auto p = std::dynamic_pointer_cast<FloatType>(type))
     {
-        return m_SizeBytes == p->m_SizeBytes;
+        return m_SizeBits == p->m_SizeBits;
     }
 
     return false;
@@ -28,10 +28,10 @@ bool scc::ir::FloatType::Equals(const TypePtr &type) const
 
 std::ostream &scc::ir::FloatType::Print(std::ostream &stream) const
 {
-    return stream << "f" << (m_SizeBytes * 8u);
+    return stream << "f" << m_SizeBits;
 }
 
-unsigned scc::ir::FloatType::GetSizeBytes() const
+unsigned scc::ir::FloatType::GetSizeBits() const
 {
-    return m_SizeBytes;
+    return m_SizeBits;
 }

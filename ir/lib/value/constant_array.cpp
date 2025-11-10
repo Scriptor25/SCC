@@ -2,7 +2,7 @@
 #include <scc/ir/type.hpp>
 #include <scc/ir/value.hpp>
 
-scc::ir::ConstantArray::ConstantArray(ArrayType::Ptr type, std::vector<ConstantPtr> values)
+scc::ir::ConstantArray::ConstantArray(ArrayType::Ptr type, std::vector<ConstantFwd::Ptr> values)
     : Constant(std::move(type)),
       m_Values(std::move(values))
 {
@@ -45,7 +45,7 @@ unsigned scc::ir::ConstantArray::GetValueCount() const
     return m_Values.size();
 }
 
-scc::ir::ConstantPtr scc::ir::ConstantArray::GetValue(const unsigned index) const
+scc::ir::ConstantFwd::Ptr scc::ir::ConstantArray::GetValue(const unsigned index) const
 {
     return m_Values.at(index);
 }

@@ -10,7 +10,7 @@ unsigned scc::ir::VoidType::GenerateHash() const
     return 0u;
 }
 
-bool scc::ir::VoidType::Equals(const TypePtr &type) const
+bool scc::ir::VoidType::Equals(const TypeFwd::Ptr &type) const
 {
     return type->GetKind() == Kind_Void;
 }

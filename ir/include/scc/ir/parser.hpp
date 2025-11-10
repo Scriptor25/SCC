@@ -21,6 +21,9 @@ namespace scc::ir
         uint64_t Integer = 0ull;
     };
 
+    template<typename T>
+    concept TokenTypeLike = std::is_convertible_v<T, TokenType>;
+
     class Parser final
     {
     public:
@@ -34,7 +37,7 @@ namespace scc::ir
         Token Expect(TokenType type, const std::string &value = {});
         Token Expect(const std::vector<TokenType> &types);
 
-        template<typename... Types>
+        template<TokenTypeLike... Types>
         Token Expect(Types &&... types)
         {
             return Expect(std::vector<TokenType>{ types... });

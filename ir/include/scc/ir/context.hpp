@@ -21,14 +21,14 @@ namespace scc::ir
         FloatType::Ptr GetF32Type();
         FloatType::Ptr GetF64Type();
 
-        PointerType::Ptr GetPointerType(TypePtr base);
+        PointerType::Ptr GetPointerType(TypeFwd::Ptr base);
 
-        ArrayType::Ptr GetArrayType(TypePtr base, unsigned length);
-        VectorType::Ptr GetVectorType(TypePtr base, unsigned length);
+        ArrayType::Ptr GetArrayType(TypeFwd::Ptr base, unsigned length);
+        VectorType::Ptr GetVectorType(TypeFwd::Ptr base, unsigned length);
 
-        StructType::Ptr GetStructType(std::vector<TypePtr> elements);
+        StructType::Ptr GetStructType(std::vector<TypeFwd::Ptr> elements);
 
-        FunctionType::Ptr GetFunctionType(TypePtr result, std::vector<TypePtr> arguments, bool variadic);
+        FunctionType::Ptr GetFunctionType(TypeFwd::Ptr result, std::vector<TypeFwd::Ptr> arguments, bool variadic);
 
     private:
         template<typename T, typename... Args> requires std::is_base_of_v<Type, T>
@@ -44,6 +44,6 @@ namespace scc::ir
             return type;
         }
 
-        std::unordered_map<TypePtr, TypePtr, TypeHash> m_Types;
+        std::unordered_map<TypeFwd::Ptr, TypeFwd::Ptr, TypeHash> m_Types;
     };
 }

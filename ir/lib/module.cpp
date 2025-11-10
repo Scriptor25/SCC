@@ -24,7 +24,7 @@ bool scc::ir::Module::HasSymbol(const std::string &name) const
     return false;
 }
 
-scc::ir::GlobalPtr scc::ir::Module::GetSymbol(const std::string &name) const
+scc::ir::GlobalFwd::Ptr scc::ir::Module::GetSymbol(const std::string &name) const
 {
     for (auto &symbol : m_Symbols)
     {
@@ -36,7 +36,10 @@ scc::ir::GlobalPtr scc::ir::Module::GetSymbol(const std::string &name) const
     Error("symbol {} does not exist", name);
 }
 
-scc::ir::Variable::Ptr scc::ir::Module::CreateVariable(TypePtr type, std::string name, ConstantPtr initializer)
+scc::ir::Variable::Ptr scc::ir::Module::CreateVariable(
+    TypeFwd::Ptr type,
+    std::string name,
+    ConstantFwd::Ptr initializer)
 {
     for (const auto &symbol : m_Symbols)
     {

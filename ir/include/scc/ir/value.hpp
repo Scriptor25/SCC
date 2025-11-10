@@ -9,56 +9,66 @@ namespace scc::ir
     class Value
     {
     public:
-        explicit Value(TypePtr type);
+        explicit Value(TypeFwd::Ptr type);
         virtual ~Value() = default;
 
         virtual std::ostream &Print(std::ostream &stream) const = 0;
         virtual std::ostream &PrintOperand(std::ostream &stream) const = 0;
 
-        [[nodiscard]] TypePtr GetType() const;
+        [[nodiscard]] TypeFwd::Ptr GetType() const;
 
     protected:
-        TypePtr m_Type;
+        TypeFwd::Ptr m_Type;
     };
 
-    class NamedValue : public Value
+    class IdentifiedValue : public Value
     {
     public:
-        explicit NamedValue(TypePtr type, std::string name);
+        explicit IdentifiedValue(TypeFwd::Ptr type, RegisterFwd::Ptr register_);
 
-        [[nodiscard]] std::string GetName() const;
+        [[nodiscard]] RegisterFwd::Ptr GetRegister() const;
+        void SetRegister(RegisterFwd::Ptr register_);
+
+        std::ostream &Print(std::ostream &stream) const override;
+        std::ostream &PrintOperand(std::ostream &stream) const override;
+
+    protected:
+        RegisterFwd::Ptr m_Register;
+    };
+
+    class Argument final : public IdentifiedValue, public Shared<Argument>
+    {
+    public:
+        explicit Argument(TypeFwd::Ptr type, RegisterFwd::Ptr register_);
+
+        std::ostream &Print(std::ostream &stream) const override;
+
+        void SetName(std::string name) const;
+    };
+
+    class Global : public Value
+    {
+    public:
+        explicit Global(TypeFwd::Ptr type, std::string name);
+
+        std::ostream &PrintOperand(std::ostream &stream) const override;
+
+        std::string GetName() const;
         void SetName(std::string name);
 
     protected:
         std::string m_Name;
     };
 
-    class Argument final : public NamedValue, public Shared<Argument>
-    {
-    public:
-        explicit Argument(TypePtr type, std::string name);
-
-        std::ostream &PrintOperand(std::ostream &stream) const override;
-        std::ostream &Print(std::ostream &stream) const override;
-    };
-
-    class Global : public NamedValue
-    {
-    public:
-        explicit Global(TypePtr type, std::string name);
-
-        std::ostream &PrintOperand(std::ostream &stream) const override;
-    };
-
     class Variable final : public Global, public Shared<Variable>
     {
     public:
-        explicit Variable(TypePtr type, std::string name, ConstantPtr initializer);
+        explicit Variable(TypeFwd::Ptr type, std::string name, ConstantFwd::Ptr initializer);
 
         std::ostream &Print(std::ostream &stream) const override;
 
     private:
-        ConstantPtr m_Initializer;
+        ConstantFwd::Ptr m_Initializer;
     };
 
     class Function final : public Global, public Shared<Function>
@@ -68,22 +78,26 @@ namespace scc::ir
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        void Insert(BlockPtr block);
+        void Insert(BlockFwd::Ptr block);
 
-        unsigned GetArgumentCount() const;
-        Argument::Ptr GetArgument(unsigned index) const;
+        [[nodiscard]] unsigned GetArgumentCount() const;
+        [[nodiscard]] Argument::Ptr GetArgument(unsigned index) const;
+
+        RegisterFwd::Ptr CreateRegister(std::string name = {});
 
     private:
-        TypePtr m_Result;
+        TypeFwd::Ptr m_Result;
         std::vector<Argument::Ptr> m_Arguments;
         bool m_Variadic;
-        std::vector<BlockPtr> m_Blocks;
+
+        std::vector<BlockFwd::Ptr> m_Blocks;
+        std::vector<RegisterFwd::Ptr> m_Registers;
     };
 
     class Constant : public Value
     {
     public:
-        explicit Constant(TypePtr type);
+        explicit Constant(TypeFwd::Ptr type);
 
         std::ostream &Print(std::ostream &stream) const override;
     };
@@ -95,7 +109,7 @@ namespace scc::ir
 
         std::ostream &PrintOperand(std::ostream &stream) const override;
 
-        uint64_t GetValue() const;
+        [[nodiscard]] uint64_t GetValue() const;
 
     private:
         uint64_t m_Value;
@@ -108,7 +122,7 @@ namespace scc::ir
 
         std::ostream &PrintOperand(std::ostream &stream) const override;
 
-        double GetValue() const;
+        [[nodiscard]] double GetValue() const;
 
     private:
         double m_Value;
@@ -117,42 +131,42 @@ namespace scc::ir
     class ConstantArray final : public Constant, public Shared<ConstantArray>
     {
     public:
-        explicit ConstantArray(ArrayType::Ptr type, std::vector<ConstantPtr> values);
+        explicit ConstantArray(ArrayType::Ptr type, std::vector<ConstantFwd::Ptr> values);
 
         std::ostream &PrintOperand(std::ostream &stream) const override;
 
-        unsigned GetValueCount() const;
-        ConstantPtr GetValue(unsigned index) const;
+        [[nodiscard]] unsigned GetValueCount() const;
+        [[nodiscard]] ConstantFwd::Ptr GetValue(unsigned index) const;
 
     private:
-        std::vector<ConstantPtr> m_Values;
+        std::vector<ConstantFwd::Ptr> m_Values;
     };
 
     class ConstantVector final : public Constant, public Shared<ConstantVector>
     {
     public:
-        explicit ConstantVector(VectorType::Ptr type, std::vector<ConstantPtr> values);
+        explicit ConstantVector(VectorType::Ptr type, std::vector<ConstantFwd::Ptr> values);
 
         std::ostream &PrintOperand(std::ostream &stream) const override;
 
-        unsigned GetValueCount() const;
-        ConstantPtr GetValue(unsigned index) const;
+        [[nodiscard]] unsigned GetValueCount() const;
+        [[nodiscard]] ConstantFwd::Ptr GetValue(unsigned index) const;
 
     private:
-        std::vector<ConstantPtr> m_Values;
+        std::vector<ConstantFwd::Ptr> m_Values;
     };
 
     class ConstantStruct final : public Constant, public Shared<ConstantStruct>
     {
     public:
-        explicit ConstantStruct(StructType::Ptr type, std::vector<ConstantPtr> values);
+        explicit ConstantStruct(StructType::Ptr type, std::vector<ConstantFwd::Ptr> values);
 
         std::ostream &PrintOperand(std::ostream &stream) const override;
 
-        unsigned GetValueCount() const;
-        ConstantPtr GetValue(unsigned index) const;
+        [[nodiscard]] unsigned GetValueCount() const;
+        [[nodiscard]] ConstantFwd::Ptr GetValue(unsigned index) const;
 
     private:
-        std::vector<ConstantPtr> m_Values;
+        std::vector<ConstantFwd::Ptr> m_Values;
     };
 }

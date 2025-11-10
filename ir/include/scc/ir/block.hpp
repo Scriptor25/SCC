@@ -7,25 +7,31 @@
 
 namespace scc::ir
 {
-    class Block final : public NamedValue, public Shared<Block>
+    class Block final : public Shared<Block>
     {
     public:
         explicit Block(std::string name, Function::WeakPtr function);
 
-        std::ostream &Print(std::ostream &stream) const override;
-        std::ostream &PrintOperand(std::ostream &stream) const override;
+        std::string GetName() const;
+        void SetName(std::string name);
+
+        std::ostream &Print(std::ostream &stream) const;
+        std::ostream &PrintOperand(std::ostream &stream) const;
 
         [[nodiscard]] Function::Ptr GetFunction() const;
         [[nodiscard]] unsigned GetInstructionCount() const;
-        [[nodiscard]] InstructionPtr GetInstruction(unsigned index) const;
+        [[nodiscard]] InstructionFwd::Ptr GetInstruction(unsigned index) const;
 
-        [[nodiscard]] std::vector<InstructionPtr>::const_iterator begin() const;
-        [[nodiscard]] std::vector<InstructionPtr>::const_iterator end() const;
+        [[nodiscard]] std::vector<InstructionFwd::Ptr>::const_iterator begin() const;
+        [[nodiscard]] std::vector<InstructionFwd::Ptr>::const_iterator end() const;
 
-        void Insert(InstructionPtr instruction);
+        void Insert(InstructionFwd::Ptr instruction);
+
+        RegisterFwd::Ptr CreateRegister(std::string name = {}) const;
 
     private:
+        std::string m_Name;
         Function::WeakPtr m_Function;
-        std::vector<InstructionPtr> m_Instructions;
+        std::vector<InstructionFwd::Ptr> m_Instructions;
     };
 }

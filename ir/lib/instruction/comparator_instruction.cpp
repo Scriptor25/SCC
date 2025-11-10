@@ -1,13 +1,14 @@
 #include <scc/ir/instruction.hpp>
+#include <scc/ir/register.hpp>
 
 scc::ir::ComparatorInstruction::ComparatorInstruction(
-    TypePtr type,
-    std::string name,
-    Block::WeakPtr block,
+    TypeFwd::Ptr type,
+    RegisterFwd::Ptr register_,
+    BlockFwd::WeakPtr block,
     const Comparator comparator,
-    ValuePtr lhs,
-    ValuePtr rhs)
-    : NamedInstruction(std::move(type), std::move(name), std::move(block)),
+    ValueFwd::Ptr lhs,
+    ValueFwd::Ptr rhs)
+    : IdentifiedInstruction(std::move(type), std::move(register_), std::move(block)),
       m_Comparator(comparator),
       m_LHS(std::move(lhs)),
       m_RHS(std::move(rhs))
@@ -16,7 +17,7 @@ scc::ir::ComparatorInstruction::ComparatorInstruction(
 
 std::ostream &scc::ir::ComparatorInstruction::Print(std::ostream &stream) const
 {
-    stream << '%' << m_Name << " = cmp.";
+    m_Register->Print(stream) << " = cmp.";
     switch (m_Comparator)
     {
     case Comparator_LT:
@@ -39,4 +40,19 @@ std::ostream &scc::ir::ComparatorInstruction::Print(std::ostream &stream) const
         break;
     }
     return m_RHS->PrintOperand(m_LHS->PrintOperand(stream << ' ') << ", ");
+}
+
+scc::ir::Comparator scc::ir::ComparatorInstruction::GetComparator() const
+{
+    return m_Comparator;
+}
+
+scc::ir::ValueFwd::Ptr scc::ir::ComparatorInstruction::GetLHS() const
+{
+    return m_LHS;
+}
+
+scc::ir::ValueFwd::Ptr scc::ir::ComparatorInstruction::GetRHS() const
+{
+    return m_RHS;
 }

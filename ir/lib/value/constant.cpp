@@ -1,6 +1,6 @@
 #include <scc/ir/value.hpp>
 
-scc::ir::Constant::Constant(TypePtr type)
+scc::ir::Constant::Constant(TypeFwd::Ptr type)
     : Value(std::move(type))
 {
 }

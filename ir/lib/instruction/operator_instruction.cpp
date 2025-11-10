@@ -1,12 +1,13 @@
 #include <scc/ir/instruction.hpp>
+#include <scc/ir/register.hpp>
 
 scc::ir::OperatorInstruction::OperatorInstruction(
-    TypePtr type,
-    std::string name,
-    Block::WeakPtr block,
+    TypeFwd::Ptr type,
+    RegisterFwd::Ptr register_,
+    BlockFwd::WeakPtr block,
     const Operator operator_,
-    std::vector<ValuePtr> operands)
-    : NamedInstruction(std::move(type), std::move(name), std::move(block)),
+    std::vector<ValueFwd::Ptr> operands)
+    : IdentifiedInstruction(std::move(type), std::move(register_), std::move(block)),
       m_Operator(operator_),
       m_Operands(std::move(operands))
 {
@@ -14,7 +15,7 @@ scc::ir::OperatorInstruction::OperatorInstruction(
 
 std::ostream &scc::ir::OperatorInstruction::Print(std::ostream &stream) const
 {
-    stream << '%' << m_Name << " = ";
+    m_Register->Print(stream) << " = ";
     switch (m_Operator)
     {
     case Operator_Add:
@@ -52,4 +53,19 @@ std::ostream &scc::ir::OperatorInstruction::Print(std::ostream &stream) const
         (*i)->PrintOperand(stream);
     }
     return stream;
+}
+
+scc::ir::Operator scc::ir::OperatorInstruction::GetOperator() const
+{
+    return m_Operator;
+}
+
+unsigned scc::ir::OperatorInstruction::GetOperandCount() const
+{
+    return m_Operands.size();
+}
+
+scc::ir::ValueFwd::Ptr scc::ir::OperatorInstruction::GetOperand(const unsigned index) const
+{
+    return m_Operands.at(index);
 }

@@ -1,7 +1,7 @@
 #include <scc/ir/context.hpp>
 #include <scc/ir/value.hpp>
 
-scc::ir::Variable::Variable(TypePtr type, std::string name, ConstantPtr initializer)
+scc::ir::Variable::Variable(TypeFwd::Ptr type, std::string name, ConstantFwd::Ptr initializer)
     : Global(type->GetContext().GetPointerType(type), std::move(name)),
       m_Initializer(std::move(initializer))
 {

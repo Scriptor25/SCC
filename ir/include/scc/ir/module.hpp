@@ -12,15 +12,15 @@ namespace scc::ir
         std::string GetName();
 
         [[nodiscard]] bool HasSymbol(const std::string &name) const;
-        [[nodiscard]] GlobalPtr GetSymbol(const std::string &name) const;
+        [[nodiscard]] GlobalFwd::Ptr GetSymbol(const std::string &name) const;
 
-        Variable::Ptr CreateVariable(TypePtr type, std::string name, ConstantPtr initializer);
+        Variable::Ptr CreateVariable(TypeFwd::Ptr type, std::string name, ConstantFwd::Ptr initializer);
         Function::Ptr CreateFunction(FunctionType::Ptr type, std::string name);
 
         std::ostream &Print(std::ostream &stream) const;
 
     private:
         std::string m_Name;
-        std::vector<GlobalPtr> m_Symbols;
+        std::vector<GlobalFwd::Ptr> m_Symbols;
     };
 }

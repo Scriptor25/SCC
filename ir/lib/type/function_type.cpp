@@ -2,8 +2,8 @@
 
 scc::ir::FunctionType::FunctionType(
     Context &context,
-    TypePtr result,
-    std::vector<TypePtr> arguments,
+    TypeFwd::Ptr result,
+    std::vector<TypeFwd::Ptr> arguments,
     const bool variadic)
     : Type(context, Kind_Function),
       m_Result(std::move(result)),
@@ -23,7 +23,7 @@ unsigned scc::ir::FunctionType::GenerateHash() const
     return CombineHash(7, hash);
 }
 
-bool scc::ir::FunctionType::Equals(const TypePtr &type) const
+bool scc::ir::FunctionType::Equals(const TypeFwd::Ptr &type) const
 {
     if (type->GetKind() != Kind_Function)
     {
@@ -83,7 +83,7 @@ std::ostream &scc::ir::FunctionType::Print(std::ostream &stream) const
     return stream << ')';
 }
 
-scc::ir::TypePtr scc::ir::FunctionType::GetResult() const
+scc::ir::TypeFwd::Ptr scc::ir::FunctionType::GetResult() const
 {
     return m_Result;
 }
@@ -93,17 +93,17 @@ unsigned scc::ir::FunctionType::GetArgumentCount() const
     return m_Arguments.size();
 }
 
-scc::ir::TypePtr scc::ir::FunctionType::GetArgument(const unsigned index) const
+scc::ir::TypeFwd::Ptr scc::ir::FunctionType::GetArgument(const unsigned index) const
 {
     return m_Arguments.at(index);
 }
 
-std::vector<scc::ir::TypePtr>::const_iterator scc::ir::FunctionType::begin() const
+std::vector<scc::ir::TypeFwd::Ptr>::const_iterator scc::ir::FunctionType::begin() const
 {
     return m_Arguments.begin();
 }
 
-std::vector<scc::ir::TypePtr>::const_iterator scc::ir::FunctionType::end() const
+std::vector<scc::ir::TypeFwd::Ptr>::const_iterator scc::ir::FunctionType::end() const
 {
     return m_Arguments.end();
 }

@@ -1,12 +1,12 @@
 #include <scc/ir/ir.hpp>
 #include <scc/ir/type.hpp>
 
-unsigned scc::ir::TypeHash::operator()(const TypePtr &type) const noexcept
+unsigned scc::ir::TypeHash::operator()(const TypeFwd::Ptr &type) const noexcept
 {
     return type->GenerateHash();
 }
 
-bool scc::ir::operator==(const TypePtr &a, const TypePtr &b)
+bool scc::ir::operator==(const TypeFwd::Ptr &a, const TypeFwd::Ptr &b)
 {
     return a.get() == b.get() || (a && b && a->GetKind() == b->GetKind() && a->Equals(b));
 }

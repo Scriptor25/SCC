@@ -1,21 +1,17 @@
+#include <scc/ir/register.hpp>
 #include <scc/ir/value.hpp>
 
-scc::ir::Argument::Argument(TypePtr type, std::string name)
-    : NamedValue(std::move(type), std::move(name))
+scc::ir::Argument::Argument(TypeFwd::Ptr type, RegisterFwd::Ptr register_)
+    : IdentifiedValue(std::move(type), std::move(register_))
 {
-}
-
-std::ostream &scc::ir::Argument::PrintOperand(std::ostream &stream) const
-{
-    return stream << '%' << m_Name;
 }
 
 std::ostream &scc::ir::Argument::Print(std::ostream &stream) const
 {
-    if (m_Name.empty())
-    {
-        return m_Type->Print(stream);
-    }
+    return m_Register->Print(m_Type->Print(stream) << ' ');
+}
 
-    return m_Type->Print(stream) << " %" << m_Name;
+void scc::ir::Argument::SetName(std::string name) const
+{
+    m_Register->SetName(std::move(name));
 }

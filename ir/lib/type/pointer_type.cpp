@@ -1,6 +1,6 @@
 #include <scc/ir/type.hpp>
 
-scc::ir::PointerType::PointerType(Context &context, TypePtr base)
+scc::ir::PointerType::PointerType(Context &context, TypeFwd::Ptr base)
     : Type(context, Kind_Pointer),
       m_Base(std::move(base))
 {
@@ -11,7 +11,7 @@ unsigned scc::ir::PointerType::GenerateHash() const
     return CombineHash(3, m_Base->GenerateHash());
 }
 
-bool scc::ir::PointerType::Equals(const TypePtr &type) const
+bool scc::ir::PointerType::Equals(const TypeFwd::Ptr &type) const
 {
     if (type->GetKind() != Kind_Pointer)
     {
@@ -31,7 +31,17 @@ std::ostream &scc::ir::PointerType::Print(std::ostream &stream) const
     return m_Base->Print(stream << '[') << ']';
 }
 
-scc::ir::TypePtr scc::ir::PointerType::GetBase() const
+scc::ir::TypeFwd::Ptr scc::ir::PointerType::GetBase() const
+{
+    return m_Base;
+}
+
+unsigned scc::ir::PointerType::GetElementCount() const
+{
+    return ~0u;
+}
+
+scc::ir::Shared<scc::ir::Type>::Ptr scc::ir::PointerType::GetElement(unsigned index) const
 {
     return m_Base;
 }
