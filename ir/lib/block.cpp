@@ -20,6 +20,18 @@ void scc::ir::Block::SetName(std::string name)
 std::ostream &scc::ir::Block::Print(std::ostream &stream) const
 {
     stream << m_Name << ':';
+    if (!m_Predecessors.empty())
+    {
+        stream << " ; ";
+        for (auto i = m_Predecessors.begin(); i != m_Predecessors.end(); ++i)
+        {
+            if (i != m_Predecessors.begin())
+            {
+                stream << ", ";
+            }
+            stream << (*i)->GetName();
+        }
+    }
     for (auto &instruction : m_Instructions)
     {
         instruction->Print(stream << std::endl << "    ");
@@ -60,6 +72,16 @@ std::vector<scc::ir::InstructionFwd::Ptr>::const_iterator scc::ir::Block::end() 
 void scc::ir::Block::Insert(InstructionFwd::Ptr instruction)
 {
     m_Instructions.emplace_back(std::move(instruction));
+}
+
+void scc::ir::Block::UsePred(Ptr block)
+{
+    m_Predecessors.emplace(std::move(block));
+}
+
+void scc::ir::Block::DropPred(Ptr block)
+{
+    m_Predecessors.erase(std::move(block));
 }
 
 scc::ir::RegisterFwd::Ptr scc::ir::Block::CreateRegister(std::string name) const

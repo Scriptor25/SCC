@@ -1,7 +1,7 @@
 #pragma once
 
+#include <set>
 #include <vector>
-#include <scc/ir/block.hpp>
 #include <scc/ir/ir.hpp>
 #include <scc/ir/value.hpp>
 
@@ -27,11 +27,15 @@ namespace scc::ir
 
         void Insert(InstructionFwd::Ptr instruction);
 
+        void UsePred(Ptr block);
+        void DropPred(Ptr block);
+
         RegisterFwd::Ptr CreateRegister(std::string name = {}) const;
 
     private:
         std::string m_Name;
         Function::WeakPtr m_Function;
+        std::set<Ptr> m_Predecessors;
         std::vector<InstructionFwd::Ptr> m_Instructions;
     };
 }

@@ -11,6 +11,7 @@ scc::ir::BranchInstruction::BranchInstruction(
       m_Then(std::move(destination))
 {
     m_Then->Use();
+    m_Then->UsePred(GetBlock());
 }
 
 scc::ir::BranchInstruction::BranchInstruction(
@@ -27,7 +28,9 @@ scc::ir::BranchInstruction::BranchInstruction(
 {
     m_Condition->Use();
     m_Then->Use();
+    m_Then->UsePred(GetBlock());
     m_Else->Use();
+    m_Else->UsePred(GetBlock());
 }
 
 scc::ir::BranchInstruction::~BranchInstruction()
@@ -36,11 +39,14 @@ scc::ir::BranchInstruction::~BranchInstruction()
     {
         m_Condition->Drop();
         m_Then->Drop();
+        m_Then->DropPred(GetBlock());
         m_Else->Drop();
+        m_Then->DropPred(GetBlock());
     }
     else
     {
         m_Then->Drop();
+        m_Then->DropPred(GetBlock());
     }
 }
 
