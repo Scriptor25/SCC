@@ -5,6 +5,7 @@
 #include <scc/ir/context.hpp>
 #include <scc/ir/instruction.hpp>
 #include <scc/ir/module.hpp>
+#include <scc/ir/register.hpp>
 #include <scc/ir/value.hpp>
 
 scc::ir::Builder::Builder(Context &context)
@@ -12,59 +13,96 @@ scc::ir::Builder::Builder(Context &context)
 {
 }
 
-scc::ir::ConstantInt::Ptr scc::ir::Builder::CreateI8(uint8_t value) const
+scc::ir::Context &scc::ir::Builder::GetContext() const
+{
+    return m_Context;
+}
+
+scc::ir::ConstantInt::Ptr scc::ir::Builder::CreateInt(IntType::Ptr type, uint64_t value) const
+{
+    return std::make_shared<ConstantInt>(std::move(type), value);
+}
+
+scc::ir::ConstantFloat::Ptr scc::ir::Builder::CreateFloat(FloatType::Ptr type, long double value) const
+{
+    return std::make_shared<ConstantFloat>(std::move(type), value);
+}
+
+scc::ir::ConstantInt::Ptr scc::ir::Builder::CreateI8(const uint8_t value) const
 {
     auto type = m_Context.GetI8Type();
-    return std::make_shared<ConstantInt>(std::move(type), value);
+    return CreateInt(std::move(type), value);
 }
 
-scc::ir::ConstantInt::Ptr scc::ir::Builder::CreateI16(uint16_t value) const
+scc::ir::ConstantInt::Ptr scc::ir::Builder::CreateI16(const uint16_t value) const
 {
     auto type = m_Context.GetI16Type();
-    return std::make_shared<ConstantInt>(std::move(type), value);
+    return CreateInt(std::move(type), value);
 }
 
-scc::ir::ConstantInt::Ptr scc::ir::Builder::CreateI32(uint32_t value) const
+scc::ir::ConstantInt::Ptr scc::ir::Builder::CreateI32(const uint32_t value) const
 {
     auto type = m_Context.GetI32Type();
-    return std::make_shared<ConstantInt>(std::move(type), value);
+    return CreateInt(std::move(type), value);
 }
 
-scc::ir::ConstantInt::Ptr scc::ir::Builder::CreateI64(uint64_t value) const
+scc::ir::ConstantInt::Ptr scc::ir::Builder::CreateI64(const uint64_t value) const
 {
     auto type = m_Context.GetI64Type();
-    return std::make_shared<ConstantInt>(std::move(type), value);
+    return CreateInt(std::move(type), value);
 }
 
-scc::ir::ConstantFloat::Ptr scc::ir::Builder::CreateF32(float value) const
+scc::ir::ConstantFloat::Ptr scc::ir::Builder::CreateF32(const float value) const
 {
     auto type = m_Context.GetF32Type();
-    return std::make_shared<ConstantFloat>(std::move(type), value);
+    return CreateFloat(std::move(type), value);
 }
 
-scc::ir::ConstantFloat::Ptr scc::ir::Builder::CreateF64(double value) const
+scc::ir::ConstantFloat::Ptr scc::ir::Builder::CreateF64(const long double value) const
 {
     auto type = m_Context.GetF64Type();
-    return std::make_shared<ConstantFloat>(std::move(type), value);
+    return CreateFloat(std::move(type), value);
+}
+
+scc::ir::ConstantArray::Ptr scc::ir::Builder::CreateArray(
+    ArrayType::Ptr type,
+    std::vector<ConstantFwd::Ptr> values) const
+{
+    Assert(!!type, "type must not be null");
+    const auto element = values.front()->GetType();
+    Assert(type->GetElement() == element, "element type mismatch");
+    Assert(type->GetElementCount() == values.size(), "element count mismatch");
+    for (const auto &value : values)
+        Assert(value->GetType() == element, "non-uniform elements");
+    return std::make_shared<ConstantArray>(std::move(type), std::move(values));
 }
 
 scc::ir::ConstantArray::Ptr scc::ir::Builder::CreateArray(std::vector<ConstantFwd::Ptr> values) const
 {
     Assert(!values.empty(), "values must not be empty");
-    auto base = values.front()->GetType();
+    auto element = values.front()->GetType();
     for (const auto &value : values)
-        Assert(value->GetType() == base, "non-uniform elements");
-    auto type = m_Context.GetArrayType(std::move(base), values.size());
+        Assert(value->GetType() == element, "non-uniform elements");
+    auto type = m_Context.GetArrayType(std::move(element), values.size());
     return std::make_shared<ConstantArray>(std::move(type), std::move(values));
+}
+
+scc::ir::ConstantArray::Ptr scc::ir::Builder::CreateArray(const std::string_view value) const
+{
+    std::vector<ConstantFwd::Ptr> elements;
+    for (const auto e : value)
+        elements.emplace_back(CreateI8(e));
+    auto type = m_Context.GetArrayType(m_Context.GetI8Type(), elements.size());
+    return CreateArray(std::move(type), std::move(elements));
 }
 
 scc::ir::ConstantVector::Ptr scc::ir::Builder::CreateVector(std::vector<ConstantFwd::Ptr> values) const
 {
     Assert(!values.empty(), "values must not be empty");
-    auto base = values.front()->GetType();
+    auto element = values.front()->GetType();
     for (const auto &value : values)
-        Assert(value->GetType() == base, "non-uniform elements");
-    auto type = m_Context.GetVectorType(std::move(base), values.size());
+        Assert(value->GetType() == element, "non-uniform elements");
+    auto type = m_Context.GetVectorType(std::move(element), values.size());
     return std::make_shared<ConstantVector>(std::move(type), std::move(values));
 }
 
@@ -81,21 +119,24 @@ scc::ir::ConstantStruct::Ptr scc::ir::Builder::CreateStruct(std::vector<Constant
 scc::ir::Variable::Ptr scc::ir::Builder::CreateString(
     Module &module,
     std::string name,
-    const std::string &value) const
+    const std::string_view value) const
 {
-    std::vector<ConstantFwd::Ptr> elements;
-    for (const auto i : value)
-        elements.emplace_back(CreateI8(i));
-    elements.emplace_back(CreateI8(0));
-    auto type = m_Context.GetArrayType(m_Context.GetI8Type(), elements.size());
-    auto initializer = CreateArray(std::move(elements));
+    std::string buffer;
+    buffer += value;
+    buffer += static_cast<char>(0);
+
+    auto initializer = CreateArray(buffer);
+    auto type = initializer->GetType();
     return module.CreateVariable(std::move(type), std::move(name), std::move(initializer));
 }
 
-scc::ir::BlockFwd::Ptr scc::ir::Builder::CreateBlock(const Function::Ptr &function, std::string name) const
+scc::ir::BlockFwd::Ptr scc::ir::Builder::GetOrCreateBlock(const Function::Ptr &function, std::string name) const
 {
     Assert(!!function, "function must not be null");
     Assert(!name.empty(), "name must not be empty");
+
+    if (auto block = function->Find(name))
+        return block;
 
     auto block = std::make_shared<Block>(std::move(name), function);
     function->Insert(block);
@@ -118,6 +159,12 @@ scc::ir::BlockFwd::Ptr scc::ir::Builder::GetInsertBlock() const
     return m_InsertBlock;
 }
 
+scc::ir::Function::Ptr scc::ir::Builder::GetInsertFunction() const
+{
+    Assert(!!m_InsertBlock, "insert block must not be null");
+    return m_InsertBlock->GetFunction();
+}
+
 scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateOperator(
     Operator operator_,
     std::vector<ValueFwd::Ptr> operands,
@@ -131,12 +178,15 @@ scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateOperator(
 
     auto register_ = m_InsertBlock->CreateRegister(std::move(name));
 
-    return Create<OperatorInstruction>(
+    auto instruction = Create<OperatorInstruction>(
         std::move(type),
-        std::move(register_),
+        register_,
         m_InsertBlock,
         operator_,
         std::move(operands));
+
+    register_->SetValue(instruction);
+    return instruction;
 }
 
 scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateAdd(
@@ -207,13 +257,16 @@ scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateComparator(
 
     auto register_ = m_InsertBlock->CreateRegister(std::move(name));
 
-    return Create<ComparatorInstruction>(
+    auto instruction = Create<ComparatorInstruction>(
         m_Context.GetI1Type(),
-        std::move(register_),
+        register_,
         m_InsertBlock,
         comparator,
         std::move(lhs),
         std::move(rhs));
+
+    register_->SetValue(instruction);
+    return instruction;
 }
 
 scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateLT(
@@ -268,11 +321,8 @@ scc::ir::BranchInstruction::Ptr scc::ir::Builder::CreateBranch(BlockFwd::Ptr des
 {
     Assert(!!destination, "destination must not be null");
 
-    auto register_ = m_InsertBlock->CreateRegister();
-
     return Create<BranchInstruction>(
         m_Context.GetVoidType(),
-        std::move(register_),
         m_InsertBlock,
         std::move(destination));
 }
@@ -287,11 +337,8 @@ scc::ir::BranchInstruction::Ptr scc::ir::Builder::CreateBranch(
     Assert(!!then, "then must not be null");
     Assert(!!else_, "else must not be null");
 
-    auto register_ = m_InsertBlock->CreateRegister();
-
     return Create<BranchInstruction>(
         m_Context.GetVoidType(),
-        std::move(register_),
         m_InsertBlock,
         std::move(condition),
         std::move(then),
@@ -300,18 +347,14 @@ scc::ir::BranchInstruction::Ptr scc::ir::Builder::CreateBranch(
 
 scc::ir::ReturnInstruction::Ptr scc::ir::Builder::CreateRet()
 {
-    auto register_ = m_InsertBlock->CreateRegister();
-
-    return Create<ReturnInstruction>(m_Context.GetVoidType(), std::move(register_), m_InsertBlock, nullptr);
+    return Create<ReturnInstruction>(m_Context.GetVoidType(), m_InsertBlock, nullptr);
 }
 
 scc::ir::ReturnInstruction::Ptr scc::ir::Builder::CreateRet(ValueFwd::Ptr value)
 {
     Assert(!!value, "value must not be null");
 
-    auto register_ = m_InsertBlock->CreateRegister();
-
-    return Create<ReturnInstruction>(m_Context.GetVoidType(), std::move(register_), m_InsertBlock, std::move(value));
+    return Create<ReturnInstruction>(m_Context.GetVoidType(), m_InsertBlock, std::move(value));
 }
 
 scc::ir::SelectInstruction::Ptr scc::ir::Builder::CreateSelect(
@@ -322,17 +365,18 @@ scc::ir::SelectInstruction::Ptr scc::ir::Builder::CreateSelect(
 
     auto type = options.front().second->GetType();
     for (const auto &value : options | std::views::values)
-    {
         Assert(value->GetType() == type, "non-uniform options");
-    }
 
     auto register_ = m_InsertBlock->CreateRegister(std::move(name));
 
-    return Create<SelectInstruction>(
+    auto instruction = Create<SelectInstruction>(
         std::move(type),
-        std::move(register_),
+        register_,
         m_InsertBlock,
         std::move(options));
+
+    register_->SetValue(instruction);
+    return instruction;
 }
 
 scc::ir::AllocInstruction::Ptr scc::ir::Builder::CreateAlloc(TypeFwd::Ptr type, std::string name, unsigned count)
@@ -341,11 +385,14 @@ scc::ir::AllocInstruction::Ptr scc::ir::Builder::CreateAlloc(TypeFwd::Ptr type, 
 
     auto register_ = m_InsertBlock->CreateRegister(std::move(name));
 
-    return Create<AllocInstruction>(
+    auto instruction = Create<AllocInstruction>(
         m_Context.GetPointerType(std::move(type)),
-        std::move(register_),
+        register_,
         m_InsertBlock,
         count);
+
+    register_->SetValue(instruction);
+    return instruction;
 }
 
 scc::ir::LoadInstruction::Ptr scc::ir::Builder::CreateLoad(ValueFwd::Ptr pointer, std::string name)
@@ -355,12 +402,15 @@ scc::ir::LoadInstruction::Ptr scc::ir::Builder::CreateLoad(ValueFwd::Ptr pointer
 
     auto register_ = m_InsertBlock->CreateRegister(std::move(name));
 
-    auto type = std::dynamic_pointer_cast<PointerType>(pointer->GetType())->GetBase();
-    return Create<LoadInstruction>(
+    auto type = std::dynamic_pointer_cast<PointerType>(pointer->GetType())->GetElement();
+    auto instruction = Create<LoadInstruction>(
         std::move(type),
-        std::move(register_),
+        register_,
         m_InsertBlock,
         std::move(pointer));
+
+    register_->SetValue(instruction);
+    return instruction;
 }
 
 scc::ir::StoreInstruction::Ptr scc::ir::Builder::CreateStore(ValueFwd::Ptr pointer, ValueFwd::Ptr value)
@@ -369,14 +419,11 @@ scc::ir::StoreInstruction::Ptr scc::ir::Builder::CreateStore(ValueFwd::Ptr point
     Assert(!!value, "value must not be null");
     Assert(pointer->GetType()->GetKind() == Kind::Pointer, "pointer type must be a kind of pointer");
 
-    const auto type = std::dynamic_pointer_cast<PointerType>(pointer->GetType())->GetBase();
+    const auto type = std::dynamic_pointer_cast<PointerType>(pointer->GetType())->GetElement();
     Assert(value->GetType() == type, "value type must be the same as pointer base type");
-
-    auto register_ = m_InsertBlock->CreateRegister();
 
     return Create<StoreInstruction>(
         m_Context.GetVoidType(),
-        std::move(register_),
         m_InsertBlock,
         std::move(pointer),
         std::move(value));
@@ -392,6 +439,7 @@ scc::ir::OffsetInstruction::Ptr scc::ir::Builder::CreateOffset(
     Assert(!!base, "base must not be null");
     Assert(!offsets.empty(), "offsets must not be empty");
 
+    Assert(type->GetKind() == Kind::Pointer, "type must be a kind of pointer");
     Assert(base->GetType()->GetKind() == Kind::Pointer, "base type must be a kind of pointer");
 
     for (const auto &offset : offsets)
@@ -399,12 +447,15 @@ scc::ir::OffsetInstruction::Ptr scc::ir::Builder::CreateOffset(
 
     auto register_ = m_InsertBlock->CreateRegister(std::move(name));
 
-    return Create<OffsetInstruction>(
+    auto instruction = Create<OffsetInstruction>(
         std::move(type),
-        std::move(register_),
+        register_,
         m_InsertBlock,
         std::move(base),
         std::move(offsets));
+
+    register_->SetValue(instruction);
+    return instruction;
 }
 
 scc::ir::OffsetInstruction::Ptr scc::ir::Builder::CreateConstOffset(
@@ -412,6 +463,11 @@ scc::ir::OffsetInstruction::Ptr scc::ir::Builder::CreateConstOffset(
     const std::vector<unsigned> &offsets,
     std::string name)
 {
+    Assert(!!base, "base must not be null");
+    Assert(!offsets.empty(), "offsets must not be empty");
+
+    Assert(base->GetType()->GetKind() == Kind::Pointer, "base type must be a kind of pointer");
+
     std::vector<ValueFwd::Ptr> values;
 
     auto type = base->GetType();
@@ -425,12 +481,15 @@ scc::ir::OffsetInstruction::Ptr scc::ir::Builder::CreateConstOffset(
 
     auto register_ = m_InsertBlock->CreateRegister(std::move(name));
 
-    return Create<OffsetInstruction>(
+    auto instruction = Create<OffsetInstruction>(
         m_Context.GetPointerType(std::move(type)),
-        std::move(register_),
+        register_,
         m_InsertBlock,
         std::move(base),
         std::move(values));
+
+    register_->SetValue(instruction);
+    return instruction;
 }
 
 scc::ir::CallInstruction::Ptr scc::ir::Builder::CreateCall(
@@ -454,12 +513,15 @@ scc::ir::CallInstruction::Ptr scc::ir::Builder::CreateCall(
 
     auto register_ = m_InsertBlock->CreateRegister(std::move(name));
 
-    return Create<CallInstruction>(
+    auto instruction = Create<CallInstruction>(
         function_type->GetResult(),
-        std::move(register_),
+        register_,
         m_InsertBlock,
         std::move(callee),
         std::move(arguments));
+
+    register_->SetValue(instruction);
+    return instruction;
 }
 
 scc::ir::CastInstruction::Ptr scc::ir::Builder::CreateCast(
@@ -472,9 +534,12 @@ scc::ir::CastInstruction::Ptr scc::ir::Builder::CreateCast(
 
     auto register_ = m_InsertBlock->CreateRegister(std::move(name));
 
-    return Create<CastInstruction>(
+    auto instruction = Create<CastInstruction>(
         std::move(type),
-        std::move(register_),
+        register_,
         m_InsertBlock,
         std::move(value));
+
+    register_->SetValue(instruction);
+    return instruction;
 }

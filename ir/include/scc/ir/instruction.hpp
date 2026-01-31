@@ -87,12 +87,10 @@ namespace scc::ir
     public:
         explicit BranchInstruction(
             TypeFwd::Ptr type,
-            RegisterFwd::Ptr register_,
             BlockFwd::WeakPtr block,
             BlockFwd::Ptr destination);
         explicit BranchInstruction(
             TypeFwd::Ptr type,
-            RegisterFwd::Ptr register_,
             BlockFwd::WeakPtr block,
             ValueFwd::Ptr condition,
             BlockFwd::Ptr then,
@@ -115,7 +113,6 @@ namespace scc::ir
     public:
         explicit ReturnInstruction(
             TypeFwd::Ptr type,
-            RegisterFwd::Ptr register_,
             BlockFwd::WeakPtr block,
             ValueFwd::Ptr value);
         ~ReturnInstruction() override;
@@ -155,7 +152,7 @@ namespace scc::ir
             RegisterFwd::Ptr register_,
             BlockFwd::WeakPtr block,
             unsigned count);
-        ~AllocInstruction() override;
+        ~AllocInstruction() override = default;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -188,7 +185,6 @@ namespace scc::ir
     public:
         explicit StoreInstruction(
             TypeFwd::Ptr type,
-            RegisterFwd::Ptr register_,
             BlockFwd::WeakPtr block,
             ValueFwd::Ptr pointer,
             ValueFwd::Ptr value);

@@ -41,19 +41,19 @@ scc::ir::FloatType::Ptr scc::ir::Context::GetF64Type()
     return GetType<FloatType>(64u);
 }
 
-scc::ir::PointerType::Ptr scc::ir::Context::GetPointerType(TypeFwd::Ptr base)
+scc::ir::PointerType::Ptr scc::ir::Context::GetPointerType(TypeFwd::Ptr element)
 {
-    return GetType<PointerType>(std::move(base));
+    return GetType<PointerType>(std::move(element));
 }
 
-scc::ir::ArrayType::Ptr scc::ir::Context::GetArrayType(TypeFwd::Ptr base, unsigned length)
+scc::ir::ArrayType::Ptr scc::ir::Context::GetArrayType(TypeFwd::Ptr element, unsigned length)
 {
-    return GetType<ArrayType>(std::move(base), length);
+    return GetType<ArrayType>(std::move(element), length);
 }
 
-scc::ir::VectorType::Ptr scc::ir::Context::GetVectorType(TypeFwd::Ptr base, unsigned length)
+scc::ir::VectorType::Ptr scc::ir::Context::GetVectorType(TypeFwd::Ptr element, unsigned length)
 {
-    return GetType<VectorType>(std::move(base), length);
+    return GetType<VectorType>(std::move(element), length);
 }
 
 scc::ir::StructType::Ptr scc::ir::Context::GetStructType(std::vector<TypeFwd::Ptr> elements)

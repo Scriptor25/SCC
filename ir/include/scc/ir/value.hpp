@@ -28,6 +28,7 @@ namespace scc::ir
 
         [[nodiscard]] RegisterFwd::Ptr GetRegister() const;
         void SetRegister(RegisterFwd::Ptr register_);
+        void ClearRegister();
 
         std::ostream &Print(std::ostream &stream) const override;
         std::ostream &PrintOperand(std::ostream &stream) const override;
@@ -79,11 +80,13 @@ namespace scc::ir
         std::ostream &Print(std::ostream &stream) const override;
 
         void Insert(BlockFwd::Ptr block);
+        [[nodiscard]] BlockFwd::Ptr Find(const std::string &name) const;
 
         [[nodiscard]] unsigned GetArgumentCount() const;
         [[nodiscard]] Argument::Ptr GetArgument(unsigned index) const;
 
         RegisterFwd::Ptr CreateRegister(std::string name = {});
+        [[nodiscard]] RegisterFwd::Ptr FindRegister(const std::string &name) const;
 
     private:
         TypeFwd::Ptr m_Result;
@@ -118,14 +121,14 @@ namespace scc::ir
     class ConstantFloat final : public Constant, public Shared<ConstantFloat>
     {
     public:
-        explicit ConstantFloat(FloatType::Ptr type, double value);
+        explicit ConstantFloat(FloatType::Ptr type, long double value);
 
         std::ostream &PrintOperand(std::ostream &stream) const override;
 
-        [[nodiscard]] double GetValue() const;
+        [[nodiscard]] long double GetValue() const;
 
     private:
-        double m_Value;
+        long double m_Value;
     };
 
     class ConstantArray final : public Constant, public Shared<ConstantArray>

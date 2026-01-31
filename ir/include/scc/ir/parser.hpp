@@ -8,6 +8,7 @@ namespace scc::ir
     enum class TokenType
     {
         EoF,
+        EoL,
         Identifier,
         Integer,
         String,
@@ -18,7 +19,7 @@ namespace scc::ir
     {
         TokenType Type;
         std::string Value;
-        uint64_t Integer = 0ull;
+        uint64_t IntValue = 0ull;
     };
 
     template<typename T>
@@ -32,9 +33,17 @@ namespace scc::ir
         int Get();
         Token &Next();
 
-        bool Skip(TokenType type, const std::string &value = {});
+        [[nodiscard]] bool At(TokenType type) const;
+        [[nodiscard]] bool At(TokenType type, std::string_view value) const;
+
+        bool Skip(TokenType type);
+        bool Skip(TokenType type, std::string_view value);
+
         Token Skip();
-        Token Expect(TokenType type, const std::string &value = {});
+
+        Token Expect(TokenType type);
+        Token Expect(TokenType type, std::string_view value);
+
         Token Expect(const std::vector<TokenType> &types);
 
         template<TokenTypeLike... Types>
@@ -43,7 +52,12 @@ namespace scc::ir
             return Expect(std::vector<TokenType>{ types... });
         }
 
-        Module ParseModule();
+        Module ParseModule(Context &context);
+
+        TypeFwd::Ptr ParseType(Context &context);
+        ConstantFwd::Ptr ParseConstant(Builder &builder);
+        ValueFwd::Ptr ParseValue(Module &module, Builder &builder);
+        InstructionFwd::Ptr ParseInstruction(Module &module, Builder &builder);
 
     private:
         std::istream &m_Stream;
@@ -51,3 +65,5 @@ namespace scc::ir
         Token m_Token;
     };
 }
+
+std::ostream &operator<<(std::ostream &stream, scc::ir::TokenType type);

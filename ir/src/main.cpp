@@ -1,8 +1,10 @@
+#include <fstream>
 #include <iostream>
 #include <scc/ir/builder.hpp>
 #include <scc/ir/context.hpp>
 #include <scc/ir/instruction.hpp>
 #include <scc/ir/module.hpp>
+#include <scc/ir/parser.hpp>
 #include <scc/ir/value.hpp>
 
 int main()
@@ -24,10 +26,10 @@ int main()
         context.GetFunctionType(context.GetI32Type(), { context.GetI32Type() }, false),
         "fib");
     {
-        const auto entry_block = builder.CreateBlock(fib_function, "entry");
-        const auto head_block = builder.CreateBlock(fib_function, "head");
-        const auto loop_block = builder.CreateBlock(fib_function, "loop");
-        const auto end_block = builder.CreateBlock(fib_function, "end");
+        const auto entry_block = builder.GetOrCreateBlock(fib_function, "entry");
+        const auto head_block = builder.GetOrCreateBlock(fib_function, "head");
+        const auto loop_block = builder.GetOrCreateBlock(fib_function, "loop");
+        const auto end_block = builder.GetOrCreateBlock(fib_function, "end");
 
         const auto n = fib_function->GetArgument(0);
         n->SetName("n");
@@ -70,7 +72,7 @@ int main()
             false),
         "main");
     {
-        const auto entry_block = builder.CreateBlock(main_function, "entry");
+        const auto entry_block = builder.GetOrCreateBlock(main_function, "entry");
 
         builder.SetInsertBlock(entry_block);
 
@@ -91,4 +93,12 @@ int main()
     }
 
     module.Print(std::cout);
+
+    {
+        std::ifstream stream("ir/example/example.ir");
+        scc::ir::Parser parser(stream);
+
+        auto input = parser.ParseModule(context);
+        input.Print(std::cout);
+    }
 }

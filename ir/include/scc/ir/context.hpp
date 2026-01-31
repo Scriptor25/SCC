@@ -21,10 +21,10 @@ namespace scc::ir
         FloatType::Ptr GetF32Type();
         FloatType::Ptr GetF64Type();
 
-        PointerType::Ptr GetPointerType(TypeFwd::Ptr base);
+        PointerType::Ptr GetPointerType(TypeFwd::Ptr element);
 
-        ArrayType::Ptr GetArrayType(TypeFwd::Ptr base, unsigned length);
-        VectorType::Ptr GetVectorType(TypeFwd::Ptr base, unsigned length);
+        ArrayType::Ptr GetArrayType(TypeFwd::Ptr element, unsigned length);
+        VectorType::Ptr GetVectorType(TypeFwd::Ptr element, unsigned length);
 
         StructType::Ptr GetStructType(std::vector<TypeFwd::Ptr> elements);
 

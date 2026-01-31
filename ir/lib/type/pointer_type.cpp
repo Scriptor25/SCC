@@ -1,14 +1,14 @@
 #include <scc/ir/type.hpp>
 
-scc::ir::PointerType::PointerType(Context &context, TypeFwd::Ptr base)
+scc::ir::PointerType::PointerType(Context &context, TypeFwd::Ptr element)
     : Type(context, Kind::Pointer),
-      m_Base(std::move(base))
+      m_Element(std::move(element))
 {
 }
 
 unsigned scc::ir::PointerType::GenerateHash() const
 {
-    return CombineHash(3, m_Base->GenerateHash());
+    return CombineHash(3, m_Element->GenerateHash());
 }
 
 bool scc::ir::PointerType::Equals(const TypeFwd::Ptr &type) const
@@ -17,19 +17,19 @@ bool scc::ir::PointerType::Equals(const TypeFwd::Ptr &type) const
         return false;
 
     if (const auto p = std::dynamic_pointer_cast<PointerType>(type))
-        return m_Base == p->m_Base;
+        return m_Element == p->m_Element;
 
     return false;
 }
 
 std::ostream &scc::ir::PointerType::Print(std::ostream &stream) const
 {
-    return m_Base->Print(stream << '[') << ']';
+    return m_Element->Print(stream << '[') << ']';
 }
 
-scc::ir::TypeFwd::Ptr scc::ir::PointerType::GetBase() const
+scc::ir::TypeFwd::Ptr scc::ir::PointerType::GetElement() const
 {
-    return m_Base;
+    return m_Element;
 }
 
 unsigned scc::ir::PointerType::GetElementCount() const
@@ -39,5 +39,5 @@ unsigned scc::ir::PointerType::GetElementCount() const
 
 scc::ir::Shared<scc::ir::Type>::Ptr scc::ir::PointerType::GetElement(unsigned index) const
 {
-    return m_Base;
+    return m_Element;
 }

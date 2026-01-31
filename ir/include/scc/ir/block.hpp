@@ -28,7 +28,7 @@ namespace scc::ir
         void Insert(InstructionFwd::Ptr instruction);
 
         void UsePred(Ptr block);
-        void DropPred(Ptr block);
+        void DropPred(const Ptr &block);
 
         RegisterFwd::Ptr CreateRegister(std::string name = {}) const;
 

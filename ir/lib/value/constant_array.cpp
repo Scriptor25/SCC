@@ -11,7 +11,7 @@ scc::ir::ConstantArray::ConstantArray(ArrayType::Ptr type, std::vector<ConstantF
 std::ostream &scc::ir::ConstantArray::PrintOperand(std::ostream &stream) const
 {
     if (const auto p = std::dynamic_pointer_cast<ArrayType>(m_Type);
-        p->GetBase() == p->GetContext().GetI8Type())
+        p->GetElement() == p->GetContext().GetI8Type())
     {
         m_Type->Print(stream) << " \"";
         for (auto &value : m_Values)

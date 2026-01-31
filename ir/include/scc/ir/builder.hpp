@@ -1,5 +1,6 @@
 #pragma once
 
+#include <string_view>
 #include <scc/assert.hpp>
 #include <scc/ir/block.hpp>
 #include <scc/ir/instruction.hpp>
@@ -16,30 +17,39 @@ namespace scc::ir
     public:
         explicit Builder(Context &context);
 
+        [[nodiscard]] Context &GetContext() const;
+
+        [[nodiscard]] ConstantInt::Ptr CreateInt(IntType::Ptr type, uint64_t value) const;
+        [[nodiscard]] ConstantFloat::Ptr CreateFloat(FloatType::Ptr type, long double value) const;
+
         [[nodiscard]] ConstantInt::Ptr CreateI8(uint8_t value) const;
         [[nodiscard]] ConstantInt::Ptr CreateI16(uint16_t value) const;
         [[nodiscard]] ConstantInt::Ptr CreateI32(uint32_t value) const;
         [[nodiscard]] ConstantInt::Ptr CreateI64(uint64_t value) const;
 
         [[nodiscard]] ConstantFloat::Ptr CreateF32(float value) const;
-        [[nodiscard]] ConstantFloat::Ptr CreateF64(double value) const;
+        [[nodiscard]] ConstantFloat::Ptr CreateF64(long double value) const;
 
+        [[nodiscard]] ConstantArray::Ptr CreateArray(ArrayType::Ptr type, std::vector<ConstantFwd::Ptr> values) const;
         [[nodiscard]] ConstantArray::Ptr CreateArray(std::vector<ConstantFwd::Ptr> values) const;
+        [[nodiscard]] ConstantArray::Ptr CreateArray(std::string_view value) const;
         [[nodiscard]] ConstantVector::Ptr CreateVector(std::vector<ConstantFwd::Ptr> values) const;
         [[nodiscard]] ConstantStruct::Ptr CreateStruct(std::vector<ConstantFwd::Ptr> values) const;
 
         [[nodiscard]] Variable::Ptr CreateString(
             Module &module,
             std::string name,
-            const std::string &value) const;
+            std::string_view value) const;
 
-        [[nodiscard]] BlockFwd::Ptr CreateBlock(
+        [[nodiscard]] BlockFwd::Ptr GetOrCreateBlock(
             const Function::Ptr &function,
             std::string name) const;
 
         void SetInsertBlock(BlockFwd::Ptr block);
         void ClearInsertBlock();
+
         [[nodiscard]] BlockFwd::Ptr GetInsertBlock() const;
+        [[nodiscard]] Function::Ptr GetInsertFunction() const;
 
         OperatorInstruction::Ptr CreateOperator(
             Operator operator_,

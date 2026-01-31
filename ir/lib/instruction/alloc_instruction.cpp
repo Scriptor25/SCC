@@ -11,17 +11,11 @@ scc::ir::AllocInstruction::AllocInstruction(
 {
 }
 
-scc::ir::AllocInstruction::~AllocInstruction()
-{
-}
-
 std::ostream &scc::ir::AllocInstruction::Print(std::ostream &stream) const
 {
     if (IsUsed())
-    {
         m_Register->Print(stream) << " = ";
-    }
-    const auto type = std::dynamic_pointer_cast<PointerType>(m_Type)->GetBase();
+    const auto type = std::dynamic_pointer_cast<PointerType>(m_Type)->GetElement();
     return type->Print(stream) << " alloc " << m_Count;
 }
 

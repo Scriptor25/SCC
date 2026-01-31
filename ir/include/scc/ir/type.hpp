@@ -85,61 +85,61 @@ namespace scc::ir
     class PointerType final : public Type, public Shared<PointerType>
     {
     public:
-        explicit PointerType(Context &context, TypeFwd::Ptr base);
+        explicit PointerType(Context &context, TypeFwd::Ptr element);
 
         [[nodiscard]] unsigned GenerateHash() const override;
         [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] TypeFwd::Ptr GetBase() const;
+        [[nodiscard]] TypeFwd::Ptr GetElement() const;
 
         [[nodiscard]] unsigned GetElementCount() const override;
         [[nodiscard]] TypeFwd::Ptr GetElement(unsigned index) const override;
 
     private:
-        TypeFwd::Ptr m_Base;
+        TypeFwd::Ptr m_Element;
     };
 
     class ArrayType final : public Type, public Shared<ArrayType>
     {
     public:
-        explicit ArrayType(Context &context, TypeFwd::Ptr base, unsigned length);
+        explicit ArrayType(Context &context, TypeFwd::Ptr element, unsigned length);
 
         [[nodiscard]] unsigned GenerateHash() const override;
         [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] TypeFwd::Ptr GetBase() const;
+        [[nodiscard]] TypeFwd::Ptr GetElement() const;
         [[nodiscard]] unsigned GetLength() const;
 
         [[nodiscard]] unsigned GetElementCount() const override;
         [[nodiscard]] TypeFwd::Ptr GetElement(unsigned index) const override;
 
     private:
-        TypeFwd::Ptr m_Base;
+        TypeFwd::Ptr m_Element;
         unsigned m_Length;
     };
 
     class VectorType final : public Type, public Shared<VectorType>
     {
     public:
-        explicit VectorType(Context &context, TypeFwd::Ptr base, unsigned length);
+        explicit VectorType(Context &context, TypeFwd::Ptr element, unsigned length);
 
         [[nodiscard]] unsigned GenerateHash() const override;
         [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] TypeFwd::Ptr GetBase() const;
+        [[nodiscard]] TypeFwd::Ptr GetElement() const;
         [[nodiscard]] unsigned GetLength() const;
 
         [[nodiscard]] unsigned GetElementCount() const override;
         [[nodiscard]] TypeFwd::Ptr GetElement(unsigned index) const override;
 
     private:
-        TypeFwd::Ptr m_Base;
+        TypeFwd::Ptr m_Element;
         unsigned m_Length;
     };
 

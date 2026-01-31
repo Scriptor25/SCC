@@ -3,11 +3,10 @@
 
 scc::ir::StoreInstruction::StoreInstruction(
     TypeFwd::Ptr type,
-    RegisterFwd::Ptr register_,
     BlockFwd::WeakPtr block,
     ValueFwd::Ptr pointer,
     ValueFwd::Ptr value)
-    : Instruction(std::move(type), std::move(register_), std::move(block)),
+    : Instruction(std::move(type), nullptr, std::move(block)),
       m_Pointer(std::move(pointer)),
       m_Value(std::move(value))
 {
@@ -23,10 +22,6 @@ scc::ir::StoreInstruction::~StoreInstruction()
 
 std::ostream &scc::ir::StoreInstruction::Print(std::ostream &stream) const
 {
-    if (IsUsed())
-    {
-        m_Register->Print(stream) << " = ";
-    }
     return m_Value->PrintOperand(m_Pointer->PrintOperand(stream << "store ") << ", ");
 }
 

@@ -20,7 +20,7 @@ void scc::ir::Block::SetName(std::string name)
 
 std::ostream &scc::ir::Block::Print(std::ostream &stream) const
 {
-    stream << m_Name << ':';
+    stream << '.' << m_Name << ':';
     if (!m_Predecessors.empty())
     {
         stream << " ; ";
@@ -38,7 +38,7 @@ std::ostream &scc::ir::Block::Print(std::ostream &stream) const
 
 std::ostream &scc::ir::Block::PrintOperand(std::ostream &stream) const
 {
-    return stream << '%' << m_Name;
+    return stream << '.' << m_Name;
 }
 
 scc::ir::Function::Ptr scc::ir::Block::GetFunction() const
@@ -76,7 +76,7 @@ void scc::ir::Block::UsePred(Ptr block)
     m_Predecessors.emplace(std::move(block));
 }
 
-void scc::ir::Block::DropPred(Ptr block)
+void scc::ir::Block::DropPred(const Ptr &block)
 {
     m_Predecessors.erase(block);
 }

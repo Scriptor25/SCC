@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <scc/ir/ir.hpp>
 
 namespace scc::ir
 {
@@ -9,12 +10,18 @@ namespace scc::ir
     public:
         explicit Register(std::string name = {});
 
-        std::string GetName() const;
+        void SetValue(ValueFwd::WeakPtr value);
+        void ClearValue();
+
+        [[nodiscard]] std::string GetName() const;
         void SetName(std::string name);
+
+        [[nodiscard]] ValueFwd::Ptr GetValue() const;
 
         std::ostream &Print(std::ostream &stream) const;
 
     private:
         std::string m_Name;
+        ValueFwd::WeakPtr m_Value;
     };
 }
