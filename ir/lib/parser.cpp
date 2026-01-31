@@ -5,7 +5,7 @@
 scc::ir::Parser::Parser(std::istream &stream)
     : m_Stream(stream)
 {
-    Get();
+    m_Buffer = m_Stream.get();
     Next();
 }
 
@@ -33,22 +33,24 @@ static bool isdigit(const unsigned base, const int c)
 
 scc::ir::Token &scc::ir::Parser::Next()
 {
-    enum
+    enum class State
     {
-        state_none,
-        state_integer,
-        state_identifier,
-        state_string,
-    } state = state_none;
+        None,
+        Integer,
+        Identifier,
+        String,
+    };
 
     std::string value;
+
+    auto state = State::None;
     auto base = 0u;
 
     while (m_Buffer >= 0)
     {
         switch (state)
         {
-        case state_none:
+        case State::None:
             if (m_Buffer == '0')
             {
                 Get();
@@ -56,17 +58,17 @@ scc::ir::Token &scc::ir::Parser::Next()
                 {
                 case 'b':
                     Get();
-                    state = state_integer;
+                    state = State::Integer;
                     base = 0b10u;
                     break;
                 case 'x':
                     Get();
-                    state = state_integer;
+                    state = State::Integer;
                     base = 0x10u;
                     break;
                 default:
                     value += '0';
-                    state = state_integer;
+                    state = State::Integer;
                     base = 010u;
                     break;
                 }
@@ -75,28 +77,28 @@ scc::ir::Token &scc::ir::Parser::Next()
             if (m_Buffer == '"')
             {
                 Get();
-                state = state_string;
+                state = State::String;
                 break;
             }
             if (std::isdigit(m_Buffer))
             {
-                state = state_integer;
+                state = State::Integer;
                 base = 10u;
                 break;
             }
             if (std::isalnum(m_Buffer))
             {
-                state = state_identifier;
+                state = State::Identifier;
                 break;
             }
             value += static_cast<char>(m_Buffer);
             Get();
             return m_Token = {
-                       .Type = TokenType_Other,
+                       .Type = TokenType::Other,
                        .Value = value,
                    };
 
-        case state_integer:
+        case State::Integer:
             if (isdigit(base, m_Buffer))
             {
                 value += static_cast<char>(m_Buffer);
@@ -104,12 +106,12 @@ scc::ir::Token &scc::ir::Parser::Next()
                 break;
             }
             return m_Token = {
-                       .Type = TokenType_Integer,
+                       .Type = TokenType::Integer,
                        .Value = value,
-                       .Integer = std::stoull(value, nullptr, base),
+                       .Integer = std::stoull(value, nullptr, static_cast<int>(base)),
                    };
 
-        case state_identifier:
+        case State::Identifier:
             if (std::isalnum(m_Buffer))
             {
                 value += static_cast<char>(m_Buffer);
@@ -117,11 +119,11 @@ scc::ir::Token &scc::ir::Parser::Next()
                 break;
             }
             return m_Token = {
-                       .Type = TokenType_Identifier,
+                       .Type = TokenType::Identifier,
                        .Value = value,
                    };
 
-        case state_string:
+        case State::String:
             if (m_Buffer != '"')
             {
                 value += static_cast<char>(m_Buffer);
@@ -130,14 +132,14 @@ scc::ir::Token &scc::ir::Parser::Next()
             }
             Get();
             return m_Token = {
-                       .Type = TokenType_String,
+                       .Type = TokenType::String,
                        .Value = value,
                    };
         }
     }
 
     return m_Token = {
-               .Type = TokenType_EndOfFile,
+               .Type = TokenType::EoF,
                .Value = {},
            };
 }
@@ -181,14 +183,14 @@ scc::ir::Module scc::ir::Parser::ParseModule()
 {
     Module module;
 
-    while (m_Token.Type)
+    while (m_Token.Type != TokenType::EoF)
     {
-        if (Skip(TokenType_Other, "#"))
+        if (Skip(TokenType::Other, "#"))
         {
-            const auto key = Expect(TokenType_Identifier);
+            const auto key = Expect(TokenType::Identifier);
             if (key.Value == "name")
             {
-                auto value = Expect(TokenType_String);
+                auto value = Expect(TokenType::String);
                 module.SetName(std::move(value.Value));
             }
 

@@ -15,16 +15,16 @@ namespace scc::ir
         BlockFwd::WeakPtr m_Block;
     };
 
-    enum Operator
+    enum class Operator
     {
-        Operator_Add,
-        Operator_Sub,
-        Operator_Mul,
-        Operator_Div,
-        Operator_Rem,
-        Operator_And,
-        Operator_Or,
-        Operator_Xor,
+        Add,
+        Sub,
+        Mul,
+        Div,
+        Rem,
+        And,
+        Or,
+        Xor,
     };
 
     class OperatorInstruction final : public Instruction, public Shared<OperatorInstruction>
@@ -49,14 +49,14 @@ namespace scc::ir
         std::vector<ValueFwd::Ptr> m_Operands;
     };
 
-    enum Comparator
+    enum class Comparator
     {
-        Comparator_LT,
-        Comparator_GT,
-        Comparator_LE,
-        Comparator_GE,
-        Comparator_EQ,
-        Comparator_NE,
+        LT,
+        GT,
+        LE,
+        GE,
+        EQ,
+        NE,
     };
 
     class ComparatorInstruction final : public Instruction, public Shared<ComparatorInstruction>

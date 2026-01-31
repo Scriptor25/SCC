@@ -1,7 +1,7 @@
 #include <scc/ir/type.hpp>
 
 scc::ir::FloatType::FloatType(Context &context, const unsigned size_bits)
-    : Type(context, Kind_Float),
+    : Type(context, Kind::Float),
       m_SizeBits(size_bits)
 {
 }
@@ -13,15 +13,11 @@ unsigned scc::ir::FloatType::GenerateHash() const
 
 bool scc::ir::FloatType::Equals(const TypeFwd::Ptr &type) const
 {
-    if (type->GetKind() != Kind_Float)
-    {
+    if (type->GetKind() != Kind::Float)
         return false;
-    }
 
     if (const auto p = std::dynamic_pointer_cast<FloatType>(type))
-    {
         return m_SizeBits == p->m_SizeBits;
-    }
 
     return false;
 }

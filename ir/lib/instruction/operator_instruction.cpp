@@ -12,49 +12,43 @@ scc::ir::OperatorInstruction::OperatorInstruction(
       m_Operands(std::move(operands))
 {
     for (const auto &operand : m_Operands)
-    {
         operand->Use();
-    }
 }
 
 scc::ir::OperatorInstruction::~OperatorInstruction()
 {
     for (const auto &operand : m_Operands)
-    {
         operand->Drop();
-    }
 }
 
 std::ostream &scc::ir::OperatorInstruction::Print(std::ostream &stream) const
 {
     if (IsUsed())
-    {
         m_Register->Print(stream) << " = ";
-    }
     switch (m_Operator)
     {
-    case Operator_Add:
+    case Operator::Add:
         stream << "add";
         break;
-    case Operator_Sub:
+    case Operator::Sub:
         stream << "sub";
         break;
-    case Operator_Mul:
+    case Operator::Mul:
         stream << "mul";
         break;
-    case Operator_Div:
+    case Operator::Div:
         stream << "div";
         break;
-    case Operator_Rem:
+    case Operator::Rem:
         stream << "rem";
         break;
-    case Operator_And:
+    case Operator::And:
         stream << "and";
         break;
-    case Operator_Or:
+    case Operator::Or:
         stream << "or";
         break;
-    case Operator_Xor:
+    case Operator::Xor:
         stream << "xor";
         break;
     }
@@ -62,9 +56,7 @@ std::ostream &scc::ir::OperatorInstruction::Print(std::ostream &stream) const
     for (auto i = m_Operands.begin(); i != m_Operands.end(); ++i)
     {
         if (i != m_Operands.begin())
-        {
             stream << ", ";
-        }
         (*i)->PrintOperand(stream);
     }
     return stream;

@@ -1,7 +1,7 @@
 #include <scc/ir/type.hpp>
 
 scc::ir::PointerType::PointerType(Context &context, TypeFwd::Ptr base)
-    : Type(context, Kind_Pointer),
+    : Type(context, Kind::Pointer),
       m_Base(std::move(base))
 {
 }
@@ -13,15 +13,11 @@ unsigned scc::ir::PointerType::GenerateHash() const
 
 bool scc::ir::PointerType::Equals(const TypeFwd::Ptr &type) const
 {
-    if (type->GetKind() != Kind_Pointer)
-    {
+    if (type->GetKind() != Kind::Pointer)
         return false;
-    }
 
     if (const auto p = std::dynamic_pointer_cast<PointerType>(type))
-    {
         return m_Base == p->m_Base;
-    }
 
     return false;
 }

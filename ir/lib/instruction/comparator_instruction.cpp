@@ -32,22 +32,22 @@ std::ostream &scc::ir::ComparatorInstruction::Print(std::ostream &stream) const
     stream << "cmp.";
     switch (m_Comparator)
     {
-    case Comparator_LT:
+    case Comparator::LT:
         stream << "lt";
         break;
-    case Comparator_GT:
+    case Comparator::GT:
         stream << "gt";
         break;
-    case Comparator_LE:
+    case Comparator::LE:
         stream << "le";
         break;
-    case Comparator_GE:
+    case Comparator::GE:
         stream << "ge";
         break;
-    case Comparator_EQ:
+    case Comparator::EQ:
         stream << "eq";
         break;
-    case Comparator_NE:
+    case Comparator::NE:
         stream << "ne";
         break;
     }

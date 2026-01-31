@@ -2,7 +2,7 @@
 #include <scc/ir/type.hpp>
 
 scc::ir::ArrayType::ArrayType(Context &context, TypeFwd::Ptr base, const unsigned length)
-    : Type(context, Kind_Array),
+    : Type(context, Kind::Array),
       m_Base(std::move(base)),
       m_Length(length)
 {
@@ -15,15 +15,11 @@ unsigned scc::ir::ArrayType::GenerateHash() const
 
 bool scc::ir::ArrayType::Equals(const TypeFwd::Ptr &type) const
 {
-    if (type->GetKind() != Kind_Array)
-    {
+    if (type->GetKind() != Kind::Array)
         return false;
-    }
 
     if (const auto p = std::dynamic_pointer_cast<ArrayType>(type))
-    {
         return m_Base == p->m_Base && m_Length == p->m_Length;
-    }
 
     return false;
 }

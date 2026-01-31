@@ -5,7 +5,7 @@ scc::ir::FunctionType::FunctionType(
     TypeFwd::Ptr result,
     std::vector<TypeFwd::Ptr> arguments,
     const bool variadic)
-    : Type(context, Kind_Function),
+    : Type(context, Kind::Function),
       m_Result(std::move(result)),
       m_Arguments(std::move(arguments)),
       m_Variadic(variadic)
@@ -16,44 +16,30 @@ unsigned scc::ir::FunctionType::GenerateHash() const
 {
     auto hash = m_Result->GenerateHash();
     for (auto &argument : m_Arguments)
-    {
         hash = CombineHash(hash, argument->GenerateHash());
-    }
     hash = CombineHash(hash, m_Variadic ? 0xDEADBEEFu : 0xBAADF00Du);
     return CombineHash(7, hash);
 }
 
 bool scc::ir::FunctionType::Equals(const TypeFwd::Ptr &type) const
 {
-    if (type->GetKind() != Kind_Function)
-    {
+    if (type->GetKind() != Kind::Function)
         return false;
-    }
 
     if (const auto p = std::dynamic_pointer_cast<FunctionType>(type))
     {
         if (m_Result != p->m_Result)
-        {
             return false;
-        }
 
         if (m_Variadic != p->m_Variadic)
-        {
             return false;
-        }
 
         if (m_Arguments.size() != p->m_Arguments.size())
-        {
             return false;
-        }
 
         for (unsigned i = 0; i < m_Arguments.size(); ++i)
-        {
             if (m_Arguments.at(i) != p->m_Arguments.at(i))
-            {
                 return false;
-            }
-        }
 
         return true;
     }
@@ -67,17 +53,13 @@ std::ostream &scc::ir::FunctionType::Print(std::ostream &stream) const
     for (auto i = m_Arguments.begin(); i != m_Arguments.end(); ++i)
     {
         if (i != m_Arguments.begin())
-        {
             stream << ',';
-        }
         (*i)->Print(stream);
     }
     if (m_Variadic)
     {
         if (!m_Arguments.empty())
-        {
             stream << ',';
-        }
         stream << "...";
     }
     return stream << ')';

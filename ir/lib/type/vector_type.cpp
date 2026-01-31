@@ -2,7 +2,7 @@
 #include <scc/ir/type.hpp>
 
 scc::ir::VectorType::VectorType(Context &context, TypeFwd::Ptr base, const unsigned length)
-    : Type(context, Kind_Vector),
+    : Type(context, Kind::Vector),
       m_Base(std::move(base)),
       m_Length(length)
 {
@@ -15,15 +15,11 @@ unsigned scc::ir::VectorType::GenerateHash() const
 
 bool scc::ir::VectorType::Equals(const TypeFwd::Ptr &type) const
 {
-    if (type->GetKind() != Kind_Vector)
-    {
+    if (type->GetKind() != Kind::Vector)
         return false;
-    }
 
     if (const auto p = std::dynamic_pointer_cast<VectorType>(type))
-    {
         return m_Base == p->m_Base && m_Length == p->m_Length;
-    }
 
     return false;
 }

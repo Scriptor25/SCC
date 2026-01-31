@@ -1,7 +1,7 @@
 #include <scc/ir/type.hpp>
 
 scc::ir::IntType::IntType(Context &context, const unsigned size_bits)
-    : Type(context, Kind_Int),
+    : Type(context, Kind::Int),
       m_SizeBits(size_bits)
 {
 }
@@ -13,15 +13,11 @@ unsigned scc::ir::IntType::GenerateHash() const
 
 bool scc::ir::IntType::Equals(const TypeFwd::Ptr &type) const
 {
-    if (type->GetKind() != Kind_Int)
-    {
+    if (type->GetKind() != Kind::Int)
         return false;
-    }
 
     if (const auto p = std::dynamic_pointer_cast<IntType>(type))
-    {
         return m_SizeBits == p->m_SizeBits;
-    }
 
     return false;
 }

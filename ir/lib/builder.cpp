@@ -53,9 +53,7 @@ scc::ir::ConstantArray::Ptr scc::ir::Builder::CreateArray(std::vector<ConstantFw
     Assert(!values.empty(), "values must not be empty");
     auto base = values.front()->GetType();
     for (const auto &value : values)
-    {
         Assert(value->GetType() == base, "non-uniform elements");
-    }
     auto type = m_Context.GetArrayType(std::move(base), values.size());
     return std::make_shared<ConstantArray>(std::move(type), std::move(values));
 }
@@ -65,9 +63,7 @@ scc::ir::ConstantVector::Ptr scc::ir::Builder::CreateVector(std::vector<Constant
     Assert(!values.empty(), "values must not be empty");
     auto base = values.front()->GetType();
     for (const auto &value : values)
-    {
         Assert(value->GetType() == base, "non-uniform elements");
-    }
     auto type = m_Context.GetVectorType(std::move(base), values.size());
     return std::make_shared<ConstantVector>(std::move(type), std::move(values));
 }
@@ -77,9 +73,7 @@ scc::ir::ConstantStruct::Ptr scc::ir::Builder::CreateStruct(std::vector<Constant
     Assert(!values.empty(), "values must not be empty");
     std::vector<TypeFwd::Ptr> elements;
     for (const auto &value : values)
-    {
         elements.emplace_back(value->GetType());
-    }
     auto type = m_Context.GetStructType(std::move(elements));
     return std::make_shared<ConstantStruct>(std::move(type), std::move(values));
 }
@@ -91,9 +85,7 @@ scc::ir::Variable::Ptr scc::ir::Builder::CreateString(
 {
     std::vector<ConstantFwd::Ptr> elements;
     for (const auto i : value)
-    {
         elements.emplace_back(CreateI8(i));
-    }
     elements.emplace_back(CreateI8(0));
     auto type = m_Context.GetArrayType(m_Context.GetI8Type(), elements.size());
     auto initializer = CreateArray(std::move(elements));
@@ -135,9 +127,7 @@ scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateOperator(
 
     auto type = operands.front()->GetType();
     for (const auto &operand : operands)
-    {
         Assert(operand->GetType() == type, "non-uniform operands");
-    }
 
     auto register_ = m_InsertBlock->CreateRegister(std::move(name));
 
@@ -153,56 +143,56 @@ scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateAdd(
     std::vector<ValueFwd::Ptr> operands,
     std::string name)
 {
-    return CreateOperator(Operator_Add, std::move(operands), std::move(name));
+    return CreateOperator(Operator::Add, std::move(operands), std::move(name));
 }
 
 scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateSub(
     std::vector<ValueFwd::Ptr> operands,
     std::string name)
 {
-    return CreateOperator(Operator_Sub, std::move(operands), std::move(name));
+    return CreateOperator(Operator::Sub, std::move(operands), std::move(name));
 }
 
 scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateMul(
     std::vector<ValueFwd::Ptr> operands,
     std::string name)
 {
-    return CreateOperator(Operator_Mul, std::move(operands), std::move(name));
+    return CreateOperator(Operator::Mul, std::move(operands), std::move(name));
 }
 
 scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateDiv(
     std::vector<ValueFwd::Ptr> operands,
     std::string name)
 {
-    return CreateOperator(Operator_Div, std::move(operands), std::move(name));
+    return CreateOperator(Operator::Div, std::move(operands), std::move(name));
 }
 
 scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateRem(
     std::vector<ValueFwd::Ptr> operands,
     std::string name)
 {
-    return CreateOperator(Operator_Rem, std::move(operands), std::move(name));
+    return CreateOperator(Operator::Rem, std::move(operands), std::move(name));
 }
 
 scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateAnd(
     std::vector<ValueFwd::Ptr> operands,
     std::string name)
 {
-    return CreateOperator(Operator_And, std::move(operands), std::move(name));
+    return CreateOperator(Operator::And, std::move(operands), std::move(name));
 }
 
 scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateOr(
     std::vector<ValueFwd::Ptr> operands,
     std::string name)
 {
-    return CreateOperator(Operator_Or, std::move(operands), std::move(name));
+    return CreateOperator(Operator::Or, std::move(operands), std::move(name));
 }
 
 scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateXor(
     std::vector<ValueFwd::Ptr> operands,
     std::string name)
 {
-    return CreateOperator(Operator_Xor, std::move(operands), std::move(name));
+    return CreateOperator(Operator::Xor, std::move(operands), std::move(name));
 }
 
 scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateComparator(
@@ -231,7 +221,7 @@ scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateLT(
     ValueFwd::Ptr rhs,
     std::string name)
 {
-    return CreateComparator(Comparator_LT, std::move(lhs), std::move(rhs), std::move(name));
+    return CreateComparator(Comparator::LT, std::move(lhs), std::move(rhs), std::move(name));
 }
 
 scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateGT(
@@ -239,7 +229,7 @@ scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateGT(
     ValueFwd::Ptr rhs,
     std::string name)
 {
-    return CreateComparator(Comparator_GT, std::move(lhs), std::move(rhs), std::move(name));
+    return CreateComparator(Comparator::GT, std::move(lhs), std::move(rhs), std::move(name));
 }
 
 scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateLE(
@@ -247,7 +237,7 @@ scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateLE(
     ValueFwd::Ptr rhs,
     std::string name)
 {
-    return CreateComparator(Comparator_LE, std::move(lhs), std::move(rhs), std::move(name));
+    return CreateComparator(Comparator::LE, std::move(lhs), std::move(rhs), std::move(name));
 }
 
 scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateGE(
@@ -255,7 +245,7 @@ scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateGE(
     ValueFwd::Ptr rhs,
     std::string name)
 {
-    return CreateComparator(Comparator_GE, std::move(lhs), std::move(rhs), std::move(name));
+    return CreateComparator(Comparator::GE, std::move(lhs), std::move(rhs), std::move(name));
 }
 
 scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateEQ(
@@ -263,7 +253,7 @@ scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateEQ(
     ValueFwd::Ptr rhs,
     std::string name)
 {
-    return CreateComparator(Comparator_EQ, std::move(lhs), std::move(rhs), std::move(name));
+    return CreateComparator(Comparator::EQ, std::move(lhs), std::move(rhs), std::move(name));
 }
 
 scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateNE(
@@ -271,7 +261,7 @@ scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateNE(
     ValueFwd::Ptr rhs,
     std::string name)
 {
-    return CreateComparator(Comparator_NE, std::move(lhs), std::move(rhs), std::move(name));
+    return CreateComparator(Comparator::NE, std::move(lhs), std::move(rhs), std::move(name));
 }
 
 scc::ir::BranchInstruction::Ptr scc::ir::Builder::CreateBranch(BlockFwd::Ptr destination)
@@ -361,7 +351,7 @@ scc::ir::AllocInstruction::Ptr scc::ir::Builder::CreateAlloc(TypeFwd::Ptr type, 
 scc::ir::LoadInstruction::Ptr scc::ir::Builder::CreateLoad(ValueFwd::Ptr pointer, std::string name)
 {
     Assert(!!pointer, "pointer must not be null");
-    Assert(pointer->GetType()->GetKind() == Kind_Pointer, "pointer type must be a kind of pointer");
+    Assert(pointer->GetType()->GetKind() == Kind::Pointer, "pointer type must be a kind of pointer");
 
     auto register_ = m_InsertBlock->CreateRegister(std::move(name));
 
@@ -377,7 +367,7 @@ scc::ir::StoreInstruction::Ptr scc::ir::Builder::CreateStore(ValueFwd::Ptr point
 {
     Assert(!!pointer, "pointer must not be null");
     Assert(!!value, "value must not be null");
-    Assert(pointer->GetType()->GetKind() == Kind_Pointer, "pointer type must be a kind of pointer");
+    Assert(pointer->GetType()->GetKind() == Kind::Pointer, "pointer type must be a kind of pointer");
 
     const auto type = std::dynamic_pointer_cast<PointerType>(pointer->GetType())->GetBase();
     Assert(value->GetType() == type, "value type must be the same as pointer base type");
@@ -402,12 +392,10 @@ scc::ir::OffsetInstruction::Ptr scc::ir::Builder::CreateOffset(
     Assert(!!base, "base must not be null");
     Assert(!offsets.empty(), "offsets must not be empty");
 
-    Assert(base->GetType()->GetKind() == Kind_Pointer, "base type must be a kind of pointer");
+    Assert(base->GetType()->GetKind() == Kind::Pointer, "base type must be a kind of pointer");
 
     for (const auto &offset : offsets)
-    {
-        Assert(offset->GetType()->GetKind() == Kind_Int, "offset type must be a kind of int");
-    }
+        Assert(offset->GetType()->GetKind() == Kind::Int, "offset type must be a kind of int");
 
     auto register_ = m_InsertBlock->CreateRegister(std::move(name));
 
@@ -453,7 +441,7 @@ scc::ir::CallInstruction::Ptr scc::ir::Builder::CreateCall(
     Assert(!!callee, "callee must not be null");
     Assert(!arguments.empty(), "arguments must not be empty");
 
-    Assert(callee->GetType()->GetKind() == Kind_Function, "callee type must be a kind of function");
+    Assert(callee->GetType()->GetKind() == Kind::Function, "callee type must be a kind of function");
 
     const auto function_type = std::dynamic_pointer_cast<FunctionType>(callee->GetType());
 
@@ -462,9 +450,7 @@ scc::ir::CallInstruction::Ptr scc::ir::Builder::CreateCall(
     Assert(function_type->IsVariadic() || count == arguments.size(), "too many arguments");
 
     for (unsigned i = 0; i < count; ++i)
-    {
         Assert(function_type->GetArgument(i) == arguments.at(i)->GetType(), "invalid argument type");
-    }
 
     auto register_ = m_InsertBlock->CreateRegister(std::move(name));
 

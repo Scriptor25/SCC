@@ -5,13 +5,13 @@
 
 namespace scc::ir
 {
-    enum TokenType
+    enum class TokenType
     {
-        TokenType_EndOfFile,
-        TokenType_Identifier,
-        TokenType_Integer,
-        TokenType_String,
-        TokenType_Other,
+        EoF,
+        Identifier,
+        Integer,
+        String,
+        Other,
     };
 
     struct Token final

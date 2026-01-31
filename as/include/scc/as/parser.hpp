@@ -5,21 +5,21 @@
 
 namespace scc::as
 {
-    enum TokenTypeE
+    enum class TokenType
     {
-        TokenType_EOF,
-        TokenType_EOL,
-        TokenType_Label,
-        TokenType_Symbol,
-        TokenType_String,
-        TokenType_Register,
-        TokenType_Immediate,
-        TokenType_Other,
+        EoF,
+        EoL,
+        Label,
+        Symbol,
+        String,
+        Register,
+        Immediate,
+        Other,
     };
 
     struct Token
     {
-        TokenTypeE Type = TokenType_EOF;
+        TokenType Type = TokenType::EoF;
         std::string Raw;
         std::string Value;
         IImmediateT Immediate = 0;
@@ -35,9 +35,9 @@ namespace scc::as
         Token &Next();
         Token Skip();
 
-        Token Expect(TokenTypeE type, const std::string &value = {});
-        [[nodiscard]] bool At(TokenTypeE type, const std::string &value = {}) const;
-        bool SkipIf(TokenTypeE type, const std::string &value = {});
+        Token Expect(TokenType type, const std::string &value = {});
+        [[nodiscard]] bool At(TokenType type, const std::string &value = {}) const;
+        bool SkipIf(TokenType type, const std::string &value = {});
 
         void Parse();
         void ParseLine();
@@ -49,7 +49,7 @@ namespace scc::as
     private:
         std::istream &m_Stream;
 
-        int m_Buf;
+        int m_Buffer;
         Token m_Token;
     };
 }

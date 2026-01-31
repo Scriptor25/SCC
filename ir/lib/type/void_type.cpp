@@ -1,7 +1,7 @@
 #include <scc/ir/type.hpp>
 
 scc::ir::VoidType::VoidType(Context &context)
-    : Type(context, Kind_Void)
+    : Type(context, Kind::Void)
 {
 }
 
@@ -12,7 +12,7 @@ unsigned scc::ir::VoidType::GenerateHash() const
 
 bool scc::ir::VoidType::Equals(const TypeFwd::Ptr &type) const
 {
-    return type->GetKind() == Kind_Void;
+    return type->GetKind() == Kind::Void;
 }
 
 std::ostream &scc::ir::VoidType::Print(std::ostream &stream) const

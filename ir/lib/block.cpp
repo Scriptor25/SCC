@@ -1,3 +1,4 @@
+#include <ostream>
 #include <scc/ir/block.hpp>
 #include <scc/ir/instruction.hpp>
 
@@ -26,16 +27,12 @@ std::ostream &scc::ir::Block::Print(std::ostream &stream) const
         for (auto i = m_Predecessors.begin(); i != m_Predecessors.end(); ++i)
         {
             if (i != m_Predecessors.begin())
-            {
                 stream << ", ";
-            }
             stream << (*i)->GetName();
         }
     }
     for (auto &instruction : m_Instructions)
-    {
         instruction->Print(stream << std::endl << "    ");
-    }
     return stream;
 }
 
@@ -81,7 +78,7 @@ void scc::ir::Block::UsePred(Ptr block)
 
 void scc::ir::Block::DropPred(Ptr block)
 {
-    m_Predecessors.erase(std::move(block));
+    m_Predecessors.erase(block);
 }
 
 scc::ir::RegisterFwd::Ptr scc::ir::Block::CreateRegister(std::string name) const

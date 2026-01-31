@@ -5,16 +5,16 @@
 
 namespace scc::ir
 {
-    enum Kind
+    enum class Kind
     {
-        Kind_Void,
-        Kind_Int,
-        Kind_Float,
-        Kind_Pointer,
-        Kind_Array,
-        Kind_Vector,
-        Kind_Struct,
-        Kind_Function,
+        Void,
+        Int,
+        Float,
+        Pointer,
+        Array,
+        Vector,
+        Struct,
+        Function,
     };
 
     class Type
@@ -31,8 +31,8 @@ namespace scc::ir
         [[nodiscard]] Context &GetContext() const;
         [[nodiscard]] Kind GetKind() const;
 
-        virtual unsigned GetElementCount() const;
-        virtual TypeFwd::Ptr GetElement(unsigned index) const;
+        [[nodiscard]] virtual unsigned GetElementCount() const;
+        [[nodiscard]] virtual TypeFwd::Ptr GetElement(unsigned index) const;
 
     protected:
         Context &m_Context;
@@ -94,8 +94,8 @@ namespace scc::ir
 
         [[nodiscard]] TypeFwd::Ptr GetBase() const;
 
-        unsigned GetElementCount() const override;
-        TypeFwd::Ptr GetElement(unsigned index) const override;
+        [[nodiscard]] unsigned GetElementCount() const override;
+        [[nodiscard]] TypeFwd::Ptr GetElement(unsigned index) const override;
 
     private:
         TypeFwd::Ptr m_Base;
@@ -114,8 +114,8 @@ namespace scc::ir
         [[nodiscard]] TypeFwd::Ptr GetBase() const;
         [[nodiscard]] unsigned GetLength() const;
 
-        unsigned GetElementCount() const override;
-        TypeFwd::Ptr GetElement(unsigned index) const override;
+        [[nodiscard]] unsigned GetElementCount() const override;
+        [[nodiscard]] TypeFwd::Ptr GetElement(unsigned index) const override;
 
     private:
         TypeFwd::Ptr m_Base;
@@ -135,8 +135,8 @@ namespace scc::ir
         [[nodiscard]] TypeFwd::Ptr GetBase() const;
         [[nodiscard]] unsigned GetLength() const;
 
-        unsigned GetElementCount() const override;
-        TypeFwd::Ptr GetElement(unsigned index) const override;
+        [[nodiscard]] unsigned GetElementCount() const override;
+        [[nodiscard]] TypeFwd::Ptr GetElement(unsigned index) const override;
 
     private:
         TypeFwd::Ptr m_Base;

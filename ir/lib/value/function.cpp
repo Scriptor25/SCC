@@ -1,3 +1,4 @@
+#include <ostream>
 #include <scc/ir/block.hpp>
 #include <scc/ir/register.hpp>
 #include <scc/ir/type.hpp>
@@ -9,9 +10,7 @@ scc::ir::Function::Function(const FunctionType::Ptr &type, std::string name)
     m_Result = type->GetResult();
     m_Variadic = type->IsVariadic();
     for (auto &argument : *type)
-    {
         m_Arguments.emplace_back(std::make_shared<Argument>(argument, CreateRegister()));
-    }
 }
 
 std::ostream &scc::ir::Function::Print(std::ostream &stream) const
@@ -20,32 +19,24 @@ std::ostream &scc::ir::Function::Print(std::ostream &stream) const
     for (auto i = m_Arguments.begin(); i != m_Arguments.end(); ++i)
     {
         if (i != m_Arguments.begin())
-        {
             stream << ", ";
-        }
         (*i)->Print(stream);
     }
     if (m_Variadic)
     {
         if (!m_Arguments.empty())
-        {
             stream << ", ";
-        }
         stream << "...";
     }
     stream << ')';
 
     if (m_Blocks.empty())
-    {
         return stream;
-    }
 
     stream << " {" << std::endl;
 
     for (auto &block : m_Blocks)
-    {
         block->Print(stream) << std::endl;
-    }
 
     return stream << '}';
 }
@@ -68,8 +59,6 @@ scc::ir::Argument::Ptr scc::ir::Function::GetArgument(const unsigned index) cons
 scc::ir::RegisterFwd::Ptr scc::ir::Function::CreateRegister(std::string name)
 {
     if (name.empty())
-    {
         name = std::to_string(m_Registers.size());
-    }
     return m_Registers.emplace_back(std::make_shared<Register>(std::move(name)));
 }

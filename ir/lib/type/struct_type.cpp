@@ -1,7 +1,7 @@
 #include <scc/ir/type.hpp>
 
 scc::ir::StructType::StructType(Context &context, std::vector<TypeFwd::Ptr> elements)
-    : Type(context, Kind_Struct),
+    : Type(context, Kind::Struct),
       m_Elements(std::move(elements))
 {
 }
@@ -10,33 +10,23 @@ unsigned scc::ir::StructType::GenerateHash() const
 {
     unsigned hash = 0;
     for (auto &element : m_Elements)
-    {
         hash = CombineHash(hash, element->GenerateHash());
-    }
     return CombineHash(6, hash);
 }
 
 bool scc::ir::StructType::Equals(const TypeFwd::Ptr &type) const
 {
-    if (type->GetKind() != Kind_Struct)
-    {
+    if (type->GetKind() != Kind::Struct)
         return false;
-    }
 
     if (const auto p = std::dynamic_pointer_cast<StructType>(type))
     {
         if (m_Elements.size() != p->m_Elements.size())
-        {
             return false;
-        }
 
         for (unsigned i = 0; i < m_Elements.size(); ++i)
-        {
             if (m_Elements.at(i) != p->m_Elements.at(i))
-            {
                 return false;
-            }
-        }
 
         return true;
     }
@@ -50,9 +40,7 @@ std::ostream &scc::ir::StructType::Print(std::ostream &stream) const
     for (auto i = m_Elements.begin(); i != m_Elements.end(); ++i)
     {
         if (i != m_Elements.begin())
-        {
             stream << ',';
-        }
         (*i)->Print(stream);
     }
     return stream << '}';
