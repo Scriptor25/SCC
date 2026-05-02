@@ -19,10 +19,27 @@ bool scc::ir::VectorType::Equals(const TypeFwd::Ptr &type) const
     if (type->GetKind() != Kind::Vector)
         return false;
 
-    if (const auto p = std::dynamic_pointer_cast<VectorType>(type))
+    if (const auto p = std::dynamic_pointer_cast < VectorType > (type))
         return m_Element == p->m_Element && m_Length == p->m_Length;
 
     return false;
+}
+
+unsigned scc::ir::VectorType::GetSize() const
+{
+    return m_Length * m_Element->GetSize();
+}
+
+unsigned scc::ir::VectorType::GetAlign() const
+{
+    const auto size = GetSize();
+    const auto align = std::bit_ceil(size);
+    return std::min(align, 16u);
+}
+
+bool scc::ir::VectorType::IsElement() const
+{
+    return true;
 }
 
 std::ostream &scc::ir::VectorType::Print(std::ostream &stream) const
@@ -47,6 +64,6 @@ unsigned scc::ir::VectorType::GetElementCount() const
 
 scc::ir::Shared<scc::ir::Type>::Ptr scc::ir::VectorType::GetElement(const unsigned index) const
 {
-    Assert(index < m_Length, "element index out of bounds");
+    Assert(index<m_Length, "element index out of bounds");
     return m_Element;
 }

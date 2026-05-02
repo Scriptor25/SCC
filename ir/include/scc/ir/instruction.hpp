@@ -20,8 +20,10 @@ namespace scc::ir
         Add,
         Sub,
         Mul,
-        Div,
-        Rem,
+        SDiv,
+        UDiv,
+        SRem,
+        URem,
         And,
         Or,
         Xor,
@@ -51,10 +53,14 @@ namespace scc::ir
 
     enum class Comparator
     {
-        LT,
-        GT,
-        LE,
-        GE,
+        SLT,
+        ULT,
+        SGT,
+        UGT,
+        SLE,
+        ULE,
+        SGE,
+        UGE,
         EQ,
         NE,
     };

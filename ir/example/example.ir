@@ -15,7 +15,7 @@ function i32 @fib(i32 %n) {
     br .head
 .head:
     %i = load %ip
-    %lt = cmp.lt %i, %n
+    %lt = cmp.ult %i, %n
     br %lt, .loop, .end
 .loop:
     %a = load %ap

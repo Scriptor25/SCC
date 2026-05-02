@@ -2,6 +2,8 @@
 
 #include <scc/ir/ir.hpp>
 
+#include <format>
+#include <sstream>
 #include <vector>
 
 namespace scc::ir
@@ -26,6 +28,9 @@ namespace scc::ir
 
         [[nodiscard]] virtual unsigned GenerateHash() const = 0;
         [[nodiscard]] virtual bool Equals(const TypeFwd::Ptr &) const = 0;
+        [[nodiscard]] virtual unsigned GetSize() const = 0;
+        [[nodiscard]] virtual unsigned GetAlign() const = 0;
+        [[nodiscard]] virtual bool IsElement() const = 0;
 
         virtual std::ostream &Print(std::ostream &stream) const = 0;
 
@@ -47,6 +52,9 @@ namespace scc::ir
 
         [[nodiscard]] unsigned GenerateHash() const override;
         [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
+        [[nodiscard]] unsigned GetSize() const override;
+        [[nodiscard]] unsigned GetAlign() const override;
+        [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
     };
@@ -58,6 +66,9 @@ namespace scc::ir
 
         [[nodiscard]] unsigned GenerateHash() const override;
         [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
+        [[nodiscard]] unsigned GetSize() const override;
+        [[nodiscard]] unsigned GetAlign() const override;
+        [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -74,6 +85,9 @@ namespace scc::ir
 
         [[nodiscard]] unsigned GenerateHash() const override;
         [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
+        [[nodiscard]] unsigned GetSize() const override;
+        [[nodiscard]] unsigned GetAlign() const override;
+        [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -90,6 +104,9 @@ namespace scc::ir
 
         [[nodiscard]] unsigned GenerateHash() const override;
         [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
+        [[nodiscard]] unsigned GetSize() const override;
+        [[nodiscard]] unsigned GetAlign() const override;
+        [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -109,6 +126,9 @@ namespace scc::ir
 
         [[nodiscard]] unsigned GenerateHash() const override;
         [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
+        [[nodiscard]] unsigned GetSize() const override;
+        [[nodiscard]] unsigned GetAlign() const override;
+        [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -130,6 +150,9 @@ namespace scc::ir
 
         [[nodiscard]] unsigned GenerateHash() const override;
         [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
+        [[nodiscard]] unsigned GetSize() const override;
+        [[nodiscard]] unsigned GetAlign() const override;
+        [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -151,6 +174,9 @@ namespace scc::ir
 
         [[nodiscard]] unsigned GenerateHash() const override;
         [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
+        [[nodiscard]] unsigned GetSize() const override;
+        [[nodiscard]] unsigned GetAlign() const override;
+        [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -175,6 +201,9 @@ namespace scc::ir
 
         [[nodiscard]] unsigned GenerateHash() const override;
         [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
+        [[nodiscard]] unsigned GetSize() const override;
+        [[nodiscard]] unsigned GetAlign() const override;
+        [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -194,3 +223,24 @@ namespace scc::ir
         bool m_Variadic;
     };
 }
+
+template<std::convertible_to<scc::ir::TypeFwd::Ptr> T>
+struct std::formatter<T>
+{
+    template<typename C>
+    static constexpr auto parse(C &&context)
+    {
+        return context.begin();
+    }
+
+    template<typename C>
+    static auto format(const T &value, C &&context)
+    {
+        std::ostringstream stream;
+        value->Print(stream);
+
+        for (auto c : stream.view())
+            *context.out()++ = c;
+        return context.out();
+    }
+};

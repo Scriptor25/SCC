@@ -54,7 +54,7 @@ unsigned scc::ir::Block::GetInstructionCount() const
 
 scc::ir::InstructionFwd::Ptr scc::ir::Block::GetInstruction(const unsigned index) const
 {
-    return m_Instructions.at(index);
+    return m_Instructions[index];
 }
 
 std::vector<scc::ir::InstructionFwd::Ptr>::const_iterator scc::ir::Block::begin() const

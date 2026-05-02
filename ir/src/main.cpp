@@ -3,6 +3,7 @@
 #include <scc/ir/instruction.hpp>
 #include <scc/ir/module.hpp>
 #include <scc/ir/parser.hpp>
+#include <scc/ir/platform.hpp>
 #include <scc/ir/value.hpp>
 
 #include <fstream>
@@ -10,8 +11,13 @@
 
 int main()
 {
+    const scc::ir::Platform platform
+    {
+        .PointerSize = 8u,
+    };
+
     scc::ir::Module module;
-    scc::ir::Context context;
+    scc::ir::Context context(platform);
     scc::ir::Builder builder(context);
 
     const auto format = builder.CreateString(module, "format", "fib(%d) = %d\r\n");
@@ -47,7 +53,7 @@ int main()
 
         builder.SetInsertBlock(head_block);
         auto i = builder.CreateLoad(ip, "i");
-        auto lt = builder.CreateLT(i, n, "lt");
+        auto lt = builder.CreateULT(i, n, "lt");
         builder.CreateBranch(lt, loop_block, end_block);
 
         builder.SetInsertBlock(loop_block);

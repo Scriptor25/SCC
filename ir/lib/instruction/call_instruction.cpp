@@ -53,5 +53,5 @@ unsigned scc::ir::CallInstruction::GetArgumentCount() const
 
 scc::ir::ValueFwd::Ptr scc::ir::CallInstruction::GetArgument(const unsigned index) const
 {
-    return m_Arguments.at(index);
+    return m_Arguments[index];
 }

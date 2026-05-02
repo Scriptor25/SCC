@@ -1,3 +1,5 @@
+#include <scc/ir/context.hpp>
+#include <scc/ir/platform.hpp>
 #include <scc/ir/type.hpp>
 
 scc::ir::FloatType::FloatType(Context &context, const unsigned size_bits)
@@ -16,10 +18,25 @@ bool scc::ir::FloatType::Equals(const TypeFwd::Ptr &type) const
     if (type->GetKind() != Kind::Float)
         return false;
 
-    if (const auto p = std::dynamic_pointer_cast<FloatType>(type))
+    if (const auto p = std::dynamic_pointer_cast < FloatType > (type))
         return m_SizeBits == p->m_SizeBits;
 
     return false;
+}
+
+unsigned scc::ir::FloatType::GetSize() const
+{
+    return (m_SizeBits + 0b111) >> 3;
+}
+
+unsigned scc::ir::FloatType::GetAlign() const
+{
+    return std::min(GetSize(), m_Context.GetPlatform().PointerSize);
+}
+
+bool scc::ir::FloatType::IsElement() const
+{
+    return true;
 }
 
 std::ostream &scc::ir::FloatType::Print(std::ostream &stream) const

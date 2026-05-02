@@ -61,8 +61,10 @@ namespace scc::ir
         OperatorInstruction::Ptr CreateAdd(std::vector<ValueFwd::Ptr> operands, std::string name = {});
         OperatorInstruction::Ptr CreateSub(std::vector<ValueFwd::Ptr> operands, std::string name = {});
         OperatorInstruction::Ptr CreateMul(std::vector<ValueFwd::Ptr> operands, std::string name = {});
-        OperatorInstruction::Ptr CreateDiv(std::vector<ValueFwd::Ptr> operands, std::string name = {});
-        OperatorInstruction::Ptr CreateRem(std::vector<ValueFwd::Ptr> operands, std::string name = {});
+        OperatorInstruction::Ptr CreateSDiv(std::vector<ValueFwd::Ptr> operands, std::string name = {});
+        OperatorInstruction::Ptr CreateUDiv(std::vector<ValueFwd::Ptr> operands, std::string name = {});
+        OperatorInstruction::Ptr CreateSRem(std::vector<ValueFwd::Ptr> operands, std::string name = {});
+        OperatorInstruction::Ptr CreateURem(std::vector<ValueFwd::Ptr> operands, std::string name = {});
         OperatorInstruction::Ptr CreateAnd(std::vector<ValueFwd::Ptr> operands, std::string name = {});
         OperatorInstruction::Ptr CreateOr(std::vector<ValueFwd::Ptr> operands, std::string name = {});
         OperatorInstruction::Ptr CreateXor(std::vector<ValueFwd::Ptr> operands, std::string name = {});
@@ -73,10 +75,14 @@ namespace scc::ir
             ValueFwd::Ptr rhs,
             std::string name = {});
 
-        ComparatorInstruction::Ptr CreateLT(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
-        ComparatorInstruction::Ptr CreateGT(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
-        ComparatorInstruction::Ptr CreateLE(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
-        ComparatorInstruction::Ptr CreateGE(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
+        ComparatorInstruction::Ptr CreateSLT(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
+        ComparatorInstruction::Ptr CreateULT(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
+        ComparatorInstruction::Ptr CreateSGT(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
+        ComparatorInstruction::Ptr CreateUGT(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
+        ComparatorInstruction::Ptr CreateSLE(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
+        ComparatorInstruction::Ptr CreateULE(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
+        ComparatorInstruction::Ptr CreateSGE(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
+        ComparatorInstruction::Ptr CreateUGE(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
         ComparatorInstruction::Ptr CreateEQ(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
         ComparatorInstruction::Ptr CreateNE(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
 

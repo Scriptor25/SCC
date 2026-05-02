@@ -71,7 +71,7 @@ unsigned scc::ir::Function::GetArgumentCount() const
 scc::ir::Argument::Ptr scc::ir::Function::GetArgument(const unsigned index) const
 {
     Assert(index < m_Arguments.size(), "index out of bounds");
-    return m_Arguments.at(index);
+    return m_Arguments[index];
 }
 
 scc::ir::RegisterFwd::Ptr scc::ir::Function::CreateRegister(std::string name)

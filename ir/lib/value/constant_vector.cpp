@@ -28,5 +28,5 @@ unsigned scc::ir::ConstantVector::GetValueCount() const
 
 scc::ir::ConstantFwd::Ptr scc::ir::ConstantVector::GetValue(const unsigned index) const
 {
-    return m_Values.at(index);
+    return m_Values[index];
 }

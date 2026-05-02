@@ -1,5 +1,16 @@
+#include <scc/assert.hpp>
 #include <scc/ir/context.hpp>
 #include <scc/ir/type.hpp>
+
+scc::ir::Context::Context(const Platform &platform)
+    : m_Platform(platform)
+{
+}
+
+const scc::ir::Platform &scc::ir::Context::GetPlatform() const
+{
+    return m_Platform;
+}
 
 scc::ir::VoidType::Ptr scc::ir::Context::GetVoidType()
 {
@@ -48,16 +59,20 @@ scc::ir::PointerType::Ptr scc::ir::Context::GetPointerType(TypeFwd::Ptr element)
 
 scc::ir::ArrayType::Ptr scc::ir::Context::GetArrayType(TypeFwd::Ptr element, unsigned length)
 {
+    Assert(element->IsElement(), "type {} does not qualify as element", element);
     return GetType<ArrayType>(std::move(element), length);
 }
 
 scc::ir::VectorType::Ptr scc::ir::Context::GetVectorType(TypeFwd::Ptr element, unsigned length)
 {
+    Assert(element->IsElement(), "type {} does not qualify as element", element);
     return GetType<VectorType>(std::move(element), length);
 }
 
 scc::ir::StructType::Ptr scc::ir::Context::GetStructType(std::vector<TypeFwd::Ptr> elements)
 {
+    for (auto &element : elements)
+        Assert(element->IsElement(), "type {} does not qualify as element", element);
     return GetType<StructType>(std::move(elements));
 }
 

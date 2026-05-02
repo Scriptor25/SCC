@@ -47,5 +47,5 @@ unsigned scc::ir::ConstantArray::GetValueCount() const
 
 scc::ir::ConstantFwd::Ptr scc::ir::ConstantArray::GetValue(const unsigned index) const
 {
-    return m_Values.at(index);
+    return m_Values[index];
 }

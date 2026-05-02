@@ -26,7 +26,7 @@ bool scc::ir::FunctionType::Equals(const TypeFwd::Ptr &type) const
     if (type->GetKind() != Kind::Function)
         return false;
 
-    if (const auto p = std::dynamic_pointer_cast<FunctionType>(type))
+    if (const auto p = std::dynamic_pointer_cast < FunctionType > (type))
     {
         if (m_Result != p->m_Result)
             return false;
@@ -38,12 +38,27 @@ bool scc::ir::FunctionType::Equals(const TypeFwd::Ptr &type) const
             return false;
 
         for (unsigned i = 0; i < m_Arguments.size(); ++i)
-            if (m_Arguments.at(i) != p->m_Arguments.at(i))
+            if (m_Arguments[i] != p->m_Arguments[i])
                 return false;
 
         return true;
     }
 
+    return false;
+}
+
+unsigned scc::ir::FunctionType::GetSize() const
+{
+    return 0u;
+}
+
+unsigned scc::ir::FunctionType::GetAlign() const
+{
+    return 1u;
+}
+
+bool scc::ir::FunctionType::IsElement() const
+{
     return false;
 }
 
@@ -77,7 +92,7 @@ unsigned scc::ir::FunctionType::GetArgumentCount() const
 
 scc::ir::TypeFwd::Ptr scc::ir::FunctionType::GetArgument(const unsigned index) const
 {
-    return m_Arguments.at(index);
+    return m_Arguments[index];
 }
 
 std::vector<scc::ir::TypeFwd::Ptr>::const_iterator scc::ir::FunctionType::begin() const

@@ -15,7 +15,7 @@ namespace scc::ir
         [[nodiscard]] GlobalFwd::Ptr GetSymbol(const std::string &name) const;
 
         Variable::Ptr CreateVariable(TypeFwd::Ptr type, std::string name, ConstantFwd::Ptr initializer);
-        Function::Ptr CreateFunction(FunctionType::Ptr type, std::string name);
+        Function::Ptr CreateFunction(const FunctionType::Ptr &type, std::string name);
 
         std::ostream &Print(std::ostream &stream) const;
 

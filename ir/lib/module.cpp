@@ -45,13 +45,13 @@ scc::ir::Variable::Ptr scc::ir::Module::CreateVariable(
     return value;
 }
 
-scc::ir::Function::Ptr scc::ir::Module::CreateFunction(FunctionType::Ptr type, std::string name)
+scc::ir::Function::Ptr scc::ir::Module::CreateFunction(const FunctionType::Ptr &type, std::string name)
 {
     for (const auto &symbol : m_Symbols)
         if (symbol->GetName() == name)
             Error("function {} does already exist", name);
 
-    auto value = std::make_shared<Function>(std::move(type), std::move(name));
+    auto value = std::make_shared<Function>(type, std::move(name));
     m_Symbols.emplace_back(value);
     return value;
 }

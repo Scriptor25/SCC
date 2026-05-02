@@ -205,7 +205,7 @@ scc::ir::Token &scc::ir::Parser::Next()
         }
     }
 
-    return m_Token = { .Type = TokenType::EoF };
+    return m_Token = { .Type = TokenType::EndOfFile };
 }
 
 bool scc::ir::Parser::At(const TokenType type) const
@@ -270,7 +270,7 @@ scc::ir::Module scc::ir::Parser::ParseModule(Context &context)
     Module module;
     Builder builder(context);
 
-    while (m_Token.Type != TokenType::EoF)
+    while (m_Token.Type != TokenType::EndOfFile)
     {
         if (Skip(TokenType::EoL))
             continue;
@@ -311,7 +311,7 @@ scc::ir::Module scc::ir::Parser::ParseModule(Context &context)
 
                 arguments.emplace_back(ParseType(builder.GetContext()));
 
-                auto &label = labels.emplace_back("arg" + std::to_string(labels.size()));
+                auto &label = labels.emplace_back();
                 if (Skip(TokenType::Other, "%"))
                     label = Expect(TokenType::Identifier).Value;
 
@@ -321,10 +321,11 @@ scc::ir::Module scc::ir::Parser::ParseModule(Context &context)
             Expect(TokenType::Other, ")");
 
             auto type = context.GetFunctionType(std::move(result), std::move(arguments), variadic);
-            auto function = module.CreateFunction(std::move(type), std::move(name));
+            auto function = module.CreateFunction(type, std::move(name));
 
             for (unsigned i = 0; i < labels.size(); ++i)
-                function->GetArgument(i)->SetName(std::move(labels.at(i)));
+                if (!labels[i].empty())
+                    function->GetArgument(i)->SetName(std::move(labels[i]));
 
             if (Skip(TokenType::Other, "{"))
             {
@@ -556,10 +557,14 @@ scc::ir::InstructionFwd::Ptr scc::ir::Parser::ParseInstruction(Module &module, B
     {
         static const std::map<std::string, Comparator> map
         {
-            { "lt", Comparator::LT },
-            { "gt", Comparator::GT },
-            { "le", Comparator::LE },
-            { "ge", Comparator::GE },
+            { "slt", Comparator::SLT },
+            { "ult", Comparator::ULT },
+            { "sgt", Comparator::SGT },
+            { "ugt", Comparator::UGT },
+            { "sle", Comparator::SLE },
+            { "ule", Comparator::ULE },
+            { "sge", Comparator::SGE },
+            { "uge", Comparator::UGE },
             { "eq", Comparator::EQ },
             { "ne", Comparator::NE },
         };
@@ -569,7 +574,11 @@ scc::ir::InstructionFwd::Ptr scc::ir::Parser::ParseInstruction(Module &module, B
         auto lhs = ParseValue(module, builder);
         Expect(TokenType::Other, ",");
         auto rhs = ParseValue(module, builder);
-        return builder.CreateComparator(map.at(comparator), std::move(lhs), std::move(rhs), std::move(name));
+
+        auto it = map.find(comparator);
+        Assert(it != map.end(), "undefined comparator '{}'", comparator);
+
+        return builder.CreateComparator(it->second, std::move(lhs), std::move(rhs), std::move(name));
     }
 
     if (Skip(TokenType::Identifier, "call"))
@@ -645,7 +654,7 @@ std::ostream &operator<<(std::ostream &stream, const scc::ir::TokenType type)
 {
     static std::map<scc::ir::TokenType, const char *> map
     {
-        { scc::ir::TokenType::EoF, "EoF" },
+        { scc::ir::TokenType::EndOfFile, "EndOfFile" },
         { scc::ir::TokenType::Identifier, "Identifier" },
         { scc::ir::TokenType::Integer, "Integer" },
         { scc::ir::TokenType::String, "String" },

@@ -10,3 +10,7 @@ add_subdirectory(ir)
 add_subdirectory(as)
 add_subdirectory(cc)
 add_subdirectory(ld)
+
+add_library(lib_umbrella INTERFACE)
+add_library(scc::umbrella ALIAS lib_umbrella)
+target_link_libraries(lib_umbrella INTERFACE scc::common scc::ir scc::as scc::cc scc::ld)

@@ -52,5 +52,5 @@ unsigned scc::ir::SelectInstruction::GetOptionCount() const
 std::pair<scc::ir::BlockFwd::Ptr, scc::ir::ValueFwd::Ptr> scc::ir::SelectInstruction::GetOption(
     const unsigned index) const
 {
-    return m_Options.at(index);
+    return m_Options[index];
 }

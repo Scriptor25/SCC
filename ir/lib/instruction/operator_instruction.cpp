@@ -36,11 +36,17 @@ std::ostream &scc::ir::OperatorInstruction::Print(std::ostream &stream) const
     case Operator::Mul:
         stream << "mul";
         break;
-    case Operator::Div:
-        stream << "div";
+    case Operator::SDiv:
+        stream << "sdiv";
         break;
-    case Operator::Rem:
-        stream << "rem";
+    case Operator::UDiv:
+        stream << "udiv";
+        break;
+    case Operator::SRem:
+        stream << "srem";
+        break;
+    case Operator::URem:
+        stream << "urem";
         break;
     case Operator::And:
         stream << "and";
@@ -74,5 +80,5 @@ unsigned scc::ir::OperatorInstruction::GetOperandCount() const
 
 scc::ir::ValueFwd::Ptr scc::ir::OperatorInstruction::GetOperand(const unsigned index) const
 {
-    return m_Operands.at(index);
+    return m_Operands[index];
 }

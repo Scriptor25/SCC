@@ -28,5 +28,5 @@ unsigned scc::ir::ConstantStruct::GetValueCount() const
 
 scc::ir::ConstantFwd::Ptr scc::ir::ConstantStruct::GetValue(const unsigned index) const
 {
-    return m_Values.at(index);
+    return m_Values[index];
 }

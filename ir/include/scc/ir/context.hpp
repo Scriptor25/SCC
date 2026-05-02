@@ -11,6 +11,10 @@ namespace scc::ir
     class Context final
     {
     public:
+        explicit Context(const Platform &platform);
+
+        const Platform &GetPlatform() const;
+
         VoidType::Ptr GetVoidType();
 
         IntType::Ptr GetI1Type();
@@ -37,15 +41,14 @@ namespace scc::ir
         T::Ptr GetType(Args &&... args)
         {
             auto type = std::make_shared<T>(*this, std::forward<Args>(args)...);
-            if (m_Types.contains(type))
-            {
-                return std::dynamic_pointer_cast<T>(m_Types.at(type));
-            }
+            if (auto it = m_Types.find(type); it != m_Types.end())
+                return std::dynamic_pointer_cast<T>(it->second);
 
             m_Types.emplace(type, type);
             return type;
         }
 
+        const Platform &m_Platform;
         std::unordered_map<TypeFwd::Ptr, TypeFwd::Ptr, TypeHash> m_Types;
     };
 }

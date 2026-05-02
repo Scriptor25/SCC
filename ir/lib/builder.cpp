@@ -7,6 +7,7 @@
 #include <scc/ir/value.hpp>
 
 #include <scc/assert.hpp>
+#include <scc/error.hpp>
 
 #include <ranges>
 
@@ -212,18 +213,32 @@ scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateMul(
     return CreateOperator(Operator::Mul, std::move(operands), std::move(name));
 }
 
-scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateDiv(
+scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateSDiv(
     std::vector<ValueFwd::Ptr> operands,
     std::string name)
 {
-    return CreateOperator(Operator::Div, std::move(operands), std::move(name));
+    return CreateOperator(Operator::SDiv, std::move(operands), std::move(name));
 }
 
-scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateRem(
+scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateUDiv(
     std::vector<ValueFwd::Ptr> operands,
     std::string name)
 {
-    return CreateOperator(Operator::Rem, std::move(operands), std::move(name));
+    return CreateOperator(Operator::UDiv, std::move(operands), std::move(name));
+}
+
+scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateSRem(
+    std::vector<ValueFwd::Ptr> operands,
+    std::string name)
+{
+    return CreateOperator(Operator::SRem, std::move(operands), std::move(name));
+}
+
+scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateURem(
+    std::vector<ValueFwd::Ptr> operands,
+    std::string name)
+{
+    return CreateOperator(Operator::URem, std::move(operands), std::move(name));
 }
 
 scc::ir::OperatorInstruction::Ptr scc::ir::Builder::CreateAnd(
@@ -271,36 +286,68 @@ scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateComparator(
     return instruction;
 }
 
-scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateLT(
+scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateSLT(
     ValueFwd::Ptr lhs,
     ValueFwd::Ptr rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::LT, std::move(lhs), std::move(rhs), std::move(name));
+    return CreateComparator(Comparator::SLT, std::move(lhs), std::move(rhs), std::move(name));
 }
 
-scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateGT(
+scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateULT(
     ValueFwd::Ptr lhs,
     ValueFwd::Ptr rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::GT, std::move(lhs), std::move(rhs), std::move(name));
+    return CreateComparator(Comparator::ULT, std::move(lhs), std::move(rhs), std::move(name));
 }
 
-scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateLE(
+scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateSGT(
     ValueFwd::Ptr lhs,
     ValueFwd::Ptr rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::LE, std::move(lhs), std::move(rhs), std::move(name));
+    return CreateComparator(Comparator::SGT, std::move(lhs), std::move(rhs), std::move(name));
 }
 
-scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateGE(
+scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateUGT(
     ValueFwd::Ptr lhs,
     ValueFwd::Ptr rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::GE, std::move(lhs), std::move(rhs), std::move(name));
+    return CreateComparator(Comparator::UGT, std::move(lhs), std::move(rhs), std::move(name));
+}
+
+scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateSLE(
+    ValueFwd::Ptr lhs,
+    ValueFwd::Ptr rhs,
+    std::string name)
+{
+    return CreateComparator(Comparator::SLE, std::move(lhs), std::move(rhs), std::move(name));
+}
+
+scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateULE(
+    ValueFwd::Ptr lhs,
+    ValueFwd::Ptr rhs,
+    std::string name)
+{
+    return CreateComparator(Comparator::ULE, std::move(lhs), std::move(rhs), std::move(name));
+}
+
+scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateSGE(
+    ValueFwd::Ptr lhs,
+    ValueFwd::Ptr rhs,
+    std::string name)
+{
+    return CreateComparator(Comparator::SGE, std::move(lhs), std::move(rhs), std::move(name));
+}
+
+scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateUGE(
+    ValueFwd::Ptr lhs,
+    ValueFwd::Ptr rhs,
+    std::string name)
+{
+    return CreateComparator(Comparator::UGE, std::move(lhs), std::move(rhs), std::move(name));
 }
 
 scc::ir::ComparatorInstruction::Ptr scc::ir::Builder::CreateEQ(
@@ -511,7 +558,7 @@ scc::ir::CallInstruction::Ptr scc::ir::Builder::CreateCall(
     Assert(function_type->IsVariadic() || count == arguments.size(), "too many arguments");
 
     for (unsigned i = 0; i < count; ++i)
-        Assert(function_type->GetArgument(i) == arguments.at(i)->GetType(), "invalid argument type");
+        Assert(function_type->GetArgument(i) == arguments[i]->GetType(), "invalid argument type");
 
     auto register_ = m_InsertBlock->CreateRegister(std::move(name));
 

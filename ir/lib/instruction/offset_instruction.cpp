@@ -53,5 +53,5 @@ unsigned scc::ir::OffsetInstruction::GetOffsetCount() const
 
 scc::ir::ValueFwd::Ptr scc::ir::OffsetInstruction::GetOffset(const unsigned index) const
 {
-    return m_Offsets.at(index);
+    return m_Offsets[index];
 }

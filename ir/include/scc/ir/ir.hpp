@@ -18,6 +18,8 @@ namespace scc::ir
     class Context;
     class Builder;
 
+    struct Platform;
+
     class Type;
     using TypeFwd = Shared<Type>;
 
@@ -53,4 +55,5 @@ namespace scc::ir
     bool operator==(const TypeFwd::Ptr &, const TypeFwd::Ptr &);
 
     unsigned CombineHash(unsigned a, unsigned b);
+    unsigned AlignTo(unsigned value, unsigned align);
 }

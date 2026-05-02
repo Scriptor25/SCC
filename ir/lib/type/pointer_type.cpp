@@ -1,3 +1,5 @@
+#include <scc/ir/context.hpp>
+#include <scc/ir/platform.hpp>
 #include <scc/ir/type.hpp>
 
 scc::ir::PointerType::PointerType(Context &context, TypeFwd::Ptr element)
@@ -16,10 +18,25 @@ bool scc::ir::PointerType::Equals(const TypeFwd::Ptr &type) const
     if (type->GetKind() != Kind::Pointer)
         return false;
 
-    if (const auto p = std::dynamic_pointer_cast<PointerType>(type))
+    if (const auto p = std::dynamic_pointer_cast < PointerType > (type))
         return m_Element == p->m_Element;
 
     return false;
+}
+
+unsigned scc::ir::PointerType::GetSize() const
+{
+    return m_Context.GetPlatform().PointerSize;
+}
+
+unsigned scc::ir::PointerType::GetAlign() const
+{
+    return m_Context.GetPlatform().PointerSize;
+}
+
+bool scc::ir::PointerType::IsElement() const
+{
+    return true;
 }
 
 std::ostream &scc::ir::PointerType::Print(std::ostream &stream) const

@@ -15,3 +15,8 @@ unsigned scc::ir::CombineHash(const unsigned a, const unsigned b)
 {
     return a ^ b + 0x9e3779b97f4a7c15ULL + (a << 6) + (a >> 2);
 }
+
+unsigned scc::ir::AlignTo(const unsigned value, const unsigned align)
+{
+    return (value + align - 1u) & ~(align - 1u);
+}

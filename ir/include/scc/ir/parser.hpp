@@ -6,7 +6,7 @@ namespace scc::ir
 {
     enum class TokenType
     {
-        EoF,
+        EndOfFile,
         EoL,
         Identifier,
         Integer,
