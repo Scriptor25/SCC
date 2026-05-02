@@ -1,9 +1,11 @@
 #pragma once
 
+#include <scc/ir/constant.hpp>
 #include <scc/ir/ir.hpp>
 #include <scc/ir/type.hpp>
 
-#include <unordered_map>
+#include <cstdint>
+#include <memory>
 #include <vector>
 
 namespace scc::ir
@@ -12,43 +14,87 @@ namespace scc::ir
     {
     public:
         explicit Context(const Platform &platform);
+        ~Context();
 
-        const Platform &GetPlatform() const;
+        Context(const Context &) = delete;
+        Context(Context &&context) noexcept;
 
-        VoidType::Ptr GetVoidType();
+        Context &operator=(const Context &) = delete;
+        Context &operator=(Context &&context) noexcept;
 
-        IntType::Ptr GetI1Type();
-        IntType::Ptr GetI8Type();
-        IntType::Ptr GetI16Type();
-        IntType::Ptr GetI32Type();
-        IntType::Ptr GetI64Type();
+        [[nodiscard]] const Platform &GetPlatform() const;
 
-        FloatType::Ptr GetF32Type();
-        FloatType::Ptr GetF64Type();
+        VoidType *GetVoidType();
 
-        PointerType::Ptr GetPointerType(TypeFwd::Ptr element);
+        IntType *GetInt1Type();
+        IntType *GetInt8Type();
+        IntType *GetInt16Type();
+        IntType *GetInt32Type();
+        IntType *GetInt64Type();
+        IntType *GetIntNType(unsigned size_bits);
 
-        ArrayType::Ptr GetArrayType(TypeFwd::Ptr element, unsigned length);
-        VectorType::Ptr GetVectorType(TypeFwd::Ptr element, unsigned length);
+        FloatType *GetFloat32Type();
+        FloatType *GetFloat64Type();
 
-        StructType::Ptr GetStructType(std::vector<TypeFwd::Ptr> elements);
+        PointerType *GetPointerType(Type *element);
 
-        FunctionType::Ptr GetFunctionType(TypeFwd::Ptr result, std::vector<TypeFwd::Ptr> arguments, bool variadic);
+        ArrayType *GetArrayType(Type *element, unsigned length);
+        VectorType *GetVectorType(Type *element, unsigned length);
+
+        StructType *GetStructType(std::vector<Type *> elements);
+
+        FunctionType *GetFunctionType(Type *result, std::vector<Type *> arguments, bool variadic);
+
+        ConstantInt *GetInt1(bool value);
+        ConstantInt *GetInt8(uint8_t value);
+        ConstantInt *GetInt16(uint16_t value);
+        ConstantInt *GetInt32(uint32_t value);
+        ConstantInt *GetInt64(uint64_t value);
+        ConstantInt *GetIntN(unsigned size_bits, uint64_t value);
+        ConstantInt *GetInt(IntType *type, uint64_t value);
+
+        ConstantFloat *GetFloat32(float32_t value);
+        ConstantFloat *GetFloat64(float64_t value);
+
+        ConstantArray *GetArray(std::vector<Constant *> values);
+        ConstantArray *GetArray(std::string_view value);
+
+        ConstantVector *GetVector(std::vector<Constant *> values);
+
+        ConstantStruct *GetStruct(std::vector<Constant *> values);
 
     private:
-        template<typename T, typename... Args>
-            requires std::is_base_of_v<Type, T>
-        T::Ptr GetType(Args &&... args)
+        template<std::derived_from<Type> T, typename... Args>
+        T *Get(Args &&... args)
         {
-            auto type = std::make_shared<T>(*this, std::forward<Args>(args)...);
-            if (auto it = m_Types.find(type); it != m_Types.end())
-                return std::dynamic_pointer_cast<T>(it->second);
+            auto type = std::make_unique<T>(*this, std::forward<Args>(args)...);
+            auto *ptr = type.get();
 
-            m_Types.emplace(type, type);
-            return type;
+            for (auto &entry : m_Types)
+                if (entry->Compare(ptr))
+                    return dynamic_cast<T *>(entry.get());
+
+            m_Types.push_back(std::move(type));
+            return ptr;
         }
 
-        const Platform &m_Platform;
-        std::unordered_map<TypeFwd::Ptr, TypeFwd::Ptr, TypeHash> m_Types;
+        template<std::derived_from<Constant> T, typename... Args>
+        T *Get(Args &&... args)
+        {
+            auto constant = std::make_unique<T>(std::forward<Args>(args)...);
+            auto *ptr = constant.get();
+
+            for (auto &entry : m_Constants)
+                if (entry->Compare(ptr))
+                    return dynamic_cast<T *>(entry.get());
+
+            m_Constants.push_back(std::move(constant));
+            return ptr;
+        }
+
+        const Platform *m_Platform;
+
+        std::vector<std::unique_ptr<Type>> m_Types;
+        std::vector<std::unique_ptr<Constant>> m_Constants;
     };
 }

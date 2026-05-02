@@ -1,18 +1,32 @@
 #pragma once
 
-#include <scc/ir/value.hpp>
+#include <scc/ir/user.hpp>
+
+#include <string>
+#include <vector>
 
 namespace scc::ir
 {
-    class Instruction : public IdentifiedValue
+    class Instruction : public User
     {
     public:
-        explicit Instruction(TypeFwd::Ptr type, RegisterFwd::Ptr register_, BlockFwd::WeakPtr block);
+        explicit Instruction(Type *type, Block *block);
+        explicit Instruction(Type *type, Block *block, std::string name);
 
-        [[nodiscard]] BlockFwd::Ptr GetBlock() const;
+        std::ostream &PrintOperand(std::ostream &stream) const override;
+
+        [[nodiscard]] Block *GetBlock() const;
+
+        void SetName(std::string name);
+        [[nodiscard]] const std::string &GetName() const;
+
+        [[nodiscard]] virtual bool IsTerminator() const;
+        [[nodiscard]] virtual size_t GetSuccessorCount() const;
+        [[nodiscard]] virtual Block *GetSuccessor(size_t index) const;
 
     protected:
-        BlockFwd::WeakPtr m_Block;
+        Block *m_Block;
+        std::string m_Name;
     };
 
     enum class Operator
@@ -29,26 +43,29 @@ namespace scc::ir
         Xor,
     };
 
-    class OperatorInstruction final : public Instruction, public Shared<OperatorInstruction>
+    class OperatorInstruction final : public Instruction
     {
     public:
         explicit OperatorInstruction(
-            TypeFwd::Ptr type,
-            RegisterFwd::Ptr register_,
-            BlockFwd::WeakPtr block,
+            Type *type,
+            Block *block,
+            std::string name,
             Operator operator_,
-            std::vector<ValueFwd::Ptr> operands);
+            std::vector<Value *> operands);
         ~OperatorInstruction() override;
+
+        void DropAll() override;
+        void Replace(Value *value, Value *with) override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
         [[nodiscard]] Operator GetOperator() const;
         [[nodiscard]] unsigned GetOperandCount() const;
-        [[nodiscard]] ValueFwd::Ptr GetOperand(unsigned index) const;
+        [[nodiscard]] Value *GetOperand(unsigned index) const;
 
     private:
         Operator m_Operator;
-        std::vector<ValueFwd::Ptr> m_Operands;
+        std::vector<Value *> m_Operands;
     };
 
     enum class Comparator
@@ -65,100 +82,140 @@ namespace scc::ir
         NE,
     };
 
-    class ComparatorInstruction final : public Instruction, public Shared<ComparatorInstruction>
+    class ComparatorInstruction final : public Instruction
     {
     public:
         explicit ComparatorInstruction(
-            TypeFwd::Ptr type,
-            RegisterFwd::Ptr register_,
-            BlockFwd::WeakPtr block,
+            Type *type,
+            Block *block,
+            std::string name,
             Comparator comparator,
-            ValueFwd::Ptr lhs,
-            ValueFwd::Ptr rhs);
+            Value *lhs,
+            Value *rhs);
         ~ComparatorInstruction() override;
+
+        void DropAll() override;
+        void Replace(Value *value, Value *with) override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
         [[nodiscard]] Comparator GetComparator() const;
-        [[nodiscard]] ValueFwd::Ptr GetLHS() const;
-        [[nodiscard]] ValueFwd::Ptr GetRHS() const;
+        [[nodiscard]] Value *GetLHS() const;
+        [[nodiscard]] Value *GetRHS() const;
 
     private:
         Comparator m_Comparator;
-        ValueFwd::Ptr m_LHS, m_RHS;
+        Value *m_LHS, *m_RHS;
     };
 
-    class BranchInstruction final : public Instruction, public Shared<BranchInstruction>
+    class DirectBranchInstruction final : public Instruction
     {
     public:
-        explicit BranchInstruction(
-            TypeFwd::Ptr type,
-            BlockFwd::WeakPtr block,
-            BlockFwd::Ptr destination);
-        explicit BranchInstruction(
-            TypeFwd::Ptr type,
-            BlockFwd::WeakPtr block,
-            ValueFwd::Ptr condition,
-            BlockFwd::Ptr then,
-            BlockFwd::Ptr else_);
-        ~BranchInstruction() override;
+        explicit DirectBranchInstruction(
+            Type *type,
+            Block *block,
+            Block *destination);
+        ~DirectBranchInstruction() override;
+
+        void DropAll() override;
+        void Replace(Value *value, Value *with) override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] ValueFwd::Ptr GetCondition() const;
-        [[nodiscard]] BlockFwd::Ptr GetThen() const;
-        [[nodiscard]] BlockFwd::Ptr GetElse() const;
+        bool IsTerminator() const override;
+        size_t GetSuccessorCount() const override;
+        Block *GetSuccessor(size_t index) const override;
+
+        [[nodiscard]] Block *GetDestination() const;
 
     private:
-        ValueFwd::Ptr m_Condition;
-        BlockFwd::Ptr m_Then, m_Else;
+        Block *m_Destination;
     };
 
-    class ReturnInstruction final : public Instruction, public Shared<ReturnInstruction>
+    class BranchInstruction final : public Instruction
+    {
+    public:
+        explicit BranchInstruction(
+            Type *type,
+            Block *block,
+            Value *condition,
+            Block *then,
+            Block *else_);
+        ~BranchInstruction() override;
+
+        void DropAll() override;
+        void Replace(Value *value, Value *with) override;
+
+        std::ostream &Print(std::ostream &stream) const override;
+
+        bool IsTerminator() const override;
+        size_t GetSuccessorCount() const override;
+        Block *GetSuccessor(size_t index) const override;
+
+        [[nodiscard]] Value *GetCondition() const;
+        [[nodiscard]] Block *GetThen() const;
+        [[nodiscard]] Block *GetElse() const;
+
+    private:
+        Value *m_Condition;
+        Block *m_Then, *m_Else;
+    };
+
+    class ReturnInstruction final : public Instruction
     {
     public:
         explicit ReturnInstruction(
-            TypeFwd::Ptr type,
-            BlockFwd::WeakPtr block,
-            ValueFwd::Ptr value);
+            Type *type,
+            Block *block);
+        explicit ReturnInstruction(
+            Type *type,
+            Block *block,
+            Value *value);
         ~ReturnInstruction() override;
+
+        void DropAll() override;
+        void Replace(Value *value, Value *with) override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] ValueFwd::Ptr GetValue() const;
+        bool IsTerminator() const override;
+
+        [[nodiscard]] Value *GetValue() const;
 
     private:
-        ValueFwd::Ptr m_Value;
+        Value *m_Value;
     };
 
-    class SelectInstruction final : public Instruction, public Shared<SelectInstruction>
+    class SelectInstruction final : public Instruction
     {
     public:
         explicit SelectInstruction(
-            TypeFwd::Ptr type,
-            RegisterFwd::Ptr register_,
-            BlockFwd::WeakPtr block,
-            std::vector<std::pair<BlockFwd::Ptr, ValueFwd::Ptr>> options);
+            Type *type,
+            Block *block,
+            std::string name,
+            std::vector<std::pair<Block *, Value *>> options);
         ~SelectInstruction() override;
+
+        void DropAll() override;
+        void Replace(Value *value, Value *with) override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
         [[nodiscard]] unsigned GetOptionCount() const;
-        [[nodiscard]] std::pair<BlockFwd::Ptr, ValueFwd::Ptr> GetOption(unsigned index) const;
+        [[nodiscard]] std::pair<Block *, Value *> GetOption(unsigned index) const;
 
     private:
-        std::vector<std::pair<BlockFwd::Ptr, ValueFwd::Ptr>> m_Options;
+        std::vector<std::pair<Block *, Value *>> m_Options;
     };
 
-    class AllocInstruction final : public Instruction, public Shared<AllocInstruction>
+    class AllocInstruction final : public Instruction
     {
     public:
         explicit AllocInstruction(
-            TypeFwd::Ptr type,
-            RegisterFwd::Ptr register_,
-            BlockFwd::WeakPtr block,
+            PointerType *type,
+            Block *block,
+            std::string name,
             unsigned count);
-        ~AllocInstruction() override = default;
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -168,103 +225,118 @@ namespace scc::ir
         unsigned m_Count;
     };
 
-    class LoadInstruction final : public Instruction, public Shared<LoadInstruction>
+    class LoadInstruction final : public Instruction
     {
     public:
         explicit LoadInstruction(
-            TypeFwd::Ptr type,
-            RegisterFwd::Ptr register_,
-            BlockFwd::WeakPtr block,
-            ValueFwd::Ptr pointer);
+            Type *type,
+            Block *block,
+            std::string name,
+            Value *pointer);
         ~LoadInstruction() override;
+
+        void DropAll() override;
+        void Replace(Value *value, Value *with) override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] ValueFwd::Ptr GetPointer() const;
+        [[nodiscard]] Value *GetPointer() const;
 
     private:
-        ValueFwd::Ptr m_Pointer;
+        Value *m_Pointer;
     };
 
-    class StoreInstruction final : public Instruction, public Shared<StoreInstruction>
+    class StoreInstruction final : public Instruction
     {
     public:
         explicit StoreInstruction(
-            TypeFwd::Ptr type,
-            BlockFwd::WeakPtr block,
-            ValueFwd::Ptr pointer,
-            ValueFwd::Ptr value);
+            Type *type,
+            Block *block,
+            Value *pointer,
+            Value *value);
         ~StoreInstruction() override;
+
+        void DropAll() override;
+        void Replace(Value *value, Value *with) override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] ValueFwd::Ptr GetPointer() const;
-        [[nodiscard]] ValueFwd::Ptr GetValue() const;
+        [[nodiscard]] Value *GetPointer() const;
+        [[nodiscard]] Value *GetValue() const;
 
     private:
-        ValueFwd::Ptr m_Pointer;
-        ValueFwd::Ptr m_Value;
+        Value *m_Pointer;
+        Value *m_Value;
     };
 
-    class OffsetInstruction final : public Instruction, public Shared<OffsetInstruction>
+    class OffsetInstruction final : public Instruction
     {
     public:
         explicit OffsetInstruction(
-            TypeFwd::Ptr type,
-            RegisterFwd::Ptr register_,
-            BlockFwd::WeakPtr block,
-            ValueFwd::Ptr base,
-            std::vector<ValueFwd::Ptr> offsets);
+            Type *type,
+            Block *block,
+            std::string name,
+            Value *base,
+            std::vector<Value *> offsets);
         ~OffsetInstruction() override;
+
+        void DropAll() override;
+        void Replace(Value *value, Value *with) override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] ValueFwd::Ptr GetBase() const;
+        [[nodiscard]] Value *GetBase() const;
         [[nodiscard]] unsigned GetOffsetCount() const;
-        [[nodiscard]] ValueFwd::Ptr GetOffset(unsigned index) const;
+        [[nodiscard]] Value *GetOffset(unsigned index) const;
 
     private:
-        ValueFwd::Ptr m_Base;
-        std::vector<ValueFwd::Ptr> m_Offsets;
+        Value *m_Base;
+        std::vector<Value *> m_Offsets;
     };
 
-    class CallInstruction final : public Instruction, public Shared<CallInstruction>
+    class CallInstruction final : public Instruction
     {
     public:
         explicit CallInstruction(
-            TypeFwd::Ptr type,
-            RegisterFwd::Ptr register_,
-            BlockFwd::WeakPtr block,
-            ValueFwd::Ptr callee,
-            std::vector<ValueFwd::Ptr> arguments);
+            Type *type,
+            Block *block,
+            std::string name,
+            Value *callee,
+            std::vector<Value *> arguments);
         ~CallInstruction() override;
+
+        void DropAll() override;
+        void Replace(Value *value, Value *with) override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] ValueFwd::Ptr GetCallee() const;
+        [[nodiscard]] Value *GetCallee() const;
         [[nodiscard]] unsigned GetArgumentCount() const;
-        [[nodiscard]] ValueFwd::Ptr GetArgument(unsigned index) const;
+        [[nodiscard]] Value *GetArgument(unsigned index) const;
 
     private:
-        ValueFwd::Ptr m_Callee;
-        std::vector<ValueFwd::Ptr> m_Arguments;
+        Value *m_Callee;
+        std::vector<Value *> m_Arguments;
     };
 
-    class CastInstruction final : public Instruction, public Shared<CastInstruction>
+    class CastInstruction final : public Instruction
     {
     public:
         explicit CastInstruction(
-            TypeFwd::Ptr type,
-            RegisterFwd::Ptr register_,
-            BlockFwd::WeakPtr block,
-            ValueFwd::Ptr value);
+            Type *type,
+            Block *block,
+            std::string name,
+            Value *value);
         ~CastInstruction() override;
+
+        void DropAll() override;
+        void Replace(Value *value, Value *with) override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] ValueFwd::Ptr GetValue() const;
+        [[nodiscard]] Value *GetValue() const;
 
     private:
-        ValueFwd::Ptr m_Value;
+        Value *m_Value;
     };
 }

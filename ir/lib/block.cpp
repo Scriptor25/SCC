@@ -1,17 +1,25 @@
 #include <scc/ir/block.hpp>
 #include <scc/ir/instruction.hpp>
 
-#include <ostream>
+#include <scc/assert.hpp>
 
-scc::ir::Block::Block(std::string name, Function::WeakPtr function)
-    : m_Name(std::move(name)),
-      m_Function(std::move(function))
+#include <ostream>
+#include <scc/ir/function.hpp>
+
+scc::ir::Block::Block(std::string name, Function *function)
+    : Value(nullptr),
+      m_Name(std::move(name)),
+      m_Function(function)
 {
 }
 
-std::string scc::ir::Block::GetName() const
+scc::ir::Block::~Block()
 {
-    return m_Name;
+    for (const auto &instruction : m_Instructions)
+    {
+        instruction->ReplaceWith(nullptr);
+        instruction->DropAll();
+    }
 }
 
 void scc::ir::Block::SetName(std::string name)
@@ -19,21 +27,29 @@ void scc::ir::Block::SetName(std::string name)
     m_Name = std::move(name);
 }
 
+const std::string &scc::ir::Block::GetName() const
+{
+    return m_Name;
+}
+
 std::ostream &scc::ir::Block::Print(std::ostream &stream) const
 {
     stream << '.' << m_Name << ':';
-    if (!m_Predecessors.empty())
+
+    if (auto predecessors = GetPredecessors(); !predecessors.empty())
     {
         stream << " ; ";
-        for (auto i = m_Predecessors.begin(); i != m_Predecessors.end(); ++i)
+        for (auto i = predecessors.begin(); i != predecessors.end(); ++i)
         {
-            if (i != m_Predecessors.begin())
+            if (i != predecessors.begin())
                 stream << ", ";
             stream << (*i)->GetName();
         }
     }
+
     for (auto &instruction : m_Instructions)
         instruction->Print(stream << std::endl << "    ");
+
     return stream;
 }
 
@@ -42,47 +58,64 @@ std::ostream &scc::ir::Block::PrintOperand(std::ostream &stream) const
     return stream << '.' << m_Name;
 }
 
-scc::ir::Function::Ptr scc::ir::Block::GetFunction() const
+scc::ir::Function *scc::ir::Block::GetFunction() const
 {
-    return m_Function.lock();
+    return m_Function;
 }
 
-unsigned scc::ir::Block::GetInstructionCount() const
+size_t scc::ir::Block::GetInstructionCount() const
 {
     return m_Instructions.size();
 }
 
-scc::ir::InstructionFwd::Ptr scc::ir::Block::GetInstruction(const unsigned index) const
+scc::ir::Instruction *scc::ir::Block::GetInstruction(const size_t index) const
 {
-    return m_Instructions[index];
+    AssertIndexInBounds(index, m_Instructions.size());
+
+    return m_Instructions[index].get();
 }
 
-std::vector<scc::ir::InstructionFwd::Ptr>::const_iterator scc::ir::Block::begin() const
+void scc::ir::Block::Insert(std::unique_ptr<Instruction> instruction)
 {
-    return m_Instructions.begin();
+    Assert(!!instruction, "instruction must not be null");
+
+    m_Instructions.push_back(std::move(instruction));
 }
 
-std::vector<scc::ir::InstructionFwd::Ptr>::const_iterator scc::ir::Block::end() const
+scc::ir::Value *scc::ir::Block::FindValue(const std::string &name) const
 {
-    return m_Instructions.end();
+    for (auto &instruction : m_Instructions)
+        if (instruction->GetName() == name)
+            return instruction.get();
+
+    return nullptr;
 }
 
-void scc::ir::Block::Insert(InstructionFwd::Ptr instruction)
+scc::ir::Instruction *scc::ir::Block::GetTerminator() const
 {
-    m_Instructions.emplace_back(std::move(instruction));
+    for (auto &instruction : m_Instructions)
+        if (instruction->IsTerminator())
+            return instruction.get();
+
+    return nullptr;
 }
 
-void scc::ir::Block::UsePred(Ptr block)
+std::unordered_set<scc::ir::Block *> scc::ir::Block::GetPredecessors() const
 {
-    m_Predecessors.emplace(std::move(block));
+    return m_Function->GetPredecessors(this);
 }
 
-void scc::ir::Block::DropPred(const Ptr &block)
+std::unordered_set<scc::ir::Block *> scc::ir::Block::GetSuccessors() const
 {
-    m_Predecessors.erase(block);
-}
+    if (const auto terminator = GetTerminator())
+    {
+        std::unordered_set<Block *> successors;
 
-scc::ir::RegisterFwd::Ptr scc::ir::Block::CreateRegister(std::string name) const
-{
-    return m_Function.lock()->CreateRegister(std::move(name));
+        for (auto i = 0ull; i < terminator->GetSuccessorCount(); ++i)
+            successors.insert(terminator->GetSuccessor(i));
+
+        return successors;
+    }
+
+    return {};
 }

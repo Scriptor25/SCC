@@ -9,9 +9,6 @@
 
 #include <string_view>
 
-template<typename T>
-concept InstructionLike = std::is_base_of_v<scc::ir::Instruction, T>;
-
 namespace scc::ir
 {
     class Builder final
@@ -21,128 +18,114 @@ namespace scc::ir
 
         [[nodiscard]] Context &GetContext() const;
 
-        [[nodiscard]] ConstantInt::Ptr CreateInt(IntType::Ptr type, uint64_t value) const;
-        [[nodiscard]] ConstantFloat::Ptr CreateFloat(FloatType::Ptr type, long double value) const;
-
-        [[nodiscard]] ConstantInt::Ptr CreateI8(uint8_t value) const;
-        [[nodiscard]] ConstantInt::Ptr CreateI16(uint16_t value) const;
-        [[nodiscard]] ConstantInt::Ptr CreateI32(uint32_t value) const;
-        [[nodiscard]] ConstantInt::Ptr CreateI64(uint64_t value) const;
-
-        [[nodiscard]] ConstantFloat::Ptr CreateF32(float value) const;
-        [[nodiscard]] ConstantFloat::Ptr CreateF64(long double value) const;
-
-        [[nodiscard]] ConstantArray::Ptr CreateArray(ArrayType::Ptr type, std::vector<ConstantFwd::Ptr> values) const;
-        [[nodiscard]] ConstantArray::Ptr CreateArray(std::vector<ConstantFwd::Ptr> values) const;
-        [[nodiscard]] ConstantArray::Ptr CreateArray(std::string_view value) const;
-        [[nodiscard]] ConstantVector::Ptr CreateVector(std::vector<ConstantFwd::Ptr> values) const;
-        [[nodiscard]] ConstantStruct::Ptr CreateStruct(std::vector<ConstantFwd::Ptr> values) const;
-
-        [[nodiscard]] Variable::Ptr CreateString(
+        [[nodiscard]] Variable *CreateString(
             Module &module,
             std::string name,
             std::string_view value) const;
 
-        [[nodiscard]] BlockFwd::Ptr GetOrCreateBlock(
-            const Function::Ptr &function,
+        [[nodiscard]] Block *GetOrCreateBlock(
+            Function *function,
             std::string name) const;
 
-        void SetInsertBlock(BlockFwd::Ptr block);
+        void SetInsertBlock(Block *block);
         void ClearInsertBlock();
 
-        [[nodiscard]] BlockFwd::Ptr GetInsertBlock() const;
-        [[nodiscard]] Function::Ptr GetInsertFunction() const;
+        [[nodiscard]] Block *GetInsertBlock() const;
+        [[nodiscard]] Function *GetInsertFunction() const;
 
-        OperatorInstruction::Ptr CreateOperator(
+        OperatorInstruction *CreateOperator(
             Operator operator_,
-            std::vector<ValueFwd::Ptr> operands,
+            std::vector<Value *> operands,
             std::string name = {});
 
-        OperatorInstruction::Ptr CreateAdd(std::vector<ValueFwd::Ptr> operands, std::string name = {});
-        OperatorInstruction::Ptr CreateSub(std::vector<ValueFwd::Ptr> operands, std::string name = {});
-        OperatorInstruction::Ptr CreateMul(std::vector<ValueFwd::Ptr> operands, std::string name = {});
-        OperatorInstruction::Ptr CreateSDiv(std::vector<ValueFwd::Ptr> operands, std::string name = {});
-        OperatorInstruction::Ptr CreateUDiv(std::vector<ValueFwd::Ptr> operands, std::string name = {});
-        OperatorInstruction::Ptr CreateSRem(std::vector<ValueFwd::Ptr> operands, std::string name = {});
-        OperatorInstruction::Ptr CreateURem(std::vector<ValueFwd::Ptr> operands, std::string name = {});
-        OperatorInstruction::Ptr CreateAnd(std::vector<ValueFwd::Ptr> operands, std::string name = {});
-        OperatorInstruction::Ptr CreateOr(std::vector<ValueFwd::Ptr> operands, std::string name = {});
-        OperatorInstruction::Ptr CreateXor(std::vector<ValueFwd::Ptr> operands, std::string name = {});
+        OperatorInstruction *CreateAdd(std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateSub(std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateMul(std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateSDiv(std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateUDiv(std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateSRem(std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateURem(std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateAnd(std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateOr(std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateXor(std::vector<Value *> operands, std::string name = {});
 
-        ComparatorInstruction::Ptr CreateComparator(
+        ComparatorInstruction *CreateComparator(
             Comparator comparator,
-            ValueFwd::Ptr lhs,
-            ValueFwd::Ptr rhs,
+            Value *lhs,
+            Value *rhs,
             std::string name = {});
 
-        ComparatorInstruction::Ptr CreateSLT(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
-        ComparatorInstruction::Ptr CreateULT(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
-        ComparatorInstruction::Ptr CreateSGT(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
-        ComparatorInstruction::Ptr CreateUGT(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
-        ComparatorInstruction::Ptr CreateSLE(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
-        ComparatorInstruction::Ptr CreateULE(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
-        ComparatorInstruction::Ptr CreateSGE(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
-        ComparatorInstruction::Ptr CreateUGE(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
-        ComparatorInstruction::Ptr CreateEQ(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
-        ComparatorInstruction::Ptr CreateNE(ValueFwd::Ptr lhs, ValueFwd::Ptr rhs, std::string name = {});
+        ComparatorInstruction *CreateSLT(Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateULT(Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateSGT(Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateUGT(Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateSLE(Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateULE(Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateSGE(Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateUGE(Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateEQ(Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateNE(Value *lhs, Value *rhs, std::string name = {});
 
-        BranchInstruction::Ptr CreateBranch(BlockFwd::Ptr destination);
-        BranchInstruction::Ptr CreateBranch(
-            ValueFwd::Ptr condition,
-            BlockFwd::Ptr then,
-            BlockFwd::Ptr else_);
+        DirectBranchInstruction *CreateBranch(Block *destination);
+        BranchInstruction *CreateBranch(
+            Value *condition,
+            Block *then,
+            Block *else_);
 
-        ReturnInstruction::Ptr CreateRet();
-        ReturnInstruction::Ptr CreateRet(ValueFwd::Ptr value);
+        ReturnInstruction *CreateRet();
+        ReturnInstruction *CreateRet(Value *value);
 
-        SelectInstruction::Ptr CreateSelect(
-            std::vector<std::pair<BlockFwd::Ptr, ValueFwd::Ptr>> options,
+        SelectInstruction *CreateSelect(
+            std::vector<std::pair<Block *, Value *>> options,
             std::string name = {});
 
-        AllocInstruction::Ptr CreateAlloc(
-            TypeFwd::Ptr type,
+        AllocInstruction *CreateAlloc(
+            Type *type,
             std::string name = {},
             unsigned count = 1u);
-        LoadInstruction::Ptr CreateLoad(
-            ValueFwd::Ptr pointer,
+        LoadInstruction *CreateLoad(
+            Value *pointer,
             std::string name = {});
-        StoreInstruction::Ptr CreateStore(
-            ValueFwd::Ptr pointer,
-            ValueFwd::Ptr value);
+        StoreInstruction *CreateStore(
+            Value *pointer,
+            Value *value);
 
-        OffsetInstruction::Ptr CreateOffset(
-            TypeFwd::Ptr type,
-            ValueFwd::Ptr base,
-            std::vector<ValueFwd::Ptr> offsets,
+        OffsetInstruction *CreateOffset(
+            Type *type,
+            Value *base,
+            std::vector<Value *> offsets,
             std::string name = {});
 
-        OffsetInstruction::Ptr CreateConstOffset(
-            ValueFwd::Ptr base,
+        OffsetInstruction *CreateConstOffset(
+            Value *base,
             const std::vector<unsigned> &offsets,
             std::string name = {});
 
-        CallInstruction::Ptr CreateCall(
-            ValueFwd::Ptr callee,
-            std::vector<ValueFwd::Ptr> arguments,
+        CallInstruction *CreateCall(
+            Value *callee,
+            std::vector<Value *> arguments,
             std::string name = {});
 
-        CastInstruction::Ptr CreateCast(
-            TypeFwd::Ptr type,
-            ValueFwd::Ptr value,
+        CastInstruction *CreateCast(
+            Type *type,
+            Value *value,
             std::string name = {});
 
-        template<InstructionLike T, typename... Args>
-        T::Ptr Create(Args &&... args)
+        template<std::derived_from<Instruction> T, typename... Args>
+        [[nodiscard]] T *Create(Args &&... args) const
         {
             Assert(!!m_InsertBlock, "insert block must not be null");
 
-            auto instruction = std::make_shared<T>(std::forward<Args>(args)...);
-            m_InsertBlock->Insert(instruction);
-            return instruction;
+            auto value = std::make_unique<T>(std::forward<Args>(args)...);
+            auto *ptr = value.get();
+
+            m_InsertBlock->Insert(std::move(value));
+
+            return ptr;
         }
 
     private:
         Context &m_Context;
-        BlockFwd::Ptr m_InsertBlock;
+        Block *m_InsertBlock;
     };
 }

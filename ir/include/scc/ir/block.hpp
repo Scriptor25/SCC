@@ -1,42 +1,45 @@
 #pragma once
 
+#include <scc/ir/instruction.hpp>
 #include <scc/ir/ir.hpp>
 #include <scc/ir/value.hpp>
 
-#include <set>
+#include <memory>
+#include <unordered_set>
 #include <vector>
 
 namespace scc::ir
 {
-    class Block final : public Usable, public Shared<Block>
+    class Block final : public Value
     {
     public:
-        explicit Block(std::string name, Function::WeakPtr function);
+        explicit Block(std::string name, Function *function);
+        ~Block() override;
 
-        [[nodiscard]] std::string GetName() const;
         void SetName(std::string name);
+        [[nodiscard]] const std::string &GetName() const;
 
-        std::ostream &Print(std::ostream &stream) const;
-        std::ostream &PrintOperand(std::ostream &stream) const;
+        std::ostream &Print(std::ostream &stream) const override;
+        std::ostream &PrintOperand(std::ostream &stream) const override;
 
-        [[nodiscard]] Function::Ptr GetFunction() const;
-        [[nodiscard]] unsigned GetInstructionCount() const;
-        [[nodiscard]] InstructionFwd::Ptr GetInstruction(unsigned index) const;
+        [[nodiscard]] Function *GetFunction() const;
 
-        [[nodiscard]] std::vector<InstructionFwd::Ptr>::const_iterator begin() const;
-        [[nodiscard]] std::vector<InstructionFwd::Ptr>::const_iterator end() const;
+        [[nodiscard]] size_t GetInstructionCount() const;
+        [[nodiscard]] Instruction *GetInstruction(size_t index) const;
 
-        void Insert(InstructionFwd::Ptr instruction);
+        void Insert(std::unique_ptr<Instruction> instruction);
 
-        void UsePred(Ptr block);
-        void DropPred(const Ptr &block);
+        [[nodiscard]] Value *FindValue(const std::string &name) const;
 
-        [[nodiscard]] RegisterFwd::Ptr CreateRegister(std::string name = {}) const;
+        [[nodiscard]] Instruction *GetTerminator() const;
+
+        [[nodiscard]] std::unordered_set<Block *> GetPredecessors() const;
+        [[nodiscard]] std::unordered_set<Block *> GetSuccessors() const;
 
     private:
         std::string m_Name;
-        Function::WeakPtr m_Function;
-        std::set<Ptr> m_Predecessors;
-        std::vector<InstructionFwd::Ptr> m_Instructions;
+        Function *m_Function;
+
+        std::vector<std::unique_ptr<Instruction>> m_Instructions;
     };
 }

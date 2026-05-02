@@ -1,9 +1,33 @@
+#include <scc/ir/function.hpp>
 #include <scc/ir/module.hpp>
 
 #include <scc/error.hpp>
 
 #include <ostream>
 #include <ranges>
+
+scc::ir::Module::~Module()
+{
+    for (const auto &symbol : m_Symbols)
+    {
+        symbol->ReplaceWith(nullptr);
+        symbol->DropAll();
+    }
+}
+
+scc::ir::Module::Module(Module &&module) noexcept
+    : m_Name(std::move(module.m_Name)),
+      m_Symbols(std::move(module.m_Symbols))
+{
+}
+
+scc::ir::Module &scc::ir::Module::operator=(Module &&module) noexcept
+{
+    std::swap(m_Name, module.m_Name);
+    std::swap(m_Symbols, module.m_Symbols);
+
+    return *this;
+}
 
 void scc::ir::Module::SetName(std::string name)
 {
@@ -20,45 +44,54 @@ bool scc::ir::Module::HasSymbol(const std::string &name) const
     for (auto &symbol : m_Symbols)
         if (symbol->GetName() == name)
             return true;
+
     return false;
 }
 
-scc::ir::GlobalFwd::Ptr scc::ir::Module::GetSymbol(const std::string &name) const
+scc::ir::Global *scc::ir::Module::GetSymbol(const std::string &name) const
 {
     for (auto &symbol : m_Symbols)
         if (symbol->GetName() == name)
-            return symbol;
+            return symbol.get();
+
     Error("symbol {} does not exist", name);
 }
 
-scc::ir::Variable::Ptr scc::ir::Module::CreateVariable(
-    TypeFwd::Ptr type,
+scc::ir::Variable *scc::ir::Module::CreateVariable(
+    Type *type,
     std::string name,
-    ConstantFwd::Ptr initializer)
+    Constant *initializer)
 {
     for (const auto &symbol : m_Symbols)
         if (symbol->GetName() == name)
             Error("variable {} does already exist", name);
 
-    auto value = std::make_shared<Variable>(std::move(type), std::move(name), std::move(initializer));
-    m_Symbols.emplace_back(value);
-    return value;
+    auto value = std::make_unique<Variable>(type, std::move(name), initializer);
+    auto *ptr = value.get();
+
+    m_Symbols.push_back(std::move(value));
+
+    return ptr;
 }
 
-scc::ir::Function::Ptr scc::ir::Module::CreateFunction(const FunctionType::Ptr &type, std::string name)
+scc::ir::Function *scc::ir::Module::CreateFunction(FunctionType *type, std::string name)
 {
     for (const auto &symbol : m_Symbols)
         if (symbol->GetName() == name)
             Error("function {} does already exist", name);
 
-    auto value = std::make_shared<Function>(type, std::move(name));
-    m_Symbols.emplace_back(value);
-    return value;
+    auto value = std::make_unique<Function>(type, std::move(name));
+    auto *ptr = value.get();
+
+    m_Symbols.push_back(std::move(value));
+
+    return ptr;
 }
 
 std::ostream &scc::ir::Module::Print(std::ostream &stream) const
 {
     for (auto &symbol : m_Symbols)
         symbol->Print(stream) << std::endl;
+
     return stream;
 }

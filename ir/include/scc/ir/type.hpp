@@ -26,8 +26,7 @@ namespace scc::ir
         explicit Type(Context &context, Kind kind);
         virtual ~Type() = default;
 
-        [[nodiscard]] virtual unsigned GenerateHash() const = 0;
-        [[nodiscard]] virtual bool Equals(const TypeFwd::Ptr &) const = 0;
+        [[nodiscard]] virtual bool Compare(Type *) const = 0;
         [[nodiscard]] virtual unsigned GetSize() const = 0;
         [[nodiscard]] virtual unsigned GetAlign() const = 0;
         [[nodiscard]] virtual bool IsElement() const = 0;
@@ -37,21 +36,20 @@ namespace scc::ir
         [[nodiscard]] Context &GetContext() const;
         [[nodiscard]] Kind GetKind() const;
 
-        [[nodiscard]] virtual unsigned GetElementCount() const;
-        [[nodiscard]] virtual TypeFwd::Ptr GetElement(unsigned index) const;
+        [[nodiscard]] virtual size_t GetElementCount() const;
+        [[nodiscard]] virtual Type *GetElement(size_t index) const;
 
     protected:
         Context &m_Context;
         Kind m_Kind;
     };
 
-    class VoidType final : public Type, public Shared<VoidType>
+    class VoidType final : public Type
     {
     public:
         explicit VoidType(Context &context);
 
-        [[nodiscard]] unsigned GenerateHash() const override;
-        [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
+        [[nodiscard]] bool Compare(Type *type) const override;
         [[nodiscard]] unsigned GetSize() const override;
         [[nodiscard]] unsigned GetAlign() const override;
         [[nodiscard]] bool IsElement() const override;
@@ -59,13 +57,12 @@ namespace scc::ir
         std::ostream &Print(std::ostream &stream) const override;
     };
 
-    class IntType final : public Type, public Shared<IntType>
+    class IntType final : public Type
     {
     public:
         explicit IntType(Context &context, unsigned size_bits);
 
-        [[nodiscard]] unsigned GenerateHash() const override;
-        [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
+        [[nodiscard]] bool Compare(Type *type) const override;
         [[nodiscard]] unsigned GetSize() const override;
         [[nodiscard]] unsigned GetAlign() const override;
         [[nodiscard]] bool IsElement() const override;
@@ -78,13 +75,12 @@ namespace scc::ir
         unsigned m_SizeBits;
     };
 
-    class FloatType final : public Type, public Shared<FloatType>
+    class FloatType final : public Type
     {
     public:
         explicit FloatType(Context &context, unsigned size_bits);
 
-        [[nodiscard]] unsigned GenerateHash() const override;
-        [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
+        [[nodiscard]] bool Compare(Type *type) const override;
         [[nodiscard]] unsigned GetSize() const override;
         [[nodiscard]] unsigned GetAlign() const override;
         [[nodiscard]] bool IsElement() const override;
@@ -97,150 +93,146 @@ namespace scc::ir
         unsigned m_SizeBits;
     };
 
-    class PointerType final : public Type, public Shared<PointerType>
+    class PointerType final : public Type
     {
     public:
-        explicit PointerType(Context &context, TypeFwd::Ptr element);
+        explicit PointerType(Context &context, Type *element);
 
-        [[nodiscard]] unsigned GenerateHash() const override;
-        [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
+        [[nodiscard]] bool Compare(Type *type) const override;
         [[nodiscard]] unsigned GetSize() const override;
         [[nodiscard]] unsigned GetAlign() const override;
         [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] TypeFwd::Ptr GetElement() const;
+        [[nodiscard]] Type *GetElement() const;
 
-        [[nodiscard]] unsigned GetElementCount() const override;
-        [[nodiscard]] TypeFwd::Ptr GetElement(unsigned index) const override;
+        [[nodiscard]] size_t GetElementCount() const override;
+        [[nodiscard]] Type *GetElement(size_t index) const override;
 
     private:
-        TypeFwd::Ptr m_Element;
+        Type *m_Element;
     };
 
-    class ArrayType final : public Type, public Shared<ArrayType>
+    class ArrayType final : public Type
     {
     public:
-        explicit ArrayType(Context &context, TypeFwd::Ptr element, unsigned length);
+        explicit ArrayType(Context &context, Type *element, unsigned length);
 
-        [[nodiscard]] unsigned GenerateHash() const override;
-        [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
+        [[nodiscard]] bool Compare(Type *type) const override;
         [[nodiscard]] unsigned GetSize() const override;
         [[nodiscard]] unsigned GetAlign() const override;
         [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] TypeFwd::Ptr GetElement() const;
+        [[nodiscard]] Type *GetElement() const;
         [[nodiscard]] unsigned GetLength() const;
 
-        [[nodiscard]] unsigned GetElementCount() const override;
-        [[nodiscard]] TypeFwd::Ptr GetElement(unsigned index) const override;
+        [[nodiscard]] size_t GetElementCount() const override;
+        [[nodiscard]] Type *GetElement(size_t index) const override;
 
     private:
-        TypeFwd::Ptr m_Element;
+        Type *m_Element;
         unsigned m_Length;
     };
 
-    class VectorType final : public Type, public Shared<VectorType>
+    class VectorType final : public Type
     {
     public:
-        explicit VectorType(Context &context, TypeFwd::Ptr element, unsigned length);
+        explicit VectorType(Context &context, Type *element, unsigned length);
 
-        [[nodiscard]] unsigned GenerateHash() const override;
-        [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
+        [[nodiscard]] bool Compare(Type *type) const override;
         [[nodiscard]] unsigned GetSize() const override;
         [[nodiscard]] unsigned GetAlign() const override;
         [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] TypeFwd::Ptr GetElement() const;
+        [[nodiscard]] Type *GetElement() const;
         [[nodiscard]] unsigned GetLength() const;
 
-        [[nodiscard]] unsigned GetElementCount() const override;
-        [[nodiscard]] TypeFwd::Ptr GetElement(unsigned index) const override;
+        [[nodiscard]] size_t GetElementCount() const override;
+        [[nodiscard]] Type *GetElement(size_t index) const override;
 
     private:
-        TypeFwd::Ptr m_Element;
+        Type *m_Element;
         unsigned m_Length;
     };
 
-    class StructType final : public Type, public Shared<StructType>
+    class StructType final : public Type
     {
     public:
-        explicit StructType(Context &context, std::vector<TypeFwd::Ptr> elements);
+        explicit StructType(Context &context, std::vector<Type *> elements);
 
-        [[nodiscard]] unsigned GenerateHash() const override;
-        [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
+        [[nodiscard]] bool Compare(Type *type) const override;
         [[nodiscard]] unsigned GetSize() const override;
         [[nodiscard]] unsigned GetAlign() const override;
         [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] unsigned GetElementCount() const override;
-        [[nodiscard]] TypeFwd::Ptr GetElement(unsigned index) const override;
+        [[nodiscard]] size_t GetElementCount() const override;
+        [[nodiscard]] Type *GetElement(size_t index) const override;
 
-        [[nodiscard]] std::vector<TypeFwd::Ptr>::const_iterator begin() const;
-        [[nodiscard]] std::vector<TypeFwd::Ptr>::const_iterator end() const;
+        [[nodiscard]] std::vector<Type *>::const_iterator begin() const;
+        [[nodiscard]] std::vector<Type *>::const_iterator end() const;
 
     private:
-        std::vector<TypeFwd::Ptr> m_Elements;
+        std::vector<Type *> m_Elements;
     };
 
-    class FunctionType final : public Type, public Shared<FunctionType>
+    class FunctionType final : public Type
     {
     public:
         explicit FunctionType(
             Context &context,
-            TypeFwd::Ptr result,
-            std::vector<TypeFwd::Ptr> arguments,
+            Type *result,
+            std::vector<Type *> arguments,
             bool variadic);
 
-        [[nodiscard]] unsigned GenerateHash() const override;
-        [[nodiscard]] bool Equals(const TypeFwd::Ptr &type) const override;
+        [[nodiscard]] bool Compare(Type *type) const override;
         [[nodiscard]] unsigned GetSize() const override;
         [[nodiscard]] unsigned GetAlign() const override;
         [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] TypeFwd::Ptr GetResult() const;
+        [[nodiscard]] Type *GetResult() const;
 
         [[nodiscard]] unsigned GetArgumentCount() const;
-        [[nodiscard]] TypeFwd::Ptr GetArgument(unsigned index) const;
+        [[nodiscard]] Type *GetArgument(unsigned index) const;
 
-        [[nodiscard]] std::vector<TypeFwd::Ptr>::const_iterator begin() const;
-        [[nodiscard]] std::vector<TypeFwd::Ptr>::const_iterator end() const;
+        [[nodiscard]] std::vector<Type *>::const_iterator begin() const;
+        [[nodiscard]] std::vector<Type *>::const_iterator end() const;
 
         [[nodiscard]] bool IsVariadic() const;
 
     private:
-        TypeFwd::Ptr m_Result;
-        std::vector<TypeFwd::Ptr> m_Arguments;
+        Type *m_Result;
+        std::vector<Type *> m_Arguments;
         bool m_Variadic;
     };
 }
 
-template<std::convertible_to<scc::ir::TypeFwd::Ptr> T>
-struct std::formatter<T>
+template<std::derived_from<scc::ir::Type> T>
+struct std::formatter<T *>
 {
     template<typename C>
-    static constexpr auto parse(C &&context)
+    static constexpr auto parse(C &&ctx)
     {
-        return context.begin();
+        return ctx.begin();
     }
 
     template<typename C>
-    static auto format(const T &value, C &&context)
+    static auto format(T *value, C &&ctx)
     {
         std::ostringstream stream;
         value->Print(stream);
 
         for (auto c : stream.view())
-            *context.out()++ = c;
-        return context.out();
+            *ctx.out()++ = c;
+
+        return ctx.out();
     }
 };

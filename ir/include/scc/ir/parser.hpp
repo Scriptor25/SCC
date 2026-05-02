@@ -2,6 +2,8 @@
 
 #include <scc/ir/module.hpp>
 
+#include <vector>
+
 namespace scc::ir
 {
     enum class TokenType
@@ -53,10 +55,10 @@ namespace scc::ir
 
         Module ParseModule(Context &context);
 
-        TypeFwd::Ptr ParseType(Context &context);
-        ConstantFwd::Ptr ParseConstant(Builder &builder);
-        ValueFwd::Ptr ParseValue(Module &module, Builder &builder);
-        InstructionFwd::Ptr ParseInstruction(Module &module, Builder &builder);
+        Type *ParseType(Context &context);
+        Constant *ParseConstant(Builder &builder);
+        Value *ParseValue(Module &module, Builder &builder);
+        Instruction *ParseInstruction(Module &module, Builder &builder);
 
     private:
         std::istream &m_Stream;

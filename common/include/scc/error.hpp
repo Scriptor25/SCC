@@ -10,4 +10,6 @@ namespace scc
         auto message = std::format(std::move(format), std::forward<Args>(args)...);
         throw std::runtime_error(message);
     }
+
+    [[noreturn]] void ErrorIndexOutOfBounds(size_t index, size_t count);
 }

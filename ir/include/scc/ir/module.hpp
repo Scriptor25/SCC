@@ -1,26 +1,36 @@
 #pragma once
 
 #include <scc/ir/ir.hpp>
-#include <scc/ir/value.hpp>
+
+#include <memory>
 
 namespace scc::ir
 {
     class Module final
     {
     public:
+        Module() = default;
+        ~Module();
+
+        Module(const Module &) = delete;
+        Module(Module &&module) noexcept;
+
+        Module &operator=(const Module &) = delete;
+        Module &operator=(Module &&module) noexcept;
+
         void SetName(std::string name);
         std::string GetName();
 
         [[nodiscard]] bool HasSymbol(const std::string &name) const;
-        [[nodiscard]] GlobalFwd::Ptr GetSymbol(const std::string &name) const;
+        [[nodiscard]] Global *GetSymbol(const std::string &name) const;
 
-        Variable::Ptr CreateVariable(TypeFwd::Ptr type, std::string name, ConstantFwd::Ptr initializer);
-        Function::Ptr CreateFunction(const FunctionType::Ptr &type, std::string name);
+        Variable *CreateVariable(Type *type, std::string name, Constant *initializer);
+        Function *CreateFunction(FunctionType *type, std::string name);
 
         std::ostream &Print(std::ostream &stream) const;
 
     private:
         std::string m_Name;
-        std::vector<GlobalFwd::Ptr> m_Symbols;
+        std::vector<std::unique_ptr<Global>> m_Symbols;
     };
 }

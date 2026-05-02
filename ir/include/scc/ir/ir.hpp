@@ -1,59 +1,52 @@
 #pragma once
 
-#include <memory>
+#include <compare>
+#include <type_traits>
 
 namespace scc::ir
 {
-    template<typename C>
-    class Shared
-    {
-    public:
-        using Ptr = std::shared_ptr<C>;
-        using WeakPtr = std::weak_ptr<C>;
-    };
-
-    class Parser;
-
-    class Module;
-    class Context;
-    class Builder;
+    using float32_t = std::conditional_t<sizeof(float) == 4, float, void>;
+    using float64_t = std::conditional_t<sizeof(double) == 8, double, void>;
 
     struct Platform;
 
+    class Module;
+    class Context;
+
+    class Builder;
+
+    class Parser;
+
     class Type;
-    using TypeFwd = Shared<Type>;
+    class VoidType;
+    class IntType;
+    class FloatType;
+    class PointerType;
+    class ArrayType;
+    class VectorType;
+    class StructType;
+    class FunctionType;
 
     class Value;
-    using ValueFwd = Shared<Value>;
 
-    class IdentifiedValue;
-    using IdentifiedValueFwd = Shared<IdentifiedValue>;
+    class Argument;
 
     class Global;
-    using GlobalFwd = Shared<Global>;
+    class Variable;
+    class Function;
 
     class Constant;
-    using ConstantFwd = Shared<Constant>;
-
-    class Block;
-    using BlockFwd = Shared<Block>;
+    class ConstantInt;
+    class ConstantFloat;
+    class ConstantArray;
+    class ConstantVector;
+    class ConstantStruct;
 
     class Instruction;
-    using InstructionFwd = Shared<Instruction>;
 
-    class Register;
-    using RegisterFwd = Shared<Register>;
+    class Block;
 
-    class Usable;
-    using UsableFwd = Shared<Usable>;
+    class User;
 
-    struct TypeHash final
-    {
-        unsigned operator()(const TypeFwd::Ptr &) const noexcept;
-    };
-
-    bool operator==(const TypeFwd::Ptr &, const TypeFwd::Ptr &);
-
-    unsigned CombineHash(unsigned a, unsigned b);
     unsigned AlignTo(unsigned value, unsigned align);
 }

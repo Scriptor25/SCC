@@ -14,4 +14,6 @@ namespace scc
         auto message = std::format(std::move(format), std::forward<Args>(args)...);
         throw std::runtime_error(message);
     }
+
+    void AssertIndexInBounds(size_t index, size_t count);
 }
