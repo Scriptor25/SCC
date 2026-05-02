@@ -1,5 +1,6 @@
-#include <scc/error.hpp>
 #include <scc/ir/type.hpp>
+
+#include <scc/error.hpp>
 
 scc::ir::Type::Type(Context &context, const Kind kind)
     : m_Context(context),

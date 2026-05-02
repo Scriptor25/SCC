@@ -1,10 +1,14 @@
-#include <map>
-#include <scc/assert.hpp>
-#include <scc/error.hpp>
 #include <scc/ir/builder.hpp>
 #include <scc/ir/context.hpp>
 #include <scc/ir/parser.hpp>
 #include <scc/ir/register.hpp>
+
+#include <scc/assert.hpp>
+#include <scc/error.hpp>
+
+#include <iostream>
+#include <istream>
+#include <map>
 
 scc::ir::Parser::Parser(std::istream &stream)
     : m_Stream(stream)

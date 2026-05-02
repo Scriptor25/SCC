@@ -1,7 +1,9 @@
+#include <scc/ir/module.hpp>
+
+#include <scc/error.hpp>
+
 #include <ostream>
 #include <ranges>
-#include <scc/error.hpp>
-#include <scc/ir/module.hpp>
 
 void scc::ir::Module::SetName(std::string name)
 {

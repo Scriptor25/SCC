@@ -1,5 +1,6 @@
-#include <istream>
 #include <scc/as/parser.hpp>
+
+#include <istream>
 
 static bool isdigit(const int c, const int base)
 {
@@ -52,7 +53,7 @@ scc::as::Token scc::as::Parser::Get()
             case '\n':
                 raw += static_cast<char>(m_Buffer);
                 m_Buffer = m_Stream.get();
-                return { .Type = TokenType::EoL, .Raw = std::move(raw) };
+                return { .Type = TokenType::EndOfLine, .Raw = std::move(raw) };
 
             case '#':
                 state = State::Comment;
@@ -208,7 +209,7 @@ scc::as::Token scc::as::Parser::Get()
         }
     }
 
-    return { .Type = TokenType::EoF };
+    return { .Type = TokenType::EndOfFile };
 }
 
 scc::as::Token &scc::as::Parser::Next()
@@ -256,7 +257,7 @@ bool scc::as::Parser::SkipIf(const TokenType type, const std::string &value)
 
 void scc::as::Parser::Parse()
 {
-    while (m_Token.Type != TokenType::EoF)
+    while (m_Token.Type != TokenType::EndOfFile)
     {
         ParseLine();
         // TODO: use line
@@ -271,7 +272,7 @@ void scc::as::Parser::ParseLine()
         // TODO: use label
     }
 
-    if (At(TokenType::EoL))
+    if (At(TokenType::EndOfLine))
     {
         Next();
         return;
@@ -282,7 +283,7 @@ void scc::as::Parser::ParseLine()
         auto directive = Skip();
         // TODO: use directive
 
-        while (!At(TokenType::EoL))
+        while (!At(TokenType::EndOfLine))
         {
             ParseDirectiveArg();
             // TODO: use directive arg
@@ -294,7 +295,7 @@ void scc::as::Parser::ParseLine()
         // TODO: use instruction
     }
 
-    Expect(TokenType::EoL);
+    Expect(TokenType::EndOfLine);
 }
 
 void scc::as::Parser::ParseDirectiveArg()
@@ -331,7 +332,7 @@ void scc::as::Parser::ParseInstruction()
     auto mnemonic = Expect(TokenType::Symbol);
     // TODO: use mnemonic
 
-    if (At(TokenType::EoL))
+    if (At(TokenType::EndOfLine))
         return;
 
     ParseOperandList();

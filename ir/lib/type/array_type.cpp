@@ -1,5 +1,6 @@
-#include <scc/assert.hpp>
 #include <scc/ir/type.hpp>
+
+#include <scc/assert.hpp>
 
 scc::ir::ArrayType::ArrayType(Context &context, TypeFwd::Ptr element, const unsigned length)
     : Type(context, Kind::Array),

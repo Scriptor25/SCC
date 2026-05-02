@@ -1,9 +1,10 @@
 #pragma once
 
-#include <set>
-#include <vector>
 #include <scc/ir/ir.hpp>
 #include <scc/ir/value.hpp>
+
+#include <set>
+#include <vector>
 
 namespace scc::ir
 {
@@ -12,7 +13,7 @@ namespace scc::ir
     public:
         explicit Block(std::string name, Function::WeakPtr function);
 
-        std::string GetName() const;
+        [[nodiscard]] std::string GetName() const;
         void SetName(std::string name);
 
         std::ostream &Print(std::ostream &stream) const;
@@ -30,7 +31,7 @@ namespace scc::ir
         void UsePred(Ptr block);
         void DropPred(const Ptr &block);
 
-        RegisterFwd::Ptr CreateRegister(std::string name = {}) const;
+        [[nodiscard]] RegisterFwd::Ptr CreateRegister(std::string name = {}) const;
 
     private:
         std::string m_Name;

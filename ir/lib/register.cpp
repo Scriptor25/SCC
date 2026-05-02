@@ -1,6 +1,6 @@
-#include <iostream>
-#include <scc/assert.hpp>
 #include <scc/ir/register.hpp>
+
+#include <scc/assert.hpp>
 
 scc::ir::Register::Register(std::string name)
     : m_Name(std::move(name))

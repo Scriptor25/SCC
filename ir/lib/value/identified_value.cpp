@@ -1,6 +1,7 @@
-#include <scc/assert.hpp>
 #include <scc/ir/register.hpp>
 #include <scc/ir/value.hpp>
+
+#include <scc/assert.hpp>
 
 scc::ir::IdentifiedValue::IdentifiedValue(TypeFwd::Ptr type, RegisterFwd::Ptr register_)
     : Value(std::move(type)),

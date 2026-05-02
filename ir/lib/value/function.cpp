@@ -1,9 +1,11 @@
-#include <ostream>
-#include <scc/assert.hpp>
 #include <scc/ir/block.hpp>
 #include <scc/ir/register.hpp>
 #include <scc/ir/type.hpp>
 #include <scc/ir/value.hpp>
+
+#include <scc/assert.hpp>
+
+#include <ostream>
 
 scc::ir::Function::Function(const FunctionType::Ptr &type, std::string name)
     : Global(type, std::move(name))

@@ -1,9 +1,11 @@
 #pragma once
 
-#include <vector>
 #include <scc/ir/ir.hpp>
 #include <scc/ir/type.hpp>
 #include <scc/ir/usable.hpp>
+
+#include <cstdint>
+#include <vector>
 
 namespace scc::ir
 {
@@ -54,7 +56,7 @@ namespace scc::ir
 
         std::ostream &PrintOperand(std::ostream &stream) const override;
 
-        std::string GetName() const;
+        [[nodiscard]] std::string GetName() const;
         void SetName(std::string name);
 
     protected:

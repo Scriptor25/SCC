@@ -1,9 +1,10 @@
 #pragma once
 
-#include <unordered_map>
-#include <vector>
 #include <scc/ir/ir.hpp>
 #include <scc/ir/type.hpp>
+
+#include <unordered_map>
+#include <vector>
 
 namespace scc::ir
 {
@@ -31,7 +32,8 @@ namespace scc::ir
         FunctionType::Ptr GetFunctionType(TypeFwd::Ptr result, std::vector<TypeFwd::Ptr> arguments, bool variadic);
 
     private:
-        template<typename T, typename... Args> requires std::is_base_of_v<Type, T>
+        template<typename T, typename... Args>
+            requires std::is_base_of_v<Type, T>
         T::Ptr GetType(Args &&... args)
         {
             auto type = std::make_shared<T>(*this, std::forward<Args>(args)...);

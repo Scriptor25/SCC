@@ -1,6 +1,5 @@
 #pragma once
 
-#include <iostream>
 #include <scc/ir/module.hpp>
 
 namespace scc::ir

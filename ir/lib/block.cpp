@@ -1,6 +1,7 @@
-#include <ostream>
 #include <scc/ir/block.hpp>
 #include <scc/ir/instruction.hpp>
+
+#include <ostream>
 
 scc::ir::Block::Block(std::string name, Function::WeakPtr function)
     : m_Name(std::move(name)),

@@ -10,8 +10,8 @@ namespace scc::ir
         void Use();
         void Drop();
 
-        unsigned GetUseCount() const;
-        bool IsUsed() const;
+        [[nodiscard]] unsigned GetUseCount() const;
+        [[nodiscard]] bool IsUsed() const;
 
     protected:
         unsigned m_UseCount = 0u;

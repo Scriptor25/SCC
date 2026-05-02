@@ -1,11 +1,12 @@
-#include <fstream>
-#include <iostream>
 #include <scc/ir/builder.hpp>
 #include <scc/ir/context.hpp>
 #include <scc/ir/instruction.hpp>
 #include <scc/ir/module.hpp>
 #include <scc/ir/parser.hpp>
 #include <scc/ir/value.hpp>
+
+#include <fstream>
+#include <iostream>
 
 int main()
 {

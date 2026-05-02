@@ -1,14 +1,16 @@
 #pragma once
 
-#include <iosfwd>
 #include <scc/as/as.hpp>
+
+#include <iosfwd>
+#include <string>
 
 namespace scc::as
 {
     enum class TokenType
     {
-        EoF,
-        EoL,
+        EndOfFile,
+        EndOfLine,
         Label,
         Symbol,
         String,
@@ -19,7 +21,7 @@ namespace scc::as
 
     struct Token
     {
-        TokenType Type = TokenType::EoF;
+        TokenType Type = TokenType::EndOfFile;
         std::string Raw;
         std::string Value;
         IImmediateT Immediate = 0;

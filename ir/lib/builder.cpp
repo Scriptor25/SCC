@@ -1,5 +1,3 @@
-#include <ranges>
-#include <scc/assert.hpp>
 #include <scc/ir/block.hpp>
 #include <scc/ir/builder.hpp>
 #include <scc/ir/context.hpp>
@@ -7,6 +5,10 @@
 #include <scc/ir/module.hpp>
 #include <scc/ir/register.hpp>
 #include <scc/ir/value.hpp>
+
+#include <scc/assert.hpp>
+
+#include <ranges>
 
 scc::ir::Builder::Builder(Context &context)
     : m_Context(context)

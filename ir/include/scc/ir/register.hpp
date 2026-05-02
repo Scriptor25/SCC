@@ -1,7 +1,8 @@
 #pragma once
 
-#include <string>
 #include <scc/ir/ir.hpp>
+
+#include <string>
 
 namespace scc::ir
 {

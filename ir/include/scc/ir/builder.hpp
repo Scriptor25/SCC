@@ -1,11 +1,13 @@
 #pragma once
 
-#include <string_view>
-#include <scc/assert.hpp>
 #include <scc/ir/block.hpp>
 #include <scc/ir/instruction.hpp>
 #include <scc/ir/ir.hpp>
 #include <scc/ir/value.hpp>
+
+#include <scc/assert.hpp>
+
+#include <string_view>
 
 template<typename T>
 concept InstructionLike = std::is_base_of_v<scc::ir::Instruction, T>;

@@ -1,4 +1,5 @@
-file(GLOB_RECURSE lib-sources lib/*.cpp)
+file(GLOB_RECURSE LIB_SOURCES lib/*.cpp)
 
-add_library(common ${lib-sources})
-target_include_directories(common PUBLIC include)
+add_library(scc_common ${LIB_SOURCES})
+add_library(scc::common ALIAS scc_common)
+target_include_directories(scc_common PUBLIC include)
