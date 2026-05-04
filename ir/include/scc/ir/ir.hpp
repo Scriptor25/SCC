@@ -1,6 +1,6 @@
 #pragma once
 
-#include <compare>
+#include <iosfwd>
 #include <type_traits>
 
 namespace scc::ir
@@ -49,4 +49,7 @@ namespace scc::ir
     class User;
 
     unsigned AlignTo(unsigned value, unsigned align);
+
+    std::ostream &operator<<(std::ostream &stream, const Type *type);
+    std::ostream &operator<<(std::ostream &stream, const Value *value);
 }

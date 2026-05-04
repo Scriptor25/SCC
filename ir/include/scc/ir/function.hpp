@@ -4,6 +4,12 @@
 #include <scc/ir/block.hpp>
 #include <scc/ir/global.hpp>
 
+#include <iosfwd>
+#include <memory>
+#include <string>
+#include <unordered_set>
+#include <vector>
+
 namespace scc::ir
 {
     class Function final : public Global

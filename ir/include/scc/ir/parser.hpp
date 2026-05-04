@@ -2,6 +2,10 @@
 
 #include <scc/ir/module.hpp>
 
+#include <cstdint>
+#include <iosfwd>
+#include <string>
+#include <string_view>
 #include <vector>
 
 namespace scc::ir
@@ -65,6 +69,6 @@ namespace scc::ir
         int m_Buffer;
         Token m_Token;
     };
-}
 
-std::ostream &operator<<(std::ostream &stream, scc::ir::TokenType type);
+    std::ostream &operator<<(std::ostream &stream, TokenType type);
+}

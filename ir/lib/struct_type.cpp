@@ -1,3 +1,5 @@
+#include <scc/ir/context.hpp>
+#include <scc/ir/platform.hpp>
 #include <scc/ir/type.hpp>
 
 scc::ir::StructType::StructType(Context &context, std::vector<Type *> elements)
@@ -23,10 +25,10 @@ bool scc::ir::StructType::Compare(Type *type) const
     return false;
 }
 
-unsigned scc::ir::StructType::GetSize() const
+size_t scc::ir::StructType::GetSize() const
 {
-    auto offset = 0u;
-    auto align = 1u;
+    size_t offset = 0;
+    size_t align = 1;
 
     for (const auto element : m_Elements)
     {
@@ -42,14 +44,14 @@ unsigned scc::ir::StructType::GetSize() const
     return AlignTo(offset, align);
 }
 
-unsigned scc::ir::StructType::GetAlign() const
+size_t scc::ir::StructType::GetAlign() const
 {
-    auto align = 1u;
+    size_t align = 1;
 
     for (const auto element : m_Elements)
         align = std::max(align, element->GetAlign());
 
-    return align;
+    return std::min(align, m_Context.GetPlatform().MaxAggregateAlign);
 }
 
 bool scc::ir::StructType::IsElement() const

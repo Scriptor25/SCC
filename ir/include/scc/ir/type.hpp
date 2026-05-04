@@ -27,8 +27,8 @@ namespace scc::ir
         virtual ~Type() = default;
 
         [[nodiscard]] virtual bool Compare(Type *) const = 0;
-        [[nodiscard]] virtual unsigned GetSize() const = 0;
-        [[nodiscard]] virtual unsigned GetAlign() const = 0;
+        [[nodiscard]] virtual size_t GetSize() const = 0;
+        [[nodiscard]] virtual size_t GetAlign() const = 0;
         [[nodiscard]] virtual bool IsElement() const = 0;
 
         virtual std::ostream &Print(std::ostream &stream) const = 0;
@@ -50,8 +50,8 @@ namespace scc::ir
         explicit VoidType(Context &context);
 
         [[nodiscard]] bool Compare(Type *type) const override;
-        [[nodiscard]] unsigned GetSize() const override;
-        [[nodiscard]] unsigned GetAlign() const override;
+        [[nodiscard]] size_t GetSize() const override;
+        [[nodiscard]] size_t GetAlign() const override;
         [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
@@ -60,37 +60,37 @@ namespace scc::ir
     class IntType final : public Type
     {
     public:
-        explicit IntType(Context &context, unsigned size_bits);
+        explicit IntType(Context &context, unsigned bit_width);
 
         [[nodiscard]] bool Compare(Type *type) const override;
-        [[nodiscard]] unsigned GetSize() const override;
-        [[nodiscard]] unsigned GetAlign() const override;
+        [[nodiscard]] size_t GetSize() const override;
+        [[nodiscard]] size_t GetAlign() const override;
         [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] unsigned GetSizeBits() const;
+        [[nodiscard]] unsigned GetBitWidth() const;
 
     private:
-        unsigned m_SizeBits;
+        unsigned m_BitWidth;
     };
 
     class FloatType final : public Type
     {
     public:
-        explicit FloatType(Context &context, unsigned size_bits);
+        explicit FloatType(Context &context, unsigned bit_width);
 
         [[nodiscard]] bool Compare(Type *type) const override;
-        [[nodiscard]] unsigned GetSize() const override;
-        [[nodiscard]] unsigned GetAlign() const override;
+        [[nodiscard]] size_t GetSize() const override;
+        [[nodiscard]] size_t GetAlign() const override;
         [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] unsigned GetSizeBits() const;
+        [[nodiscard]] unsigned GetBitWidth() const;
 
     private:
-        unsigned m_SizeBits;
+        unsigned m_BitWidth;
     };
 
     class PointerType final : public Type
@@ -99,8 +99,8 @@ namespace scc::ir
         explicit PointerType(Context &context, Type *element);
 
         [[nodiscard]] bool Compare(Type *type) const override;
-        [[nodiscard]] unsigned GetSize() const override;
-        [[nodiscard]] unsigned GetAlign() const override;
+        [[nodiscard]] size_t GetSize() const override;
+        [[nodiscard]] size_t GetAlign() const override;
         [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
@@ -120,8 +120,8 @@ namespace scc::ir
         explicit ArrayType(Context &context, Type *element, unsigned length);
 
         [[nodiscard]] bool Compare(Type *type) const override;
-        [[nodiscard]] unsigned GetSize() const override;
-        [[nodiscard]] unsigned GetAlign() const override;
+        [[nodiscard]] size_t GetSize() const override;
+        [[nodiscard]] size_t GetAlign() const override;
         [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
@@ -143,8 +143,8 @@ namespace scc::ir
         explicit VectorType(Context &context, Type *element, unsigned length);
 
         [[nodiscard]] bool Compare(Type *type) const override;
-        [[nodiscard]] unsigned GetSize() const override;
-        [[nodiscard]] unsigned GetAlign() const override;
+        [[nodiscard]] size_t GetSize() const override;
+        [[nodiscard]] size_t GetAlign() const override;
         [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
@@ -166,8 +166,8 @@ namespace scc::ir
         explicit StructType(Context &context, std::vector<Type *> elements);
 
         [[nodiscard]] bool Compare(Type *type) const override;
-        [[nodiscard]] unsigned GetSize() const override;
-        [[nodiscard]] unsigned GetAlign() const override;
+        [[nodiscard]] size_t GetSize() const override;
+        [[nodiscard]] size_t GetAlign() const override;
         [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
@@ -192,8 +192,8 @@ namespace scc::ir
             bool variadic);
 
         [[nodiscard]] bool Compare(Type *type) const override;
-        [[nodiscard]] unsigned GetSize() const override;
-        [[nodiscard]] unsigned GetAlign() const override;
+        [[nodiscard]] size_t GetSize() const override;
+        [[nodiscard]] size_t GetAlign() const override;
         [[nodiscard]] bool IsElement() const override;
 
         std::ostream &Print(std::ostream &stream) const override;

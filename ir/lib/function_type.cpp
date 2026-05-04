@@ -35,12 +35,12 @@ bool scc::ir::FunctionType::Compare(Type *type) const
     return false;
 }
 
-unsigned scc::ir::FunctionType::GetSize() const
+size_t scc::ir::FunctionType::GetSize() const
 {
     return 0u;
 }
 
-unsigned scc::ir::FunctionType::GetAlign() const
+size_t scc::ir::FunctionType::GetAlign() const
 {
     return 1u;
 }

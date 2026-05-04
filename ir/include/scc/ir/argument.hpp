@@ -1,7 +1,9 @@
 #pragma once
 
+#include <scc/ir/ir.hpp>
 #include <scc/ir/value.hpp>
 
+#include <iosfwd>
 #include <string>
 
 namespace scc::ir

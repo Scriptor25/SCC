@@ -504,7 +504,7 @@ scc::ir::Constant *scc::ir::Parser::ParseConstant(Builder &builder)
 
         const auto int_type = dynamic_cast<IntType *>(array_type->GetElement());
 
-        Assert(int_type->GetSizeBits() == 8, "invalid value for non-8-bit int array type");
+        Assert(int_type->GetBitWidth() == 8, "invalid value for non-8-bit int array type");
 
         return builder.GetContext().GetArray(value);
     }
@@ -717,15 +717,15 @@ scc::ir::Instruction *scc::ir::Parser::ParseInstruction(Module &module, Builder 
     Error("unexpected token");
 }
 
-std::ostream &operator<<(std::ostream &stream, const scc::ir::TokenType type)
+std::ostream &scc::ir::operator<<(std::ostream &stream, const TokenType type)
 {
-    static std::unordered_map<scc::ir::TokenType, const char *> map
+    static std::unordered_map<TokenType, const char *> map
     {
-        { scc::ir::TokenType::EndOfFile, "EndOfFile" },
-        { scc::ir::TokenType::Identifier, "Identifier" },
-        { scc::ir::TokenType::Integer, "Integer" },
-        { scc::ir::TokenType::String, "String" },
-        { scc::ir::TokenType::Other, "Other" },
+        { TokenType::EndOfFile, "EndOfFile" },
+        { TokenType::Identifier, "Identifier" },
+        { TokenType::Integer, "Integer" },
+        { TokenType::String, "String" },
+        { TokenType::Other, "Other" },
     };
 
     return stream << map.at(type);

@@ -1,6 +1,8 @@
 #include <scc/ir/type.hpp>
 
 #include <scc/assert.hpp>
+#include <scc/ir/context.hpp>
+#include <scc/ir/platform.hpp>
 
 scc::ir::VectorType::VectorType(Context &context, Type *element, const unsigned length)
     : Type(context, Kind::Vector),
@@ -17,16 +19,16 @@ bool scc::ir::VectorType::Compare(Type *type) const
     return false;
 }
 
-unsigned scc::ir::VectorType::GetSize() const
+size_t scc::ir::VectorType::GetSize() const
 {
     return m_Length * m_Element->GetSize();
 }
 
-unsigned scc::ir::VectorType::GetAlign() const
+size_t scc::ir::VectorType::GetAlign() const
 {
     const auto size = GetSize();
     const auto align = std::bit_ceil(size);
-    return std::min(align, 16u);
+    return std::min<size_t>(align, m_Context.GetPlatform().MaxVectorAlign);
 }
 
 bool scc::ir::VectorType::IsElement() const

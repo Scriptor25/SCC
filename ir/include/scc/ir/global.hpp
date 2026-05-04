@@ -2,6 +2,9 @@
 
 #include <scc/ir/constant.hpp>
 
+#include <iosfwd>
+#include <string>
+
 namespace scc::ir
 {
     class Global : public Constant
@@ -18,16 +21,5 @@ namespace scc::ir
 
     protected:
         std::string m_Name;
-    };
-
-    class Variable final : public Global
-    {
-    public:
-        explicit Variable(Type *type, std::string name, Constant *initializer);
-
-        std::ostream &Print(std::ostream &stream) const override;
-
-    private:
-        Constant *m_Initializer;
     };
 }

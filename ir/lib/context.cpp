@@ -68,9 +68,9 @@ scc::ir::IntType *scc::ir::Context::GetInt64Type()
     return Get<IntType>(64u);
 }
 
-scc::ir::IntType *scc::ir::Context::GetIntNType(unsigned size_bits)
+scc::ir::IntType *scc::ir::Context::GetIntNType(unsigned bit_width)
 {
-    return Get<IntType>(size_bits);
+    return Get<IntType>(bit_width);
 }
 
 scc::ir::FloatType *scc::ir::Context::GetFloat32Type()
@@ -143,15 +143,18 @@ scc::ir::ConstantInt *scc::ir::Context::GetInt64(const uint64_t value)
     return Get<ConstantInt>(GetInt64Type(), value);
 }
 
-scc::ir::ConstantInt *scc::ir::Context::GetIntN(const unsigned size_bits, const uint64_t value)
+scc::ir::ConstantInt *scc::ir::Context::GetIntN(const unsigned bit_width, const uint64_t value)
 {
-    const auto mask = ~0ull >> (64 - size_bits);
-    return Get<ConstantInt>(GetIntNType(size_bits), value & mask);
+    Assert(bit_width >= 1, "bit width must not be less than 1");
+    Assert(bit_width <= 64, "bit width must not be greater than 64");
+
+    const auto mask = ~0ull >> (64 - bit_width);
+    return Get<ConstantInt>(GetIntNType(bit_width), value & mask);
 }
 
 scc::ir::ConstantInt *scc::ir::Context::GetInt(IntType *type, const uint64_t value)
 {
-    const auto mask = ~0ull >> (64 - type->GetSizeBits());
+    const auto mask = ~0ull >> (64 - type->GetBitWidth());
     return Get<ConstantInt>(type, value & mask);
 }
 

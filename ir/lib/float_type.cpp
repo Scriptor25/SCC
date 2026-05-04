@@ -2,28 +2,28 @@
 #include <scc/ir/platform.hpp>
 #include <scc/ir/type.hpp>
 
-scc::ir::FloatType::FloatType(Context &context, const unsigned size_bits)
+scc::ir::FloatType::FloatType(Context &context, const unsigned bit_width)
     : Type(context, Kind::Float),
-      m_SizeBits(size_bits)
+      m_BitWidth(bit_width)
 {
 }
 
 bool scc::ir::FloatType::Compare(Type *type) const
 {
     if (const auto p = dynamic_cast<FloatType *>(type))
-        return m_SizeBits == p->m_SizeBits;
+        return m_BitWidth == p->m_BitWidth;
 
     return false;
 }
 
-unsigned scc::ir::FloatType::GetSize() const
+size_t scc::ir::FloatType::GetSize() const
 {
-    return (m_SizeBits + 0b111) >> 3;
+    return (m_BitWidth + 0b111) >> 3;
 }
 
-unsigned scc::ir::FloatType::GetAlign() const
+size_t scc::ir::FloatType::GetAlign() const
 {
-    return std::min(GetSize(), m_Context.GetPlatform().PointerSize);
+    return std::min(GetSize(), m_Context.GetPlatform().MaxFloatAlign);
 }
 
 bool scc::ir::FloatType::IsElement() const
@@ -33,10 +33,10 @@ bool scc::ir::FloatType::IsElement() const
 
 std::ostream &scc::ir::FloatType::Print(std::ostream &stream) const
 {
-    return stream << "f" << m_SizeBits;
+    return stream << "f" << m_BitWidth;
 }
 
-unsigned scc::ir::FloatType::GetSizeBits() const
+unsigned scc::ir::FloatType::GetBitWidth() const
 {
-    return m_SizeBits;
+    return m_BitWidth;
 }

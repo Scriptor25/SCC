@@ -27,3 +27,8 @@ scc::ir::Type *scc::ir::Type::GetElement(const size_t index) const
 {
     ErrorIndexOutOfBounds(index, 0ull);
 }
+
+std::ostream &scc::ir::operator<<(std::ostream &stream, const Type *type)
+{
+    return type->Print(stream);
+}

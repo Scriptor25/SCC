@@ -2,28 +2,28 @@
 #include <scc/ir/platform.hpp>
 #include <scc/ir/type.hpp>
 
-scc::ir::IntType::IntType(Context &context, const unsigned size_bits)
+scc::ir::IntType::IntType(Context &context, const unsigned bit_width)
     : Type(context, Kind::Int),
-      m_SizeBits(size_bits)
+      m_BitWidth(bit_width)
 {
 }
 
 bool scc::ir::IntType::Compare(Type *type) const
 {
     if (const auto p = dynamic_cast<IntType *>(type))
-        return m_SizeBits == p->m_SizeBits;
+        return m_BitWidth == p->m_BitWidth;
 
     return false;
 }
 
-unsigned scc::ir::IntType::GetSize() const
+size_t scc::ir::IntType::GetSize() const
 {
-    return (m_SizeBits + 0b111) >> 3;
+    return (m_BitWidth + 0b111) >> 3;
 }
 
-unsigned scc::ir::IntType::GetAlign() const
+size_t scc::ir::IntType::GetAlign() const
 {
-    return std::min(GetSize(), m_Context.GetPlatform().PointerSize);
+    return std::min(GetSize(), m_Context.GetPlatform().MaxIntAlign);
 }
 
 bool scc::ir::IntType::IsElement() const
@@ -33,10 +33,10 @@ bool scc::ir::IntType::IsElement() const
 
 std::ostream &scc::ir::IntType::Print(std::ostream &stream) const
 {
-    return stream << 'i' << m_SizeBits;
+    return stream << 'i' << m_BitWidth;
 }
 
-unsigned scc::ir::IntType::GetSizeBits() const
+unsigned scc::ir::IntType::GetBitWidth() const
 {
-    return m_SizeBits;
+    return m_BitWidth;
 }

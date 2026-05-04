@@ -1,8 +1,10 @@
 #pragma once
 
+#include <scc/ir/ir.hpp>
 #include <scc/ir/user.hpp>
 
 #include <cstdint>
+#include <iosfwd>
 #include <vector>
 
 namespace scc::ir

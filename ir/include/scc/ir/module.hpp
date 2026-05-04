@@ -1,8 +1,11 @@
 #pragma once
 
+#include <scc/ir/global.hpp>
 #include <scc/ir/ir.hpp>
 
 #include <memory>
+#include <string>
+#include <vector>
 
 namespace scc::ir
 {

@@ -10,12 +10,12 @@ bool scc::ir::VoidType::Compare(Type *type) const
     return type->GetKind() == Kind::Void;
 }
 
-unsigned scc::ir::VoidType::GetSize() const
+size_t scc::ir::VoidType::GetSize() const
 {
     return 0u;
 }
 
-unsigned scc::ir::VoidType::GetAlign() const
+size_t scc::ir::VoidType::GetAlign() const
 {
     return 1u;
 }

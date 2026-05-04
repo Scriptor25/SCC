@@ -16,14 +16,14 @@ bool scc::ir::PointerType::Compare(Type *type) const
     return false;
 }
 
-unsigned scc::ir::PointerType::GetSize() const
+size_t scc::ir::PointerType::GetSize() const
 {
     return m_Context.GetPlatform().PointerSize;
 }
 
-unsigned scc::ir::PointerType::GetAlign() const
+size_t scc::ir::PointerType::GetAlign() const
 {
-    return m_Context.GetPlatform().PointerSize;
+    return m_Context.GetPlatform().PointerAlign;
 }
 
 bool scc::ir::PointerType::IsElement() const

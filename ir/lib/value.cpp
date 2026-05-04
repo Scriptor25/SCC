@@ -41,3 +41,8 @@ scc::ir::Type *scc::ir::Value::GetType() const
 {
     return m_Type;
 }
+
+std::ostream &scc::ir::operator<<(std::ostream &stream, const Value *value)
+{
+    return value->PrintOperand(stream);
+}

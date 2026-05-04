@@ -4,7 +4,9 @@
 #include <scc/ir/ir.hpp>
 #include <scc/ir/value.hpp>
 
+#include <iosfwd>
 #include <memory>
+#include <string>
 #include <unordered_set>
 #include <vector>
 

@@ -7,7 +7,9 @@
 
 #include <scc/assert.hpp>
 
+#include <string>
 #include <string_view>
+#include <vector>
 
 namespace scc::ir
 {

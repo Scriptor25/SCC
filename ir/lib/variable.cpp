@@ -1,4 +1,4 @@
-#include <scc/ir/global.hpp>
+#include <scc/ir/variable.hpp>
 
 scc::ir::Variable::Variable(Type *type, std::string name, Constant *initializer)
     : Global(type, std::move(name)),

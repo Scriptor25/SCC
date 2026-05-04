@@ -17,7 +17,7 @@ bool scc::ir::ArrayType::Compare(Type *type) const
     return false;
 }
 
-unsigned scc::ir::ArrayType::GetSize() const
+size_t scc::ir::ArrayType::GetSize() const
 {
     const auto el_size = m_Element->GetSize();
     const auto el_align = m_Element->GetAlign();
@@ -27,7 +27,7 @@ unsigned scc::ir::ArrayType::GetSize() const
     return m_Length * stride;
 }
 
-unsigned scc::ir::ArrayType::GetAlign() const
+size_t scc::ir::ArrayType::GetAlign() const
 {
     return m_Element->GetAlign();
 }

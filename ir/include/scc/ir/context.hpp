@@ -31,7 +31,7 @@ namespace scc::ir
         IntType *GetInt16Type();
         IntType *GetInt32Type();
         IntType *GetInt64Type();
-        IntType *GetIntNType(unsigned size_bits);
+        IntType *GetIntNType(unsigned bit_width);
 
         FloatType *GetFloat32Type();
         FloatType *GetFloat64Type();
@@ -50,7 +50,7 @@ namespace scc::ir
         ConstantInt *GetInt16(uint16_t value);
         ConstantInt *GetInt32(uint32_t value);
         ConstantInt *GetInt64(uint64_t value);
-        ConstantInt *GetIntN(unsigned size_bits, uint64_t value);
+        ConstantInt *GetIntN(unsigned bit_width, uint64_t value);
         ConstantInt *GetInt(IntType *type, uint64_t value);
 
         ConstantFloat *GetFloat32(float32_t value);

@@ -2,4 +2,5 @@
 
 namespace scc::cc
 {
+    class Parser;
 }

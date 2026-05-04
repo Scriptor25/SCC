@@ -1,7 +1,9 @@
 #pragma once
 
+#include <scc/ir/ir.hpp>
 #include <scc/ir/user.hpp>
 
+#include <iosfwd>
 #include <string>
 #include <vector>
 

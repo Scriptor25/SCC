@@ -1,5 +1,6 @@
 #include <scc/ir/function.hpp>
 #include <scc/ir/module.hpp>
+#include <scc/ir/variable.hpp>
 
 #include <scc/error.hpp>
 
