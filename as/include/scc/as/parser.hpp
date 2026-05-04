@@ -24,7 +24,7 @@ namespace scc::as
         TokenType Type = TokenType::EndOfFile;
         std::string Raw;
         std::string Value;
-        IImmediateT Immediate = 0;
+        Immediate Immediate = 0;
     };
 
     class Parser

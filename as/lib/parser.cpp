@@ -41,6 +41,7 @@ scc::as::Token scc::as::Parser::Get()
 
     auto state = State::None;
     auto base = 0;
+    auto sign = false;
     auto reg = false;
 
     while (m_Buffer >= 0)
@@ -57,6 +58,12 @@ scc::as::Token scc::as::Parser::Get()
 
             case '#':
                 state = State::Comment;
+                break;
+
+            case '-':
+                raw += static_cast<char>(m_Buffer);
+                m_Buffer = m_Stream.get();
+                sign = true;
                 break;
 
             case '0':
@@ -136,7 +143,9 @@ scc::as::Token scc::as::Parser::Get()
         case State::Immediate:
             if (!isdigit(m_Buffer, base))
             {
-                const auto immediate = std::stoll(value, nullptr, base);
+                const auto immediate = sign
+                                           ? static_cast<Immediate>(std::stoll(value, nullptr, base))
+                                           : std::stoull(value, nullptr, base);
                 return {
                     .Type = TokenType::Immediate,
                     .Raw = std::move(raw),
@@ -155,7 +164,7 @@ scc::as::Token scc::as::Parser::Get()
             {
                 raw += static_cast<char>(m_Buffer);
                 m_Buffer = m_Stream.get();
-                const auto immediate = value.front();
+                const auto immediate = static_cast<unsigned char>(value.front());
                 return {
                     .Type = TokenType::Immediate,
                     .Raw = std::move(raw),

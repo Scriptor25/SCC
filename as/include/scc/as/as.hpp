@@ -1,10 +1,13 @@
 #pragma once
 
+#include <cstdint>
+
 namespace scc::as
 {
-    using IImmediateT = long long;
-    using UImmediateT = unsigned long long;
+    using Immediate = uint64_t;
 
     class Parser;
     class Writer;
+
+    struct Instruction;
 }
