@@ -18,12 +18,13 @@ void scc::ir::Value::Use(User *user)
 
 void scc::ir::Value::Drop(User *user)
 {
-    m_Uses.erase(user);
+    if (const auto it = m_Uses.find(user); it != m_Uses.end())
+        m_Uses.erase(it);
 }
 
 void scc::ir::Value::ReplaceWith(Value *with)
 {
-    for (const auto copy = m_Uses; const auto user : copy)
+    for (const auto copy = m_Uses; auto *user : copy)
         user->Replace(this, with);
 }
 
@@ -44,5 +45,5 @@ scc::ir::Type *scc::ir::Value::GetType() const
 
 std::ostream &scc::ir::operator<<(std::ostream &stream, const Value *value)
 {
-    return value->PrintOperand(stream);
+    return value->PrintOperand(stream, true);
 }

@@ -37,10 +37,7 @@ void scc::ir::CastInstruction::Replace(Value *value, Value *with)
             with->Use(this);
 
         m_Value = with;
-        return;
     }
-
-    Instruction::Replace(value, with);
 }
 
 std::ostream &scc::ir::CastInstruction::Print(std::ostream &stream) const
@@ -48,7 +45,7 @@ std::ostream &scc::ir::CastInstruction::Print(std::ostream &stream) const
     if (IsUsed())
         stream << '%' << m_Name << " = ";
 
-    return m_Value->PrintOperand(m_Type->Print(stream) << " cast ");
+    return m_Value->PrintOperand(m_Type->Print(stream << "cast ") << ", ", true);
 }
 
 scc::ir::Value *scc::ir::CastInstruction::GetValue() const

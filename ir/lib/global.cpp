@@ -7,8 +7,11 @@ scc::ir::Global::Global(Type *type, std::string name)
 {
 }
 
-std::ostream &scc::ir::Global::PrintOperand(std::ostream &stream) const
+std::ostream &scc::ir::Global::PrintOperand(std::ostream &stream, const bool print_type) const
 {
+    if (print_type)
+        m_Type->Print(stream) << ' ';
+
     return stream << '@' << m_Name;
 }
 
@@ -20,12 +23,12 @@ bool scc::ir::Global::Compare(Constant *value) const
     return false;
 }
 
-const std::string &scc::ir::Global::GetName() const
-{
-    return m_Name;
-}
-
 void scc::ir::Global::SetName(std::string name)
 {
     m_Name = std::move(name);
+}
+
+const std::string &scc::ir::Global::GetName() const
+{
+    return m_Name;
 }

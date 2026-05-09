@@ -29,6 +29,8 @@ namespace scc::ir
 
     class Value;
 
+    class EmptyValue;
+
     class Argument;
 
     class Global;

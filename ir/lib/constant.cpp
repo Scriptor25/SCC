@@ -7,5 +7,5 @@ scc::ir::Constant::Constant(Type *type)
 
 std::ostream &scc::ir::Constant::Print(std::ostream &stream) const
 {
-    return PrintOperand(stream);
+    return PrintOperand(stream, true);
 }

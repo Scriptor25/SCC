@@ -78,12 +78,12 @@ scc::ir::Type *scc::ir::FunctionType::GetResult() const
     return m_Result;
 }
 
-unsigned scc::ir::FunctionType::GetArgumentCount() const
+size_t scc::ir::FunctionType::GetArgumentCount() const
 {
     return m_Arguments.size();
 }
 
-scc::ir::Type *scc::ir::FunctionType::GetArgument(const unsigned index) const
+scc::ir::Type *scc::ir::FunctionType::GetArgument(size_t index) const
 {
     return m_Arguments[index];
 }

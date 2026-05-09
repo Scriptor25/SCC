@@ -29,6 +29,8 @@ void scc::ir::OperatorInstruction::DropAll()
             operand->Drop(this);
             operand = nullptr;
         }
+
+    m_Operands.clear();
 }
 
 void scc::ir::OperatorInstruction::Replace(Value *value, Value *with)
@@ -41,10 +43,7 @@ void scc::ir::OperatorInstruction::Replace(Value *value, Value *with)
                 with->Use(this);
 
             operand = with;
-            return;
         }
-
-    Instruction::Replace(value, with);
 }
 
 std::ostream &scc::ir::OperatorInstruction::Print(std::ostream &stream) const
@@ -90,10 +89,12 @@ std::ostream &scc::ir::OperatorInstruction::Print(std::ostream &stream) const
 
     for (auto i = m_Operands.begin(); i != m_Operands.end(); ++i)
     {
-        if (i != m_Operands.begin())
+        const auto first = i == m_Operands.begin();
+
+        if (!first)
             stream << ", ";
 
-        (*i)->PrintOperand(stream);
+        (*i)->PrintOperand(stream, first);
     }
 
     return stream;

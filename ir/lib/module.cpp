@@ -9,10 +9,11 @@
 
 scc::ir::Module::~Module()
 {
-    for (const auto &symbol : m_Symbols)
+    for (auto &symbol : m_Symbols)
     {
         symbol->ReplaceWith(nullptr);
         symbol->DropAll();
+        symbol.reset();
     }
 }
 

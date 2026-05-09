@@ -1,6 +1,7 @@
 #include <scc/ir/instruction.hpp>
 
 #include <ostream>
+#include <scc/ir/type.hpp>
 
 scc::ir::CallInstruction::CallInstruction(
     Type *type,
@@ -37,6 +38,8 @@ void scc::ir::CallInstruction::DropAll()
             argument->Drop(this);
             argument = nullptr;
         }
+
+    m_Arguments.clear();
 }
 
 void scc::ir::CallInstruction::Replace(Value *value, Value *with)
@@ -48,7 +51,6 @@ void scc::ir::CallInstruction::Replace(Value *value, Value *with)
             with->Use(this);
 
         m_Callee = with;
-        return;
     }
 
     for (auto &argument : m_Arguments)
@@ -59,10 +61,7 @@ void scc::ir::CallInstruction::Replace(Value *value, Value *with)
                 with->Use(this);
 
             argument = with;
-            return;
         }
-
-    Instruction::Replace(value, with);
 }
 
 std::ostream &scc::ir::CallInstruction::Print(std::ostream &stream) const
@@ -70,10 +69,14 @@ std::ostream &scc::ir::CallInstruction::Print(std::ostream &stream) const
     if (IsUsed())
         stream << '%' << m_Name << " = ";
 
-    m_Callee->PrintOperand(stream << "call ");
+    const auto *type = m_Callee->GetType()->GetElement();
+    const auto *function_type = dynamic_cast<const FunctionType *>(type);
+    const auto argument_count = function_type->GetArgumentCount();
 
-    for (const auto *argument : m_Arguments)
-        argument->PrintOperand(stream << ", ");
+    m_Callee->PrintOperand(function_type->Print(stream << "call ") << ' ', false);
+
+    for (size_t i = 0; i < m_Arguments.size(); ++i)
+        m_Arguments[i]->PrintOperand(stream << ", ", i >= argument_count);
 
     return stream;
 }

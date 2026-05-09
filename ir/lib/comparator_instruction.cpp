@@ -46,7 +46,6 @@ void scc::ir::ComparatorInstruction::Replace(Value *value, Value *with)
             with->Use(this);
 
         m_LHS = with;
-        return;
     }
 
     if (m_RHS == value)
@@ -56,10 +55,7 @@ void scc::ir::ComparatorInstruction::Replace(Value *value, Value *with)
             with->Use(this);
 
         m_RHS = with;
-        return;
     }
-
-    Instruction::Replace(value, with);
 }
 
 std::ostream &scc::ir::ComparatorInstruction::Print(std::ostream &stream) const
@@ -67,7 +63,6 @@ std::ostream &scc::ir::ComparatorInstruction::Print(std::ostream &stream) const
     if (IsUsed())
         stream << '%' << m_Name << " = ";
 
-    stream << "cmp.";
     switch (m_Comparator)
     {
     case Comparator::SLT:
@@ -94,15 +89,15 @@ std::ostream &scc::ir::ComparatorInstruction::Print(std::ostream &stream) const
     case Comparator::UGE:
         stream << "uge";
         break;
-    case Comparator::EQ:
+    case Comparator::EQU:
         stream << "eq";
         break;
-    case Comparator::NE:
+    case Comparator::NEQ:
         stream << "ne";
         break;
     }
 
-    return m_RHS->PrintOperand(m_LHS->PrintOperand(stream << ' ') << ", ");
+    return m_RHS->PrintOperand(m_LHS->PrintOperand(stream << ' ', true) << ", ", false);
 }
 
 scc::ir::Comparator scc::ir::ComparatorInstruction::GetComparator() const

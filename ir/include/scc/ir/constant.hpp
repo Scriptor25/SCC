@@ -24,7 +24,7 @@ namespace scc::ir
     public:
         explicit ConstantInt(IntType *type, uint64_t value);
 
-        [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream) const override;
+        [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
         [[nodiscard]] bool Compare(Constant *value) const override;
 
         [[nodiscard]] uint64_t GetValue() const;
@@ -38,7 +38,7 @@ namespace scc::ir
     public:
         explicit ConstantFloat(FloatType *type, float64_t value);
 
-        [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream) const override;
+        [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
         [[nodiscard]] bool Compare(Constant *value) const override;
 
         [[nodiscard]] float64_t GetValue() const;
@@ -56,7 +56,7 @@ namespace scc::ir
         void DropAll() override;
         void Replace(Value *value, Value *with) override;
 
-        [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream) const override;
+        [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
         [[nodiscard]] bool Compare(Constant *value) const override;
 
         [[nodiscard]] unsigned GetValueCount() const;
@@ -75,7 +75,7 @@ namespace scc::ir
         void DropAll() override;
         void Replace(Value *value, Value *with) override;
 
-        [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream) const override;
+        [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
         [[nodiscard]] bool Compare(Constant *value) const override;
 
         [[nodiscard]] unsigned GetValueCount() const;
@@ -94,7 +94,7 @@ namespace scc::ir
         void DropAll() override;
         void Replace(Value *value, Value *with) override;
 
-        [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream) const override;
+        [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
         [[nodiscard]] bool Compare(Constant *value) const override;
 
         [[nodiscard]] unsigned GetValueCount() const;

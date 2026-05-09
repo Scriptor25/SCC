@@ -16,9 +16,12 @@ scc::ir::Instruction::Instruction(Type *type, Block *block, std::string name)
 {
 }
 
-std::ostream &scc::ir::Instruction::PrintOperand(std::ostream &stream) const
+std::ostream &scc::ir::Instruction::PrintOperand(std::ostream &stream, const bool print_type) const
 {
-    Assert(!m_Name.empty(), "cannot use unnamed instruction value");
+    Assert(!m_Name.empty(), "cannot use nameless value");
+
+    if (print_type)
+        m_Type->Print(stream) << ' ';
 
     return stream << '%' << m_Name;
 }

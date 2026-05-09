@@ -12,12 +12,12 @@ namespace scc::ir
     public:
         explicit Global(Type *type, std::string name);
 
-        [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream) const override;
+        [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
 
         [[nodiscard]] bool Compare(Constant *value) const override;
 
-        [[nodiscard]] const std::string &GetName() const;
         void SetName(std::string name);
+        [[nodiscard]] const std::string &GetName() const;
 
     protected:
         std::string m_Name;

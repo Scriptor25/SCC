@@ -16,13 +16,14 @@ namespace scc::ir
     {
     public:
         explicit Block(std::string name, Function *function);
-        ~Block() override;
+
+        void DropAll();
 
         void SetName(std::string name);
         [[nodiscard]] const std::string &GetName() const;
 
         std::ostream &Print(std::ostream &stream) const override;
-        std::ostream &PrintOperand(std::ostream &stream) const override;
+        std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
 
         [[nodiscard]] Function *GetFunction() const;
 
@@ -30,6 +31,9 @@ namespace scc::ir
         [[nodiscard]] Instruction *GetInstruction(size_t index) const;
 
         Instruction *Insert(std::unique_ptr<Instruction> instruction);
+        void Erase(const Instruction *instruction);
+
+        Value *CreateEmpty(Type *type, std::string name) const;
 
         [[nodiscard]] Value *FindValue(const std::string &name) const;
 

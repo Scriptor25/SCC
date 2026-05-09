@@ -16,7 +16,7 @@ namespace scc::ir
         virtual ~Value();
 
         virtual std::ostream &Print(std::ostream &stream) const = 0;
-        virtual std::ostream &PrintOperand(std::ostream &stream) const = 0;
+        virtual std::ostream &PrintOperand(std::ostream &stream, bool print_type) const = 0;
 
         void Use(User *user);
         void Drop(User *user);
@@ -47,7 +47,7 @@ struct std::formatter<T *>
     static auto format(T *value, C &&ctx)
     {
         std::ostringstream stream;
-        value->PrintOperand(stream);
+        value->PrintOperand(stream, true);
 
         for (auto c : stream.view())
             *ctx.out()++ = c;

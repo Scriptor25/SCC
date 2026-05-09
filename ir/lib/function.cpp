@@ -1,5 +1,6 @@
 #include <scc/ir/argument.hpp>
 #include <scc/ir/block.hpp>
+#include <scc/ir/empty_value.hpp>
 #include <scc/ir/function.hpp>
 #include <scc/ir/type.hpp>
 
@@ -17,11 +18,22 @@ scc::ir::Function::Function(FunctionType *type, std::string name)
 
 scc::ir::Function::~Function()
 {
-    for (const auto &block : m_Blocks)
+    for (auto &block : m_Blocks)
+    {
         block->ReplaceWith(nullptr);
+        block->DropAll();
+        block.reset();
+    }
 
-    for (const auto &argument : m_Arguments)
+    m_Blocks.clear();
+
+    for (auto &argument : m_Arguments)
+    {
         argument->ReplaceWith(nullptr);
+        argument.reset();
+    }
+
+    m_Arguments.clear();
 }
 
 std::ostream &scc::ir::Function::Print(std::ostream &stream) const
@@ -82,6 +94,16 @@ scc::ir::Block *scc::ir::Function::FindBlock(const std::string &name) const
     return nullptr;
 }
 
+scc::ir::Value *scc::ir::Function::CreateEmpty(Type *type, std::string name)
+{
+    auto value = std::make_unique<EmptyValue>(type, std::move(name));
+    auto *ptr = value.get();
+
+    m_Empties.push_back(std::move(value));
+
+    return ptr;
+}
+
 scc::ir::Value *scc::ir::Function::FindValue(const std::string &name) const
 {
     for (auto &argument : m_Arguments)
@@ -89,13 +111,12 @@ scc::ir::Value *scc::ir::Function::FindValue(const std::string &name) const
             return argument.get();
 
     for (auto &block : m_Blocks)
-    {
-        if (block->GetName() == name)
-            return block.get();
-
         if (auto *value = block->FindValue(name))
             return value;
-    }
+
+    for (auto &empty : m_Empties)
+        if (empty->GetName() == name)
+            return empty.get();
 
     return nullptr;
 }

@@ -7,7 +7,7 @@ scc::ir::AllocInstruction::AllocInstruction(
     PointerType *type,
     Block *block,
     std::string name,
-    const unsigned count)
+    const uint64_t count)
     : Instruction(type, block, std::move(name)),
       m_Count(count)
 {
@@ -18,12 +18,16 @@ std::ostream &scc::ir::AllocInstruction::Print(std::ostream &stream) const
     if (IsUsed())
         stream << '%' << m_Name << " = ";
 
-    const auto *element_type = dynamic_cast<PointerType *>(m_Type)->GetElement();
+    const auto *element_type = m_Type->GetElement();
+    element_type->Print(stream << "alloc ");
 
-    return element_type->Print(stream) << " alloc " << m_Count;
+    if (m_Count == 1)
+        return stream;
+
+    return stream << " 0x" << std::hex << m_Count;
 }
 
-unsigned scc::ir::AllocInstruction::GetCount() const
+uint64_t scc::ir::AllocInstruction::GetCount() const
 {
     return m_Count;
 }

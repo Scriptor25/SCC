@@ -41,18 +41,15 @@ void scc::ir::ReturnInstruction::Replace(Value *value, Value *with)
             with->Use(this);
 
         m_Value = with;
-        return;
     }
-
-    Instruction::Replace(value, with);
 }
 
 std::ostream &scc::ir::ReturnInstruction::Print(std::ostream &stream) const
 {
     if (m_Value)
-        return m_Value->PrintOperand(stream << "ret ");
+        return m_Value->PrintOperand(stream << "ret ", false);
 
-    return stream << "ret void";
+    return stream << "ret";
 }
 
 bool scc::ir::ReturnInstruction::IsTerminator() const

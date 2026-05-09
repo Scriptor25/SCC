@@ -7,9 +7,12 @@ scc::ir::ConstantInt::ConstantInt(IntType *type, const uint64_t value)
 {
 }
 
-std::ostream &scc::ir::ConstantInt::PrintOperand(std::ostream &stream) const
+std::ostream &scc::ir::ConstantInt::PrintOperand(std::ostream &stream, const bool print_type) const
 {
-    return m_Type->Print(stream) << " 0x" << std::hex << m_Value << std::dec;
+    if (print_type)
+        m_Type->Print(stream) << ' ';
+
+    return stream << "0x" << std::hex << m_Value;
 }
 
 bool scc::ir::ConstantInt::Compare(Constant *value) const

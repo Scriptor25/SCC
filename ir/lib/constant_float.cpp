@@ -7,9 +7,12 @@ scc::ir::ConstantFloat::ConstantFloat(FloatType *type, const float64_t value)
 {
 }
 
-std::ostream &scc::ir::ConstantFloat::PrintOperand(std::ostream &stream) const
+std::ostream &scc::ir::ConstantFloat::PrintOperand(std::ostream &stream, const bool print_type) const
 {
-    return m_Type->Print(stream) << " 0x" << std::hexfloat << m_Value << std::defaultfloat;
+    if (print_type)
+        m_Type->Print(stream) << ' ';
+
+    return stream << "0x" << std::hexfloat << m_Value;
 }
 
 bool scc::ir::ConstantFloat::Compare(Constant *value) const

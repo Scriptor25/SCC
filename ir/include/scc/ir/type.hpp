@@ -36,6 +36,8 @@ namespace scc::ir
         [[nodiscard]] Context &GetContext() const;
         [[nodiscard]] Kind GetKind() const;
 
+        [[nodiscard]] virtual Type *GetElement() const;
+
         [[nodiscard]] virtual size_t GetElementCount() const;
         [[nodiscard]] virtual Type *GetElement(size_t index) const;
 
@@ -60,7 +62,7 @@ namespace scc::ir
     class IntType final : public Type
     {
     public:
-        explicit IntType(Context &context, unsigned bit_width);
+        explicit IntType(Context &context, size_t bit_width);
 
         [[nodiscard]] bool Compare(Type *type) const override;
         [[nodiscard]] size_t GetSize() const override;
@@ -69,16 +71,16 @@ namespace scc::ir
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] unsigned GetBitWidth() const;
+        [[nodiscard]] size_t GetBitWidth() const;
 
     private:
-        unsigned m_BitWidth;
+        size_t m_BitWidth;
     };
 
     class FloatType final : public Type
     {
     public:
-        explicit FloatType(Context &context, unsigned bit_width);
+        explicit FloatType(Context &context, size_t bit_width);
 
         [[nodiscard]] bool Compare(Type *type) const override;
         [[nodiscard]] size_t GetSize() const override;
@@ -87,10 +89,10 @@ namespace scc::ir
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] unsigned GetBitWidth() const;
+        [[nodiscard]] size_t GetBitWidth() const;
 
     private:
-        unsigned m_BitWidth;
+        size_t m_BitWidth;
     };
 
     class PointerType final : public Type
@@ -105,7 +107,7 @@ namespace scc::ir
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] Type *GetElement() const;
+        [[nodiscard]] Type *GetElement() const override;
 
         [[nodiscard]] size_t GetElementCount() const override;
         [[nodiscard]] Type *GetElement(size_t index) const override;
@@ -117,7 +119,7 @@ namespace scc::ir
     class ArrayType final : public Type
     {
     public:
-        explicit ArrayType(Context &context, Type *element, unsigned length);
+        explicit ArrayType(Context &context, Type *element, size_t element_count);
 
         [[nodiscard]] bool Compare(Type *type) const override;
         [[nodiscard]] size_t GetSize() const override;
@@ -126,21 +128,20 @@ namespace scc::ir
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] Type *GetElement() const;
-        [[nodiscard]] unsigned GetLength() const;
+        [[nodiscard]] Type *GetElement() const override;
 
         [[nodiscard]] size_t GetElementCount() const override;
         [[nodiscard]] Type *GetElement(size_t index) const override;
 
     private:
         Type *m_Element;
-        unsigned m_Length;
+        size_t m_ElementCount;
     };
 
     class VectorType final : public Type
     {
     public:
-        explicit VectorType(Context &context, Type *element, unsigned length);
+        explicit VectorType(Context &context, Type *element, size_t element_count);
 
         [[nodiscard]] bool Compare(Type *type) const override;
         [[nodiscard]] size_t GetSize() const override;
@@ -149,15 +150,14 @@ namespace scc::ir
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] Type *GetElement() const;
-        [[nodiscard]] unsigned GetLength() const;
+        [[nodiscard]] Type *GetElement() const override;
 
         [[nodiscard]] size_t GetElementCount() const override;
         [[nodiscard]] Type *GetElement(size_t index) const override;
 
     private:
         Type *m_Element;
-        unsigned m_Length;
+        size_t m_ElementCount;
     };
 
     class StructType final : public Type
@@ -200,8 +200,8 @@ namespace scc::ir
 
         [[nodiscard]] Type *GetResult() const;
 
-        [[nodiscard]] unsigned GetArgumentCount() const;
-        [[nodiscard]] Type *GetArgument(unsigned index) const;
+        [[nodiscard]] size_t GetArgumentCount() const;
+        [[nodiscard]] Type *GetArgument(size_t index) const;
 
         [[nodiscard]] std::vector<Type *>::const_iterator begin() const;
         [[nodiscard]] std::vector<Type *>::const_iterator end() const;

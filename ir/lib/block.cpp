@@ -1,8 +1,10 @@
 #include <scc/ir/block.hpp>
+#include <scc/ir/empty_value.hpp>
 #include <scc/ir/function.hpp>
 #include <scc/ir/instruction.hpp>
 
 #include <scc/assert.hpp>
+#include <scc/error.hpp>
 
 #include <ostream>
 
@@ -13,13 +15,16 @@ scc::ir::Block::Block(std::string name, Function *function)
 {
 }
 
-scc::ir::Block::~Block()
+void scc::ir::Block::DropAll()
 {
-    for (const auto &instruction : m_Instructions)
+    for (auto &instruction : m_Instructions)
     {
         instruction->ReplaceWith(nullptr);
         instruction->DropAll();
+        instruction.reset();
     }
+
+    m_Instructions.clear();
 }
 
 void scc::ir::Block::SetName(std::string name)
@@ -53,7 +58,7 @@ std::ostream &scc::ir::Block::Print(std::ostream &stream) const
     return stream;
 }
 
-std::ostream &scc::ir::Block::PrintOperand(std::ostream &stream) const
+std::ostream &scc::ir::Block::PrintOperand(std::ostream &stream, bool print_type) const
 {
     return stream << '.' << m_Name;
 }
@@ -79,9 +84,39 @@ scc::ir::Instruction *scc::ir::Block::Insert(std::unique_ptr<Instruction> instru
 {
     Assert(!!instruction, "instruction must not be null");
 
+    auto *ptr = instruction.get();
+
+    if (auto &name = instruction->GetName(); !name.empty())
+        if (auto *value = m_Function->FindValue(name))
+        {
+            auto *empty = dynamic_cast<EmptyValue *>(value);
+            Assert(!!empty, "value %{} does already exist and is not empty", name);
+
+            empty->ReplaceWith(ptr);
+        }
+
     m_Instructions.push_back(std::move(instruction));
 
-    return m_Instructions.back().get();
+    return ptr;
+}
+
+void scc::ir::Block::Erase(const Instruction *instruction)
+{
+    Assert(!!instruction, "instruction must not be null");
+
+    for (auto it = m_Instructions.begin(); it != m_Instructions.end(); ++it)
+        if (it->get() == instruction)
+        {
+            m_Instructions.erase(it);
+            return;
+        }
+
+    Error("cannot erase instruction because block does not own it");
+}
+
+scc::ir::Value *scc::ir::Block::CreateEmpty(Type *type, std::string name) const
+{
+    return m_Function->CreateEmpty(type, std::move(name));
 }
 
 scc::ir::Value *scc::ir::Block::FindValue(const std::string &name) const

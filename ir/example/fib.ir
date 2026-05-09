@@ -5,26 +5,16 @@ function i32 @printf([i8], ...)
 
 function i32 @fib(i32 %n) {
 .entry:
-    %pt = i32 alloc 3
-    %ap = [i32] offset %pt, i64 0x0
-    %bp = [i32] offset %pt, i64 0x1
-    %ip = [i32] offset %pt, i64 0x2
-    store %ap, i32 0x0
-    store %bp, i32 0x1
-    store %ip, i32 0x0
     br .head
 .head:
-    %i = load %ip
-    %lt = cmp.ult %i, %n
+    %a = select i32 [ .entry, 0x0 ], [ .loop, %b ]
+    %b = select i32 [ .entry, 0x1 ], [ .loop, %c ]
+    %i = select i32 [ .entry, 0x0 ], [ .loop, %x ]
+    %lt = ult i32 %i, %n
     br %lt, .loop, .end
 .loop:
-    %a = load %ap
-    %b = load %bp
-    %c = add %a, %b
-    store %ap, %b
-    store %bp, %c
-    %x = add %i, i32 0x1
-    store %ip, %x
+    %c = add i32 %a, %b
+    %x = add i32 %i, 0x1
     br .head
 .end:
     ret %a
@@ -32,11 +22,11 @@ function i32 @fib(i32 %n) {
 
 function i32 @main(i32 %argc, [[i8]] %argv) {
 .entry:
-    %np = [[i8]] offset %argv, i64 0x1
-    %ns = load %np
-    %n = call @atoi, %ns
-    %r = call @fib, %n
-    %fp = [i8] cast @format
-    call @printf, %fp, %n, %r
+    %np = element [[i8]] %argv, i64 0x1
+    %ns = load [[i8]] %np
+    %n = call i32([i8]) @atoi, %ns
+    %r = call i32(i32) @fib, %n
+    %f = element [[i8 x 15]] @format, i64 0x0, i64 0x0
+    call i32([i8], ...) @printf, %f, i32 %n, i32 %r
     ret %r
 }

@@ -2,7 +2,7 @@
 #include <scc/ir/platform.hpp>
 #include <scc/ir/type.hpp>
 
-scc::ir::FloatType::FloatType(Context &context, const unsigned bit_width)
+scc::ir::FloatType::FloatType(Context &context, const size_t bit_width)
     : Type(context, Kind::Float),
       m_BitWidth(bit_width)
 {
@@ -33,10 +33,10 @@ bool scc::ir::FloatType::IsElement() const
 
 std::ostream &scc::ir::FloatType::Print(std::ostream &stream) const
 {
-    return stream << "f" << m_BitWidth;
+    return stream << 'f' << m_BitWidth;
 }
 
-unsigned scc::ir::FloatType::GetBitWidth() const
+size_t scc::ir::FloatType::GetBitWidth() const
 {
     return m_BitWidth;
 }

@@ -10,11 +10,14 @@ scc::ir::Context::Context(const Platform &platform)
 
 scc::ir::Context::~Context()
 {
-    for (const auto &constant : m_Constants)
+    for (auto &constant : m_Constants)
     {
         constant->ReplaceWith(nullptr);
         constant->DropAll();
+        constant.reset();
     }
+
+    m_Constants.clear();
 }
 
 scc::ir::Context::Context(Context &&context) noexcept
@@ -45,42 +48,42 @@ scc::ir::VoidType *scc::ir::Context::GetVoidType()
 
 scc::ir::IntType *scc::ir::Context::GetInt1Type()
 {
-    return Get<IntType>(1u);
+    return Get<IntType>(1);
 }
 
 scc::ir::IntType *scc::ir::Context::GetInt8Type()
 {
-    return Get<IntType>(8u);
+    return Get<IntType>(8);
 }
 
 scc::ir::IntType *scc::ir::Context::GetInt16Type()
 {
-    return Get<IntType>(16u);
+    return Get<IntType>(16);
 }
 
 scc::ir::IntType *scc::ir::Context::GetInt32Type()
 {
-    return Get<IntType>(32u);
+    return Get<IntType>(32);
 }
 
 scc::ir::IntType *scc::ir::Context::GetInt64Type()
 {
-    return Get<IntType>(64u);
+    return Get<IntType>(64);
 }
 
-scc::ir::IntType *scc::ir::Context::GetIntNType(unsigned bit_width)
+scc::ir::IntType *scc::ir::Context::GetIntNType(uint64_t bit_width)
 {
     return Get<IntType>(bit_width);
 }
 
 scc::ir::FloatType *scc::ir::Context::GetFloat32Type()
 {
-    return Get<FloatType>(32u);
+    return Get<FloatType>(32);
 }
 
 scc::ir::FloatType *scc::ir::Context::GetFloat64Type()
 {
-    return Get<FloatType>(64u);
+    return Get<FloatType>(64);
 }
 
 scc::ir::PointerType *scc::ir::Context::GetPointerType(Type *element)
@@ -88,14 +91,14 @@ scc::ir::PointerType *scc::ir::Context::GetPointerType(Type *element)
     return Get<PointerType>(element);
 }
 
-scc::ir::ArrayType *scc::ir::Context::GetArrayType(Type *element, unsigned length)
+scc::ir::ArrayType *scc::ir::Context::GetArrayType(Type *element, uint64_t length)
 {
     Assert(element->IsElement(), "type {} does not qualify as element", element);
 
     return Get<ArrayType>(element, length);
 }
 
-scc::ir::VectorType *scc::ir::Context::GetVectorType(Type *element, unsigned length)
+scc::ir::VectorType *scc::ir::Context::GetVectorType(Type *element, uint64_t length)
 {
     Assert(element->IsElement(), "type {} does not qualify as element", element);
 
@@ -143,18 +146,18 @@ scc::ir::ConstantInt *scc::ir::Context::GetInt64(const uint64_t value)
     return Get<ConstantInt>(GetInt64Type(), value);
 }
 
-scc::ir::ConstantInt *scc::ir::Context::GetIntN(const unsigned bit_width, const uint64_t value)
+scc::ir::ConstantInt *scc::ir::Context::GetIntN(const uint64_t bit_width, const uint64_t value)
 {
     Assert(bit_width >= 1, "bit width must not be less than 1");
     Assert(bit_width <= 64, "bit width must not be greater than 64");
 
-    const auto mask = ~0ull >> (64 - bit_width);
+    const auto mask = ~uint64_t() >> (64 - bit_width);
     return Get<ConstantInt>(GetIntNType(bit_width), value & mask);
 }
 
 scc::ir::ConstantInt *scc::ir::Context::GetInt(IntType *type, const uint64_t value)
 {
-    const auto mask = ~0ull >> (64 - type->GetBitWidth());
+    const auto mask = ~uint64_t() >> (64 - type->GetBitWidth());
     return Get<ConstantInt>(type, value & mask);
 }
 

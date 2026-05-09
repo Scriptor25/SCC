@@ -35,15 +35,12 @@ void scc::ir::DirectBranchInstruction::Replace(Value *value, Value *with)
             with->Use(this);
 
         m_Destination = dynamic_cast<Block *>(with);
-        return;
     }
-
-    Instruction::Replace(value, with);
 }
 
 std::ostream &scc::ir::DirectBranchInstruction::Print(std::ostream &stream) const
 {
-    return m_Destination->PrintOperand(stream << "br ");
+    return m_Destination->PrintOperand(stream << "br ", false);
 }
 
 bool scc::ir::DirectBranchInstruction::IsTerminator() const

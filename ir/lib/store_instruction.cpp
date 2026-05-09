@@ -43,7 +43,6 @@ void scc::ir::StoreInstruction::Replace(Value *value, Value *with)
             with->Use(this);
 
         m_Pointer = with;
-        return;
     }
 
     if (m_Value == value)
@@ -53,15 +52,12 @@ void scc::ir::StoreInstruction::Replace(Value *value, Value *with)
             with->Use(this);
 
         m_Value = with;
-        return;
     }
-
-    Instruction::Replace(value, with);
 }
 
 std::ostream &scc::ir::StoreInstruction::Print(std::ostream &stream) const
 {
-    return m_Value->PrintOperand(m_Pointer->PrintOperand(stream << "store ") << ", ");
+    return m_Value->PrintOperand(m_Pointer->PrintOperand(stream << "store ", true) << ", ", false);
 }
 
 scc::ir::Value *scc::ir::StoreInstruction::GetPointer() const

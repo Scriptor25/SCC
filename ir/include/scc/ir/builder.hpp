@@ -34,39 +34,44 @@ namespace scc::ir
 
         [[nodiscard]] Block *GetInsertBlock() const;
         [[nodiscard]] Function *GetInsertFunction() const;
+        [[nodiscard]] Type *GetInsertFunctionResult() const;
+
+        Value *CreateEmpty(Type *type, std::string name = {}) const;
 
         OperatorInstruction *CreateOperator(
             Operator operator_,
+            Type *type,
             std::vector<Value *> operands,
             std::string name = {});
 
-        OperatorInstruction *CreateAdd(std::vector<Value *> operands, std::string name = {});
-        OperatorInstruction *CreateSub(std::vector<Value *> operands, std::string name = {});
-        OperatorInstruction *CreateMul(std::vector<Value *> operands, std::string name = {});
-        OperatorInstruction *CreateSDiv(std::vector<Value *> operands, std::string name = {});
-        OperatorInstruction *CreateUDiv(std::vector<Value *> operands, std::string name = {});
-        OperatorInstruction *CreateSRem(std::vector<Value *> operands, std::string name = {});
-        OperatorInstruction *CreateURem(std::vector<Value *> operands, std::string name = {});
-        OperatorInstruction *CreateAnd(std::vector<Value *> operands, std::string name = {});
-        OperatorInstruction *CreateOr(std::vector<Value *> operands, std::string name = {});
-        OperatorInstruction *CreateXor(std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateAdd(Type *type, std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateSub(Type *type, std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateMul(Type *type, std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateSDiv(Type *type, std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateUDiv(Type *type, std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateSRem(Type *type, std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateURem(Type *type, std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateAnd(Type *type, std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateOr(Type *type, std::vector<Value *> operands, std::string name = {});
+        OperatorInstruction *CreateXor(Type *type, std::vector<Value *> operands, std::string name = {});
 
         ComparatorInstruction *CreateComparator(
             Comparator comparator,
+            Type *type,
             Value *lhs,
             Value *rhs,
             std::string name = {});
 
-        ComparatorInstruction *CreateSLT(Value *lhs, Value *rhs, std::string name = {});
-        ComparatorInstruction *CreateULT(Value *lhs, Value *rhs, std::string name = {});
-        ComparatorInstruction *CreateSGT(Value *lhs, Value *rhs, std::string name = {});
-        ComparatorInstruction *CreateUGT(Value *lhs, Value *rhs, std::string name = {});
-        ComparatorInstruction *CreateSLE(Value *lhs, Value *rhs, std::string name = {});
-        ComparatorInstruction *CreateULE(Value *lhs, Value *rhs, std::string name = {});
-        ComparatorInstruction *CreateSGE(Value *lhs, Value *rhs, std::string name = {});
-        ComparatorInstruction *CreateUGE(Value *lhs, Value *rhs, std::string name = {});
-        ComparatorInstruction *CreateEQ(Value *lhs, Value *rhs, std::string name = {});
-        ComparatorInstruction *CreateNE(Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateSLT(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateULT(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateSGT(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateUGT(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateSLE(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateULE(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateSGE(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateUGE(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateEQ(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ComparatorInstruction *CreateNE(Type *type, Value *lhs, Value *rhs, std::string name = {});
 
         DirectBranchInstruction *CreateBranch(Block *destination);
         BranchInstruction *CreateBranch(
@@ -78,13 +83,14 @@ namespace scc::ir
         ReturnInstruction *CreateRet(Value *value);
 
         SelectInstruction *CreateSelect(
-            std::vector<std::pair<Block *, Value *>> options,
+            Type *type,
+            std::vector<std::pair<Block *, Value *>> nodes,
             std::string name = {});
 
         AllocInstruction *CreateAlloc(
             Type *type,
-            std::string name = {},
-            unsigned count = 1u);
+            uint64_t count = 1,
+            std::string name = {});
         LoadInstruction *CreateLoad(
             Value *pointer,
             std::string name = {});
@@ -92,18 +98,18 @@ namespace scc::ir
             Value *pointer,
             Value *value);
 
-        OffsetInstruction *CreateOffset(
-            Type *type,
-            Value *base,
-            std::vector<Value *> offsets,
+        ElementPointerInstruction *CreateElementPointer(
+            Value *pointer,
+            std::vector<Value *> indices,
             std::string name = {});
 
-        OffsetInstruction *CreateConstOffset(
-            Value *base,
-            const std::vector<unsigned> &offsets,
+        ElementPointerInstruction *CreateElementPointer(
+            Value *pointer,
+            const std::vector<size_t> &indices,
             std::string name = {});
 
         CallInstruction *CreateCall(
+            FunctionType *function_type,
             Value *callee,
             std::vector<Value *> arguments,
             std::string name = {});

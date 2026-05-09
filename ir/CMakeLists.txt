@@ -11,3 +11,6 @@ add_executable(bin_ir ${BIN_SOURCES})
 target_include_directories(bin_ir PRIVATE include)
 target_link_libraries(bin_ir PRIVATE scc::ir)
 set_target_properties(bin_ir PROPERTIES OUTPUT_NAME "sir")
+
+target_compile_options(lib_ir PUBLIC -fsanitize=address)
+target_link_libraries(lib_ir PUBLIC asan)

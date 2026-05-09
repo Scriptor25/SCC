@@ -18,6 +18,11 @@ scc::ir::Kind scc::ir::Type::GetKind() const
     return m_Kind;
 }
 
+scc::ir::Type *scc::ir::Type::GetElement() const
+{
+    Error("type does not have a single element");
+}
+
 size_t scc::ir::Type::GetElementCount() const
 {
     return 0;

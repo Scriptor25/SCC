@@ -4,24 +4,24 @@
 #include <scc/ir/context.hpp>
 #include <scc/ir/platform.hpp>
 
-scc::ir::VectorType::VectorType(Context &context, Type *element, const unsigned length)
+scc::ir::VectorType::VectorType(Context &context, Type *element, size_t element_count)
     : Type(context, Kind::Vector),
       m_Element(element),
-      m_Length(length)
+      m_ElementCount(element_count)
 {
 }
 
 bool scc::ir::VectorType::Compare(Type *type) const
 {
     if (const auto *vector_type = dynamic_cast<VectorType *>(type))
-        return m_Element == vector_type->m_Element && m_Length == vector_type->m_Length;
+        return m_Element == vector_type->m_Element && m_ElementCount == vector_type->m_ElementCount;
 
     return false;
 }
 
 size_t scc::ir::VectorType::GetSize() const
 {
-    return m_Length * m_Element->GetSize();
+    return m_ElementCount * m_Element->GetSize();
 }
 
 size_t scc::ir::VectorType::GetAlign() const
@@ -38,7 +38,7 @@ bool scc::ir::VectorType::IsElement() const
 
 std::ostream &scc::ir::VectorType::Print(std::ostream &stream) const
 {
-    return m_Element->Print(stream << '<') << " x " << m_Length << '>';
+    return m_Element->Print(stream << '<') << " x " << std::dec << m_ElementCount << '>';
 }
 
 scc::ir::Type *scc::ir::VectorType::GetElement() const
@@ -46,19 +46,14 @@ scc::ir::Type *scc::ir::VectorType::GetElement() const
     return m_Element;
 }
 
-unsigned scc::ir::VectorType::GetLength() const
-{
-    return m_Length;
-}
-
 size_t scc::ir::VectorType::GetElementCount() const
 {
-    return m_Length;
+    return m_ElementCount;
 }
 
 scc::ir::Type *scc::ir::VectorType::GetElement(const size_t index) const
 {
-    AssertIndexInBounds(index, m_Length);
+    AssertIndexInBounds(index, m_ElementCount);
 
     return m_Element;
 }

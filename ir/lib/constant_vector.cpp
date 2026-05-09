@@ -24,6 +24,8 @@ void scc::ir::ConstantVector::DropAll()
             value->Drop(this);
             value = nullptr;
         }
+
+    m_Values.clear();
 }
 
 void scc::ir::ConstantVector::Replace(Value *value, Value *with)
@@ -36,22 +38,22 @@ void scc::ir::ConstantVector::Replace(Value *value, Value *with)
                 with->Use(this);
 
             val = dynamic_cast<Constant *>(with);
-            return;
         }
-
-    Constant::Replace(value, with);
 }
 
-std::ostream &scc::ir::ConstantVector::PrintOperand(std::ostream &stream) const
+std::ostream &scc::ir::ConstantVector::PrintOperand(std::ostream &stream, const bool print_type) const
 {
-    m_Type->Print(stream) << " <";
+    if (print_type)
+        m_Type->Print(stream) << ' ';
+
+    stream << '<';
 
     for (auto i = m_Values.begin(); i != m_Values.end(); ++i)
     {
         if (i != m_Values.begin())
             stream << ", ";
 
-        (*i)->PrintOperand(stream);
+        (*i)->PrintOperand(stream, false);
     }
 
     return stream << '>';
@@ -59,7 +61,7 @@ std::ostream &scc::ir::ConstantVector::PrintOperand(std::ostream &stream) const
 
 bool scc::ir::ConstantVector::Compare(Constant *value) const
 {
-    if (const auto *vector_value = dynamic_cast<ConstantVector *>(value))
+    if (const auto *vector_value = dynamic_cast<const ConstantVector *>(value))
     {
         if (m_Type != vector_value->m_Type)
             return false;

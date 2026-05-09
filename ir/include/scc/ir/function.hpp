@@ -22,7 +22,10 @@ namespace scc::ir
 
         void InsertBlock(std::unique_ptr<Block> block);
         Block *CreateBlock(std::string name);
+
         [[nodiscard]] Block *FindBlock(const std::string &name) const;
+
+        Value *CreateEmpty(Type *type, std::string name);
 
         [[nodiscard]] Value *FindValue(const std::string &name) const;
 
@@ -37,5 +40,7 @@ namespace scc::ir
 
         std::vector<std::unique_ptr<Argument>> m_Arguments;
         std::vector<std::unique_ptr<Block>> m_Blocks;
+
+        std::vector<std::unique_ptr<EmptyValue>> m_Empties;
     };
 }

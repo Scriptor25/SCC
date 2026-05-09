@@ -31,15 +31,15 @@ namespace scc::ir
         IntType *GetInt16Type();
         IntType *GetInt32Type();
         IntType *GetInt64Type();
-        IntType *GetIntNType(unsigned bit_width);
+        IntType *GetIntNType(uint64_t bit_width);
 
         FloatType *GetFloat32Type();
         FloatType *GetFloat64Type();
 
         PointerType *GetPointerType(Type *element);
 
-        ArrayType *GetArrayType(Type *element, unsigned length);
-        VectorType *GetVectorType(Type *element, unsigned length);
+        ArrayType *GetArrayType(Type *element, uint64_t length);
+        VectorType *GetVectorType(Type *element, uint64_t length);
 
         StructType *GetStructType(std::vector<Type *> elements);
 
@@ -50,7 +50,7 @@ namespace scc::ir
         ConstantInt *GetInt16(uint16_t value);
         ConstantInt *GetInt32(uint32_t value);
         ConstantInt *GetInt64(uint64_t value);
-        ConstantInt *GetIntN(unsigned bit_width, uint64_t value);
+        ConstantInt *GetIntN(uint64_t bit_width, uint64_t value);
         ConstantInt *GetInt(IntType *type, uint64_t value);
 
         ConstantFloat *GetFloat32(float32_t value);

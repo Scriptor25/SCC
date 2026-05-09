@@ -15,7 +15,7 @@ namespace scc::ir
         explicit Instruction(Type *type, Block *block);
         explicit Instruction(Type *type, Block *block, std::string name);
 
-        std::ostream &PrintOperand(std::ostream &stream) const override;
+        std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
 
         [[nodiscard]] Block *GetBlock() const;
 
@@ -80,8 +80,8 @@ namespace scc::ir
         ULE,
         SGE,
         UGE,
-        EQ,
-        NE,
+        EQU,
+        NEQ,
     };
 
     class ComparatorInstruction final : public Instruction
@@ -195,7 +195,7 @@ namespace scc::ir
             Type *type,
             Block *block,
             std::string name,
-            std::vector<std::pair<Block *, Value *>> options);
+            std::vector<std::pair<Block *, Value *>> nodes);
         ~SelectInstruction() override;
 
         void DropAll() override;
@@ -203,11 +203,12 @@ namespace scc::ir
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] unsigned GetOptionCount() const;
-        [[nodiscard]] std::pair<Block *, Value *> GetOption(unsigned index) const;
+        [[nodiscard]] size_t GetNodeCount() const;
+        std::pair<Block *, Value *> &GetNode(size_t index);
+        [[nodiscard]] const std::pair<Block *, Value *> &GetNode(size_t index) const;
 
     private:
-        std::vector<std::pair<Block *, Value *>> m_Options;
+        std::vector<std::pair<Block *, Value *>> m_Nodes;
     };
 
     class AllocInstruction final : public Instruction
@@ -217,14 +218,14 @@ namespace scc::ir
             PointerType *type,
             Block *block,
             std::string name,
-            unsigned count);
+            uint64_t count);
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] unsigned GetCount() const;
+        [[nodiscard]] uint64_t GetCount() const;
 
     private:
-        unsigned m_Count;
+        uint64_t m_Count;
     };
 
     class LoadInstruction final : public Instruction
@@ -271,16 +272,16 @@ namespace scc::ir
         Value *m_Value;
     };
 
-    class OffsetInstruction final : public Instruction
+    class ElementPointerInstruction final : public Instruction
     {
     public:
-        explicit OffsetInstruction(
+        explicit ElementPointerInstruction(
             Type *type,
             Block *block,
             std::string name,
-            Value *base,
-            std::vector<Value *> offsets);
-        ~OffsetInstruction() override;
+            Value *pointer,
+            std::vector<Value *> indices);
+        ~ElementPointerInstruction() override;
 
         void DropAll() override;
         void Replace(Value *value, Value *with) override;
@@ -288,12 +289,12 @@ namespace scc::ir
         std::ostream &Print(std::ostream &stream) const override;
 
         [[nodiscard]] Value *GetBase() const;
-        [[nodiscard]] unsigned GetOffsetCount() const;
-        [[nodiscard]] Value *GetOffset(unsigned index) const;
+        [[nodiscard]] size_t GetIndexCount() const;
+        [[nodiscard]] Value *GetIndex(size_t index) const;
 
     private:
-        Value *m_Base;
-        std::vector<Value *> m_Offsets;
+        Value *m_Pointer;
+        std::vector<Value *> m_Indices;
     };
 
     class CallInstruction final : public Instruction

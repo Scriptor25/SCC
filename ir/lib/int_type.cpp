@@ -2,7 +2,7 @@
 #include <scc/ir/platform.hpp>
 #include <scc/ir/type.hpp>
 
-scc::ir::IntType::IntType(Context &context, const unsigned bit_width)
+scc::ir::IntType::IntType(Context &context, const size_t bit_width)
     : Type(context, Kind::Int),
       m_BitWidth(bit_width)
 {
@@ -33,10 +33,10 @@ bool scc::ir::IntType::IsElement() const
 
 std::ostream &scc::ir::IntType::Print(std::ostream &stream) const
 {
-    return stream << 'i' << m_BitWidth;
+    return stream << 'i' << std::dec << m_BitWidth;
 }
 
-unsigned scc::ir::IntType::GetBitWidth() const
+size_t scc::ir::IntType::GetBitWidth() const
 {
     return m_BitWidth;
 }

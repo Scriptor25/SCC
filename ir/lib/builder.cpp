@@ -11,6 +11,11 @@
 
 #include <ranges>
 
+static void assert_type_match(scc::ir::Type *a, scc::ir::Type *b)
+{
+    scc::Assert(a == b, "type mismatch: {} != {}", a, b);
+}
+
 scc::ir::Builder::Builder(Context &context)
     : m_Context(context),
       m_InsertBlock()
@@ -72,17 +77,34 @@ scc::ir::Function *scc::ir::Builder::GetInsertFunction() const
     return m_InsertBlock->GetFunction();
 }
 
+scc::ir::Type *scc::ir::Builder::GetInsertFunctionResult() const
+{
+    Assert(!!m_InsertBlock, "insert block must not be null");
+
+    const auto *function = m_InsertBlock->GetFunction();
+    const auto *function_type = dynamic_cast<FunctionType *>(function->GetType()->GetElement());
+
+    return function_type->GetResult();
+}
+
+scc::ir::Value *scc::ir::Builder::CreateEmpty(Type *type, std::string name) const
+{
+    Assert(!!m_InsertBlock, "insert block must not be null");
+
+    return m_InsertBlock->CreateEmpty(type, std::move(name));
+}
+
 scc::ir::OperatorInstruction *scc::ir::Builder::CreateOperator(
     Operator operator_,
+    Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
+    Assert(!!type, "type must not be null");
     Assert(!operands.empty(), "operands must not be empty");
 
-    auto *type = operands.front()->GetType();
-
     for (const auto *operand : operands)
-        Assert(operand->GetType() == type, "non-uniform operands");
+        assert_type_match(operand->GetType(), type);
 
     return Create<OperatorInstruction>(
         type,
@@ -93,84 +115,98 @@ scc::ir::OperatorInstruction *scc::ir::Builder::CreateOperator(
 }
 
 scc::ir::OperatorInstruction *scc::ir::Builder::CreateAdd(
+    Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::Add, std::move(operands), std::move(name));
+    return CreateOperator(Operator::Add, type, std::move(operands), std::move(name));
 }
 
 scc::ir::OperatorInstruction *scc::ir::Builder::CreateSub(
+    Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::Sub, std::move(operands), std::move(name));
+    return CreateOperator(Operator::Sub, type, std::move(operands), std::move(name));
 }
 
 scc::ir::OperatorInstruction *scc::ir::Builder::CreateMul(
+    Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::Mul, std::move(operands), std::move(name));
+    return CreateOperator(Operator::Mul, type, std::move(operands), std::move(name));
 }
 
 scc::ir::OperatorInstruction *scc::ir::Builder::CreateSDiv(
+    Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::SDiv, std::move(operands), std::move(name));
+    return CreateOperator(Operator::SDiv, type, std::move(operands), std::move(name));
 }
 
 scc::ir::OperatorInstruction *scc::ir::Builder::CreateUDiv(
+    Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::UDiv, std::move(operands), std::move(name));
+    return CreateOperator(Operator::UDiv, type, std::move(operands), std::move(name));
 }
 
 scc::ir::OperatorInstruction *scc::ir::Builder::CreateSRem(
+    Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::SRem, std::move(operands), std::move(name));
+    return CreateOperator(Operator::SRem, type, std::move(operands), std::move(name));
 }
 
 scc::ir::OperatorInstruction *scc::ir::Builder::CreateURem(
+    Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::URem, std::move(operands), std::move(name));
+    return CreateOperator(Operator::URem, type, std::move(operands), std::move(name));
 }
 
 scc::ir::OperatorInstruction *scc::ir::Builder::CreateAnd(
+    Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::And, std::move(operands), std::move(name));
+    return CreateOperator(Operator::And, type, std::move(operands), std::move(name));
 }
 
 scc::ir::OperatorInstruction *scc::ir::Builder::CreateOr(
+    Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::Or, std::move(operands), std::move(name));
+    return CreateOperator(Operator::Or, type, std::move(operands), std::move(name));
 }
 
 scc::ir::OperatorInstruction *scc::ir::Builder::CreateXor(
+    Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::Xor, std::move(operands), std::move(name));
+    return CreateOperator(Operator::Xor, type, std::move(operands), std::move(name));
 }
 
 scc::ir::ComparatorInstruction *scc::ir::Builder::CreateComparator(
     Comparator comparator,
+    Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
+    Assert(!!type, "type must not be null");
     Assert(!!lhs, "lhs must not be null");
     Assert(!!rhs, "rhs must not be null");
-    Assert(lhs->GetType() == rhs->GetType(), "rhs type must be same as lhs type");
+
+    assert_type_match(lhs->GetType(), type);
+    assert_type_match(rhs->GetType(), type);
 
     return Create<ComparatorInstruction>(
         m_Context.GetInt1Type(),
@@ -182,83 +218,93 @@ scc::ir::ComparatorInstruction *scc::ir::Builder::CreateComparator(
 }
 
 scc::ir::ComparatorInstruction *scc::ir::Builder::CreateSLT(
+    Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::SLT, lhs, rhs, std::move(name));
+    return CreateComparator(Comparator::SLT, type, lhs, rhs, std::move(name));
 }
 
 scc::ir::ComparatorInstruction *scc::ir::Builder::CreateULT(
+    Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::ULT, lhs, rhs, std::move(name));
+    return CreateComparator(Comparator::ULT, type, lhs, rhs, std::move(name));
 }
 
 scc::ir::ComparatorInstruction *scc::ir::Builder::CreateSGT(
+    Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::SGT, lhs, rhs, std::move(name));
+    return CreateComparator(Comparator::SGT, type, lhs, rhs, std::move(name));
 }
 
 scc::ir::ComparatorInstruction *scc::ir::Builder::CreateUGT(
+    Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::UGT, lhs, rhs, std::move(name));
+    return CreateComparator(Comparator::UGT, type, lhs, rhs, std::move(name));
 }
 
 scc::ir::ComparatorInstruction *scc::ir::Builder::CreateSLE(
+    Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::SLE, lhs, rhs, std::move(name));
+    return CreateComparator(Comparator::SLE, type, lhs, rhs, std::move(name));
 }
 
 scc::ir::ComparatorInstruction *scc::ir::Builder::CreateULE(
+    Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::ULE, lhs, rhs, std::move(name));
+    return CreateComparator(Comparator::ULE, type, lhs, rhs, std::move(name));
 }
 
 scc::ir::ComparatorInstruction *scc::ir::Builder::CreateSGE(
+    Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::SGE, lhs, rhs, std::move(name));
+    return CreateComparator(Comparator::SGE, type, lhs, rhs, std::move(name));
 }
 
 scc::ir::ComparatorInstruction *scc::ir::Builder::CreateUGE(
+    Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::UGE, lhs, rhs, std::move(name));
+    return CreateComparator(Comparator::UGE, type, lhs, rhs, std::move(name));
 }
 
 scc::ir::ComparatorInstruction *scc::ir::Builder::CreateEQ(
+    Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::EQ, lhs, rhs, std::move(name));
+    return CreateComparator(Comparator::EQU, type, lhs, rhs, std::move(name));
 }
 
 scc::ir::ComparatorInstruction *scc::ir::Builder::CreateNE(
+    Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::NE, lhs, rhs, std::move(name));
+    return CreateComparator(Comparator::NEQ, type, lhs, rhs, std::move(name));
 }
 
 scc::ir::DirectBranchInstruction *scc::ir::Builder::CreateBranch(Block *destination)
@@ -277,9 +323,10 @@ scc::ir::BranchInstruction *scc::ir::Builder::CreateBranch(
     Block *else_)
 {
     Assert(!!condition, "condition must not be null");
-    Assert(condition->GetType() == m_Context.GetInt1Type(), "condition type must be i1");
     Assert(!!then, "then must not be null");
     Assert(!!else_, "else must not be null");
+
+    assert_type_match(condition->GetType(), m_Context.GetInt1Type());
 
     return Create<BranchInstruction>(
         m_Context.GetVoidType(),
@@ -298,30 +345,33 @@ scc::ir::ReturnInstruction *scc::ir::Builder::CreateRet(Value *value)
 {
     Assert(!!value, "value must not be null");
 
+    assert_type_match(value->GetType(), GetInsertFunctionResult());
+
     return Create<ReturnInstruction>(m_Context.GetVoidType(), m_InsertBlock, value);
 }
 
 scc::ir::SelectInstruction *scc::ir::Builder::CreateSelect(
-    std::vector<std::pair<Block *, Value *>> options,
+    Type *type,
+    std::vector<std::pair<Block *, Value *>> nodes,
     std::string name)
 {
-    Assert(!options.empty(), "options must not be empty");
+    Assert(!!type, "type must not be null");
+    Assert(!nodes.empty(), "nodes must not be empty");
 
-    auto *type = options.front().second->GetType();
-
-    for (const auto *value : options | std::views::values)
-        Assert(value->GetType() == type, "non-uniform options");
+    for (const auto *value : nodes | std::views::values)
+        assert_type_match(value->GetType(), type);
 
     return Create<SelectInstruction>(
         type,
         m_InsertBlock,
         std::move(name),
-        std::move(options));
+        std::move(nodes));
 }
 
-scc::ir::AllocInstruction *scc::ir::Builder::CreateAlloc(Type *type, std::string name, unsigned count)
+scc::ir::AllocInstruction *scc::ir::Builder::CreateAlloc(Type *type, uint64_t count, std::string name)
 {
     Assert(!!type, "type must not be null");
+    Assert(!!count, "count must not be 0");
 
     return Create<AllocInstruction>(
         m_Context.GetPointerType(type),
@@ -333,9 +383,11 @@ scc::ir::AllocInstruction *scc::ir::Builder::CreateAlloc(Type *type, std::string
 scc::ir::LoadInstruction *scc::ir::Builder::CreateLoad(Value *pointer, std::string name)
 {
     Assert(!!pointer, "pointer must not be null");
-    Assert(pointer->GetType()->GetKind() == Kind::Pointer, "pointer type must be a kind of pointer");
 
-    auto *element_type = dynamic_cast<PointerType *>(pointer->GetType())->GetElement();
+    auto *pointer_type = pointer->GetType();
+    Assert(pointer_type->GetKind() == Kind::Pointer, "type {} is not a kind of pointer", pointer_type);
+
+    auto *element_type = pointer_type->GetElement();
 
     return Create<LoadInstruction>(
         element_type,
@@ -348,11 +400,14 @@ scc::ir::StoreInstruction *scc::ir::Builder::CreateStore(Value *pointer, Value *
 {
     Assert(!!pointer, "pointer must not be null");
     Assert(!!value, "value must not be null");
-    Assert(pointer->GetType()->GetKind() == Kind::Pointer, "pointer type must be a kind of pointer");
 
-    const auto *element_type = dynamic_cast<PointerType *>(pointer->GetType())->GetElement();
+    auto *pointer_type = pointer->GetType();
+    Assert(pointer_type->GetKind() == Kind::Pointer, "type {} is not a kind of pointer", pointer_type);
 
-    Assert(value->GetType() == element_type, "value type must be the same as pointer base type");
+    auto *element_type = pointer_type->GetElement();
+    auto *value_type = value->GetType();
+
+    assert_type_match(value_type, element_type);
 
     return Create<StoreInstruction>(
         m_Context.GetVoidType(),
@@ -361,79 +416,96 @@ scc::ir::StoreInstruction *scc::ir::Builder::CreateStore(Value *pointer, Value *
         value);
 }
 
-scc::ir::OffsetInstruction *scc::ir::Builder::CreateOffset(
-    Type *type,
-    Value *base,
-    std::vector<Value *> offsets,
+scc::ir::ElementPointerInstruction *scc::ir::Builder::CreateElementPointer(
+    Value *pointer,
+    std::vector<Value *> indices,
     std::string name)
 {
-    Assert(!!type, "type must not be null");
-    Assert(!!base, "base must not be null");
-    Assert(!offsets.empty(), "offsets must not be empty");
+    Assert(!!pointer, "pointer must not be null");
+    Assert(!indices.empty(), "indices must not be empty");
 
-    Assert(type->GetKind() == Kind::Pointer, "type must be a kind of pointer");
-    Assert(base->GetType()->GetKind() == Kind::Pointer, "base type must be a kind of pointer");
+    auto *pointer_type = pointer->GetType();
 
-    for (const auto *offset : offsets)
-        Assert(offset->GetType()->GetKind() == Kind::Int, "offset type must be a kind of int");
+    Assert(pointer_type->GetKind() == Kind::Pointer, "type {} is not a kind of pointer", pointer_type);
 
-    return Create<OffsetInstruction>(
-        type,
-        m_InsertBlock,
-        std::move(name),
-        base,
-        std::move(offsets));
-}
-
-scc::ir::OffsetInstruction *scc::ir::Builder::CreateConstOffset(
-    Value *base,
-    const std::vector<unsigned> &offsets,
-    std::string name)
-{
-    Assert(!!base, "base must not be null");
-    Assert(!offsets.empty(), "offsets must not be empty");
-
-    Assert(base->GetType()->GetKind() == Kind::Pointer, "base type must be a kind of pointer");
-
-    auto *type = base->GetType();
-
-    std::vector<Value *> values(offsets.size());
-
-    for (size_t i = 0; i < offsets.size(); ++i)
+    for (auto *index : indices)
     {
-        auto &offset = offsets[i];
-        Assert(offset < type->GetElementCount(), "constant offset out of bounds");
+        Assert(!!pointer_type->GetElementCount(), "type {} does not have any elements to index into", pointer_type);
 
-        type = type->GetElement(offset);
-        values[i] = m_Context.GetInt64(offset);
+        auto *index_type = index->GetType();
+        Assert(index_type->GetKind() == Kind::Int, "type {} is not a kind of int", index_type);
+
+        if (pointer_type->GetKind() == Kind::Struct)
+        {
+            const auto *constant_index = dynamic_cast<ConstantInt *>(index);
+
+            Assert(!!constant_index, "index must be constant");
+
+            const auto index_value = constant_index->GetValue();
+
+            pointer_type = pointer_type->GetElement(index_value);
+        }
+        else
+        {
+            pointer_type = pointer_type->GetElement();
+        }
     }
 
-    return Create<OffsetInstruction>(
-        m_Context.GetPointerType(type),
+    return Create<ElementPointerInstruction>(
+        m_Context.GetPointerType(pointer_type),
         m_InsertBlock,
         std::move(name),
-        base,
+        pointer,
+        std::move(indices));
+}
+
+scc::ir::ElementPointerInstruction *scc::ir::Builder::CreateElementPointer(
+    Value *pointer,
+    const std::vector<size_t> &indices,
+    std::string name)
+{
+    Assert(!!pointer, "pointer must not be null");
+    Assert(!indices.empty(), "indices must not be empty");
+
+    auto *pointer_type = pointer->GetType();
+
+    Assert(pointer_type->GetKind() == Kind::Pointer, "type {} is not a kind of pointer", pointer_type);
+
+    std::vector<Value *> values(indices.size());
+
+    for (size_t i = 0; i < indices.size(); ++i)
+    {
+        const auto index = indices[i];
+
+        pointer_type = pointer_type->GetElement(index);
+        values[i] = m_Context.GetInt64(index);
+    }
+
+    return Create<ElementPointerInstruction>(
+        m_Context.GetPointerType(pointer_type),
+        m_InsertBlock,
+        std::move(name),
+        pointer,
         std::move(values));
 }
 
 scc::ir::CallInstruction *scc::ir::Builder::CreateCall(
+    FunctionType *function_type,
     Value *callee,
     std::vector<Value *> arguments,
     std::string name)
 {
+    Assert(!!function_type, "function type must not be null");
     Assert(!!callee, "callee must not be null");
     Assert(!arguments.empty(), "arguments must not be empty");
 
     auto *callee_type = callee->GetType();
 
-    Assert(callee_type->GetKind() == Kind::Pointer, "callee type must be a kind of pointer");
+    Assert(callee_type->GetKind() == Kind::Pointer, "type {} is not a kind of pointer", callee_type);
 
-    const auto *pointer_type = dynamic_cast<PointerType *>(callee_type);
-    auto *element_type = pointer_type->GetElement();
+    auto *callee_element_type = dynamic_cast<PointerType *>(callee_type)->GetElement();
 
-    Assert(element_type->GetKind() == Kind::Function, "callee element type must be a kind of function");
-
-    const auto *function_type = dynamic_cast<FunctionType *>(element_type);
+    assert_type_match(callee_element_type, function_type);
 
     const auto count = function_type->GetArgumentCount();
 
@@ -441,7 +513,7 @@ scc::ir::CallInstruction *scc::ir::Builder::CreateCall(
     Assert(function_type->IsVariadic() || count == arguments.size(), "too many arguments");
 
     for (size_t i = 0; i < count; ++i)
-        Assert(function_type->GetArgument(i) == arguments[i]->GetType(), "invalid argument type");
+        assert_type_match(arguments[i]->GetType(), function_type->GetArgument(i));
 
     return Create<CallInstruction>(
         function_type->GetResult(),
@@ -458,6 +530,12 @@ scc::ir::CastInstruction *scc::ir::Builder::CreateCast(
 {
     Assert(!!type, "type must not be null");
     Assert(!!value, "value must not be null");
+
+    Assert(type->GetKind() == Kind::Pointer, "type {} is not a kind of pointer", type);
+
+    auto *value_type = value->GetType();
+
+    Assert(value_type->GetKind() == Kind::Pointer, "type {} is not a kind of pointer", value_type);
 
     return Create<CastInstruction>(
         type,

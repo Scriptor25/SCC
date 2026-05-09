@@ -52,7 +52,6 @@ void scc::ir::BranchInstruction::Replace(Value *value, Value *with)
             with->Use(this);
 
         m_Condition = with;
-        return;
     }
 
     if (m_Then == value)
@@ -62,7 +61,6 @@ void scc::ir::BranchInstruction::Replace(Value *value, Value *with)
             with->Use(this);
 
         m_Then = dynamic_cast<Block *>(with);
-        return;
     }
 
     if (m_Else == value)
@@ -72,15 +70,20 @@ void scc::ir::BranchInstruction::Replace(Value *value, Value *with)
             with->Use(this);
 
         m_Else = dynamic_cast<Block *>(with);
-        return;
     }
-
-    Instruction::Replace(value, with);
 }
 
 std::ostream &scc::ir::BranchInstruction::Print(std::ostream &stream) const
 {
-    return m_Else->PrintOperand(m_Then->PrintOperand(m_Condition->PrintOperand(stream << "br ") << ", ") << ", ");
+    return m_Else->PrintOperand(
+        m_Then->PrintOperand(
+            m_Condition->PrintOperand(
+                stream << "br ",
+                false
+            ) << ", ",
+            false
+        ) << ", ",
+        false);
 }
 
 bool scc::ir::BranchInstruction::IsTerminator() const

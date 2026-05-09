@@ -24,6 +24,8 @@ void scc::ir::ConstantStruct::DropAll()
             value->Drop(this);
             value = nullptr;
         }
+
+    m_Values.clear();
 }
 
 void scc::ir::ConstantStruct::Replace(Value *value, Value *with)
@@ -36,22 +38,22 @@ void scc::ir::ConstantStruct::Replace(Value *value, Value *with)
                 with->Use(this);
 
             val = dynamic_cast<Constant *>(with);
-            return;
         }
-
-    Constant::Replace(value, with);
 }
 
-std::ostream &scc::ir::ConstantStruct::PrintOperand(std::ostream &stream) const
+std::ostream &scc::ir::ConstantStruct::PrintOperand(std::ostream &stream, const bool print_type) const
 {
-    m_Type->Print(stream) << " {";
+    if (print_type)
+        m_Type->Print(stream) << ' ';
+
+    stream << '{';
 
     for (auto i = m_Values.begin(); i != m_Values.end(); ++i)
     {
         if (i != m_Values.begin())
             stream << ", ";
 
-        (*i)->PrintOperand(stream);
+        (*i)->PrintOperand(stream, false);
     }
 
     return stream << '}';
@@ -59,7 +61,7 @@ std::ostream &scc::ir::ConstantStruct::PrintOperand(std::ostream &stream) const
 
 bool scc::ir::ConstantStruct::Compare(Constant *value) const
 {
-    if (const auto *struct_value = dynamic_cast<ConstantStruct *>(value))
+    if (const auto *struct_value = dynamic_cast<const ConstantStruct *>(value))
     {
         if (m_Type != struct_value->m_Type)
             return false;

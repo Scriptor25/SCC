@@ -36,10 +36,7 @@ void scc::ir::LoadInstruction::Replace(Value *value, Value *with)
             with->Use(this);
 
         m_Pointer = with;
-        return;
     }
-
-    Instruction::Replace(value, with);
 }
 
 std::ostream &scc::ir::LoadInstruction::Print(std::ostream &stream) const
@@ -47,7 +44,7 @@ std::ostream &scc::ir::LoadInstruction::Print(std::ostream &stream) const
     if (IsUsed())
         stream << '%' << m_Name << " = ";
 
-    return m_Pointer->PrintOperand(stream << "load ");
+    return m_Pointer->PrintOperand(stream << "load ", true);
 }
 
 scc::ir::Value *scc::ir::LoadInstruction::GetPointer() const
