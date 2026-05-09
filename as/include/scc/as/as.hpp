@@ -5,9 +5,24 @@
 namespace scc::as
 {
     using Immediate = uint64_t;
+    using InstructionCode = uint32_t;
+
+    enum class OperandType;
 
     class Parser;
     class Writer;
 
-    struct Instruction;
+    class Module;
+    class Section;
+
+    class Fragment;
+
+    class Instruction;
+    class Data;
+    class Align;
+    class Fill;
+
+    class Operand;
+
+    class Symbol;
 }
