@@ -14,8 +14,8 @@ std::ostream &scc::ir::ConstantInt::PrintOperand(std::ostream &stream) const
 
 bool scc::ir::ConstantInt::Compare(Constant *value) const
 {
-    if (const auto p = dynamic_cast<ConstantInt *>(value))
-        return m_Type == p->m_Type && m_Value == p->m_Value;
+    if (const auto *int_value = dynamic_cast<ConstantInt *>(value))
+        return m_Type == int_value->m_Type && m_Value == int_value->m_Value;
 
     return false;
 }

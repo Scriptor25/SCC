@@ -90,14 +90,14 @@ bool scc::ir::BranchInstruction::IsTerminator() const
 
 size_t scc::ir::BranchInstruction::GetSuccessorCount() const
 {
-    return 2ull;
+    return 2;
 }
 
-scc::ir::Block *scc::ir::BranchInstruction::GetSuccessor(size_t index) const
+scc::ir::Block *scc::ir::BranchInstruction::GetSuccessor(const size_t index) const
 {
-    AssertIndexInBounds(index, 2ull);
+    AssertIndexInBounds(index, 2);
 
-    return index == 0ull ? m_Then : m_Else;
+    return index == 0 ? m_Then : m_Else;
 }
 
 scc::ir::Value *scc::ir::BranchInstruction::GetCondition() const

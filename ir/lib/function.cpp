@@ -11,7 +11,7 @@ scc::ir::Function::Function(FunctionType *type, std::string name)
     m_Result = type->GetResult();
     m_Variadic = type->IsVariadic();
 
-    for (const auto argument : *type)
+    for (auto *argument : *type)
         m_Arguments.push_back(std::make_unique<Argument>(argument));
 }
 
@@ -68,12 +68,9 @@ void scc::ir::Function::InsertBlock(std::unique_ptr<Block> block)
 
 scc::ir::Block *scc::ir::Function::CreateBlock(std::string name)
 {
-    auto block = std::make_unique<Block>(std::move(name), this);
-    auto *ptr = block.get();
+    m_Blocks.push_back(std::make_unique<Block>(std::move(name), this));
 
-    m_Blocks.push_back(std::move(block));
-
-    return ptr;
+    return m_Blocks.back().get();
 }
 
 scc::ir::Block *scc::ir::Function::FindBlock(const std::string &name) const
@@ -96,7 +93,7 @@ scc::ir::Value *scc::ir::Function::FindValue(const std::string &name) const
         if (block->GetName() == name)
             return block.get();
 
-        if (auto value = block->FindValue(name))
+        if (auto *value = block->FindValue(name))
             return value;
     }
 

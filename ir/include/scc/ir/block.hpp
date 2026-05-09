@@ -29,7 +29,7 @@ namespace scc::ir
         [[nodiscard]] size_t GetInstructionCount() const;
         [[nodiscard]] Instruction *GetInstruction(size_t index) const;
 
-        void Insert(std::unique_ptr<Instruction> instruction);
+        Instruction *Insert(std::unique_ptr<Instruction> instruction);
 
         [[nodiscard]] Value *FindValue(const std::string &name) const;
 

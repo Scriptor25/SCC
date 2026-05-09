@@ -1,10 +1,10 @@
 #include <scc/ir/block.hpp>
+#include <scc/ir/function.hpp>
 #include <scc/ir/instruction.hpp>
 
 #include <scc/assert.hpp>
 
 #include <ostream>
-#include <scc/ir/function.hpp>
 
 scc::ir::Block::Block(std::string name, Function *function)
     : Value(nullptr),
@@ -75,11 +75,13 @@ scc::ir::Instruction *scc::ir::Block::GetInstruction(const size_t index) const
     return m_Instructions[index].get();
 }
 
-void scc::ir::Block::Insert(std::unique_ptr<Instruction> instruction)
+scc::ir::Instruction *scc::ir::Block::Insert(std::unique_ptr<Instruction> instruction)
 {
     Assert(!!instruction, "instruction must not be null");
 
     m_Instructions.push_back(std::move(instruction));
+
+    return m_Instructions.back().get();
 }
 
 scc::ir::Value *scc::ir::Block::FindValue(const std::string &name) const
@@ -107,11 +109,11 @@ std::unordered_set<scc::ir::Block *> scc::ir::Block::GetPredecessors() const
 
 std::unordered_set<scc::ir::Block *> scc::ir::Block::GetSuccessors() const
 {
-    if (const auto terminator = GetTerminator())
+    if (const auto *terminator = GetTerminator())
     {
         std::unordered_set<Block *> successors;
 
-        for (auto i = 0ull; i < terminator->GetSuccessorCount(); ++i)
+        for (size_t i = 0; i < terminator->GetSuccessorCount(); ++i)
             successors.insert(terminator->GetSuccessor(i));
 
         return successors;

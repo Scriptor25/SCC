@@ -14,19 +14,19 @@ scc::ir::FunctionType::FunctionType(
 
 bool scc::ir::FunctionType::Compare(Type *type) const
 {
-    if (const auto p = dynamic_cast<FunctionType *>(type))
+    if (const auto *function_type = dynamic_cast<FunctionType *>(type))
     {
-        if (m_Result != p->m_Result)
+        if (m_Result != function_type->m_Result)
             return false;
 
-        if (m_Variadic != p->m_Variadic)
+        if (m_Variadic != function_type->m_Variadic)
             return false;
 
-        if (m_Arguments.size() != p->m_Arguments.size())
+        if (m_Arguments.size() != function_type->m_Arguments.size())
             return false;
 
-        for (auto i = 0ull; i < m_Arguments.size(); ++i)
-            if (m_Arguments[i] != p->m_Arguments[i])
+        for (size_t i = 0; i < m_Arguments.size(); ++i)
+            if (m_Arguments[i] != function_type->m_Arguments[i])
                 return false;
 
         return true;

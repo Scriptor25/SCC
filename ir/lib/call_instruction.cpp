@@ -14,7 +14,7 @@ scc::ir::CallInstruction::CallInstruction(
 {
     m_Callee->Use(this);
 
-    for (const auto argument : m_Arguments)
+    for (auto *argument : m_Arguments)
         argument->Use(this);
 }
 
@@ -72,7 +72,7 @@ std::ostream &scc::ir::CallInstruction::Print(std::ostream &stream) const
 
     m_Callee->PrintOperand(stream << "call ");
 
-    for (const auto argument : m_Arguments)
+    for (const auto *argument : m_Arguments)
         argument->PrintOperand(stream << ", ");
 
     return stream;

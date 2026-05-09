@@ -7,7 +7,7 @@ scc::ir::ConstantArray::ConstantArray(ArrayType *type, std::vector<Constant *> v
     : Constant(type),
       m_Values(std::move(values))
 {
-    for (const auto value : m_Values)
+    for (auto *value : m_Values)
         value->Use(this);
 }
 
@@ -44,7 +44,8 @@ void scc::ir::ConstantArray::Replace(Value *value, Value *with)
 
 std::ostream &scc::ir::ConstantArray::PrintOperand(std::ostream &stream) const
 {
-    if (const auto p = dynamic_cast<ArrayType *>(m_Type); p->GetElement() == p->GetContext().GetInt8Type())
+    if (const auto *array_type = dynamic_cast<ArrayType *>(m_Type);
+        array_type->GetElement() == array_type->GetContext().GetInt8Type())
     {
         m_Type->Print(stream) << " \"";
 
@@ -52,7 +53,7 @@ std::ostream &scc::ir::ConstantArray::PrintOperand(std::ostream &stream) const
             if (const auto c = dynamic_cast<ConstantInt *>(value)->GetValue(); c >= 0x20)
                 stream << static_cast<char>(c);
             else
-                stream << "\\x" << std::hex << (c >> 4ull & 0xFull) << (c & 0xFull) << std::dec;
+                stream << "\\x" << std::hex << (c >> 4 & 0xF) << (c & 0xF) << std::dec;
 
         return stream << '"';
     }
@@ -72,16 +73,16 @@ std::ostream &scc::ir::ConstantArray::PrintOperand(std::ostream &stream) const
 
 bool scc::ir::ConstantArray::Compare(Constant *value) const
 {
-    if (const auto p = dynamic_cast<ConstantArray *>(value))
+    if (const auto *array_value = dynamic_cast<ConstantArray *>(value))
     {
-        if (m_Type != p->m_Type)
+        if (m_Type != array_value->m_Type)
             return false;
 
-        if (m_Values.size() != p->m_Values.size())
+        if (m_Values.size() != array_value->m_Values.size())
             return false;
 
-        for (auto i = 0ull; i < m_Values.size(); ++i)
-            if (m_Values[i] != p->m_Values[i])
+        for (size_t i = 0; i < m_Values.size(); ++i)
+            if (m_Values[i] != array_value->m_Values[i])
                 return false;
 
         return true;

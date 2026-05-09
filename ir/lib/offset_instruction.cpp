@@ -15,7 +15,7 @@ scc::ir::OffsetInstruction::OffsetInstruction(
 {
     m_Base->Use(this);
 
-    for (const auto offset : m_Offsets)
+    for (auto *offset : m_Offsets)
         offset->Use(this);
 }
 
@@ -73,7 +73,7 @@ std::ostream &scc::ir::OffsetInstruction::Print(std::ostream &stream) const
 
     m_Base->PrintOperand(m_Type->Print(stream) << " offset ");
 
-    for (const auto offset : m_Offsets)
+    for (const auto *offset : m_Offsets)
         offset->PrintOperand(stream << ", ");
 
     return stream;

@@ -11,8 +11,8 @@ scc::ir::ArrayType::ArrayType(Context &context, Type *element, const unsigned le
 
 bool scc::ir::ArrayType::Compare(Type *type) const
 {
-    if (const auto p = dynamic_cast<ArrayType *>(type))
-        return m_Element == p->m_Element && m_Length == p->m_Length;
+    if (const auto *array_type = dynamic_cast<ArrayType *>(type))
+        return m_Element == array_type->m_Element && m_Length == array_type->m_Length;
 
     return false;
 }

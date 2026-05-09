@@ -10,13 +10,13 @@ scc::ir::StructType::StructType(Context &context, std::vector<Type *> elements)
 
 bool scc::ir::StructType::Compare(Type *type) const
 {
-    if (const auto p = dynamic_cast<StructType *>(type))
+    if (const auto *struct_type = dynamic_cast<StructType *>(type))
     {
-        if (m_Elements.size() != p->m_Elements.size())
+        if (m_Elements.size() != struct_type->m_Elements.size())
             return false;
 
-        for (unsigned i = 0; i < m_Elements.size(); ++i)
-            if (m_Elements[i] != p->m_Elements[i])
+        for (size_t i = 0; i < m_Elements.size(); ++i)
+            if (m_Elements[i] != struct_type->m_Elements[i])
                 return false;
 
         return true;
@@ -30,7 +30,7 @@ size_t scc::ir::StructType::GetSize() const
     size_t offset = 0;
     size_t align = 1;
 
-    for (const auto element : m_Elements)
+    for (const auto *element : m_Elements)
     {
         const auto el_size = element->GetSize();
         const auto el_align = element->GetAlign();
@@ -48,7 +48,7 @@ size_t scc::ir::StructType::GetAlign() const
 {
     size_t align = 1;
 
-    for (const auto element : m_Elements)
+    for (const auto *element : m_Elements)
         align = std::max(align, element->GetAlign());
 
     return std::min(align, m_Context.GetPlatform().MaxAggregateAlign);
@@ -79,7 +79,7 @@ size_t scc::ir::StructType::GetElementCount() const
     return m_Elements.size();
 }
 
-scc::ir::Type *scc::ir::StructType::GetElement(size_t index) const
+scc::ir::Type *scc::ir::StructType::GetElement(const size_t index) const
 {
     return m_Elements[index];
 }

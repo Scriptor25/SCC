@@ -10,8 +10,8 @@ scc::ir::FloatType::FloatType(Context &context, const unsigned bit_width)
 
 bool scc::ir::FloatType::Compare(Type *type) const
 {
-    if (const auto p = dynamic_cast<FloatType *>(type))
-        return m_BitWidth == p->m_BitWidth;
+    if (const auto *float_type = dynamic_cast<FloatType *>(type))
+        return m_BitWidth == float_type->m_BitWidth;
 
     return false;
 }

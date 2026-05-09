@@ -10,8 +10,8 @@ scc::ir::PointerType::PointerType(Context &context, Type *element)
 
 bool scc::ir::PointerType::Compare(Type *type) const
 {
-    if (const auto p = dynamic_cast<PointerType *>(type))
-        return m_Element == p->m_Element;
+    if (const auto *pointer_type = dynamic_cast<PointerType *>(type))
+        return m_Element == pointer_type->m_Element;
 
     return false;
 }

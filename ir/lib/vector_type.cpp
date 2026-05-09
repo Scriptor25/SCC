@@ -13,8 +13,8 @@ scc::ir::VectorType::VectorType(Context &context, Type *element, const unsigned 
 
 bool scc::ir::VectorType::Compare(Type *type) const
 {
-    if (const auto p = dynamic_cast<VectorType *>(type))
-        return m_Element == p->m_Element && m_Length == p->m_Length;
+    if (const auto *vector_type = dynamic_cast<VectorType *>(type))
+        return m_Element == vector_type->m_Element && m_Length == vector_type->m_Length;
 
     return false;
 }

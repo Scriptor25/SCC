@@ -70,11 +70,12 @@ namespace scc::ir
             auto type = std::make_unique<T>(*this, std::forward<Args>(args)...);
             auto *ptr = type.get();
 
-            for (auto &entry : m_Types)
+            for (const auto &entry : m_Types)
                 if (entry->Compare(ptr))
                     return dynamic_cast<T *>(entry.get());
 
             m_Types.push_back(std::move(type));
+
             return ptr;
         }
 
@@ -84,11 +85,12 @@ namespace scc::ir
             auto constant = std::make_unique<T>(std::forward<Args>(args)...);
             auto *ptr = constant.get();
 
-            for (auto &entry : m_Constants)
+            for (const auto &entry : m_Constants)
                 if (entry->Compare(ptr))
                     return dynamic_cast<T *>(entry.get());
 
             m_Constants.push_back(std::move(constant));
+
             return ptr;
         }
 

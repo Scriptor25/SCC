@@ -104,7 +104,7 @@ scc::ir::VectorType *scc::ir::Context::GetVectorType(Type *element, unsigned len
 
 scc::ir::StructType *scc::ir::Context::GetStructType(std::vector<Type *> elements)
 {
-    for (auto element : elements)
+    for (auto *element : elements)
         Assert(element->IsElement(), "type {} does not qualify as element", element);
 
     return Get<StructType>(std::move(elements));
@@ -172,9 +172,9 @@ scc::ir::ConstantArray *scc::ir::Context::GetArray(std::vector<Constant *> value
 {
     Assert(!values.empty(), "values must not be empty");
 
-    const auto element = values[0]->GetType();
+    auto *element = values[0]->GetType();
 
-    for (const auto value : values)
+    for (const auto *value : values)
         Assert(element == value->GetType(), "value types must be homogenous");
 
     return Get<ConstantArray>(GetArrayType(element, values.size()), std::move(values));
@@ -184,7 +184,7 @@ scc::ir::ConstantArray *scc::ir::Context::GetArray(const std::string_view value)
 {
     std::vector<Constant *> values(value.size());
 
-    for (auto i = 0ull; i < value.size(); ++i)
+    for (size_t i = 0; i < value.size(); ++i)
         values[i] = GetInt8(value[i]);
 
     return Get<ConstantArray>(GetArrayType(GetInt8Type(), value.size()), std::move(values));
@@ -194,9 +194,9 @@ scc::ir::ConstantVector *scc::ir::Context::GetVector(std::vector<Constant *> val
 {
     Assert(!values.empty(), "values must not be empty");
 
-    const auto element = values[0]->GetType();
+    auto *element = values[0]->GetType();
 
-    for (const auto value : values)
+    for (const auto *value : values)
         Assert(element == value->GetType(), "value types must be homogenous");
 
     return Get<ConstantVector>(GetVectorType(element, values.size()), std::move(values));
@@ -206,7 +206,7 @@ scc::ir::ConstantStruct *scc::ir::Context::GetStruct(std::vector<Constant *> val
 {
     std::vector<Type *> elements(values.size());
 
-    for (auto i = 0ull; i < values.size(); ++i)
+    for (size_t i = 0; i < values.size(); ++i)
         elements[i] = values[i]->GetType();
 
     return Get<ConstantStruct>(GetStructType(std::move(elements)), std::move(values));

@@ -67,10 +67,10 @@ scc::ir::Variable *scc::ir::Module::CreateVariable(
         if (symbol->GetName() == name)
             Error("variable {} does already exist", name);
 
-    auto value = std::make_unique<Variable>(type, std::move(name), initializer);
-    auto *ptr = value.get();
+    auto variable = std::make_unique<Variable>(type, std::move(name), initializer);
+    auto *ptr = variable.get();
 
-    m_Symbols.push_back(std::move(value));
+    m_Symbols.push_back(std::move(variable));
 
     return ptr;
 }
@@ -81,10 +81,10 @@ scc::ir::Function *scc::ir::Module::CreateFunction(FunctionType *type, std::stri
         if (symbol->GetName() == name)
             Error("function {} does already exist", name);
 
-    auto value = std::make_unique<Function>(type, std::move(name));
-    auto *ptr = value.get();
+    auto function = std::make_unique<Function>(type, std::move(name));
+    auto *ptr = function.get();
 
-    m_Symbols.push_back(std::move(value));
+    m_Symbols.push_back(std::move(function));
 
     return ptr;
 }

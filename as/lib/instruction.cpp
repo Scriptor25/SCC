@@ -30,3 +30,23 @@ const scc::as::Operand &scc::as::Instruction::operator[](const size_t index) con
 {
     return m_Operands[index];
 }
+
+scc::as::Instruction::iterator<false> scc::as::Instruction::begin()
+{
+    return { size_t(), m_Operands };
+}
+
+scc::as::Instruction::iterator<false> scc::as::Instruction::end()
+{
+    return { ~size_t(), m_Operands };
+}
+
+scc::as::Instruction::iterator<true> scc::as::Instruction::begin() const
+{
+    return { size_t(), m_Operands };
+}
+
+scc::as::Instruction::iterator<true> scc::as::Instruction::end() const
+{
+    return { ~size_t(), m_Operands };
+}

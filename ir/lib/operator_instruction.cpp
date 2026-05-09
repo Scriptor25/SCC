@@ -12,7 +12,7 @@ scc::ir::OperatorInstruction::OperatorInstruction(
       m_Operator(operator_),
       m_Operands(std::move(operands))
 {
-    for (const auto operand : m_Operands)
+    for (auto *operand : m_Operands)
         operand->Use(this);
 }
 

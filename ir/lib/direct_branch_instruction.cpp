@@ -53,12 +53,12 @@ bool scc::ir::DirectBranchInstruction::IsTerminator() const
 
 size_t scc::ir::DirectBranchInstruction::GetSuccessorCount() const
 {
-    return 1ull;
+    return 1;
 }
 
 scc::ir::Block *scc::ir::DirectBranchInstruction::GetSuccessor(const size_t index) const
 {
-    AssertIndexInBounds(index, 1ull);
+    AssertIndexInBounds(index, 1);
 
     return m_Destination;
 }

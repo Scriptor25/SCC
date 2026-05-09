@@ -9,7 +9,7 @@ scc::ir::SelectInstruction::SelectInstruction(
     : Instruction(type, block, std::move(name)),
       m_Options(std::move(options))
 {
-    for (auto [key, value] : m_Options)
+    for (auto &[key, value] : m_Options)
     {
         key->Use(this);
         value->Use(this);

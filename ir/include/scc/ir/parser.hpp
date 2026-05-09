@@ -22,9 +22,9 @@ namespace scc::ir
 
     struct Token final
     {
-        TokenType Type;
+        TokenType Type{};
         std::string Value;
-        uint64_t IntValue = 0ull;
+        uint64_t IntValue{};
     };
 
     template<typename T>

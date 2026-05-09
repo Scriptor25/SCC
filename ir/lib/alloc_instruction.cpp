@@ -18,8 +18,9 @@ std::ostream &scc::ir::AllocInstruction::Print(std::ostream &stream) const
     if (IsUsed())
         stream << '%' << m_Name << " = ";
 
-    const auto type = dynamic_cast<PointerType *>(m_Type)->GetElement();
-    return type->Print(stream) << " alloc " << m_Count;
+    const auto *element_type = dynamic_cast<PointerType *>(m_Type)->GetElement();
+
+    return element_type->Print(stream) << " alloc " << m_Count;
 }
 
 unsigned scc::ir::AllocInstruction::GetCount() const

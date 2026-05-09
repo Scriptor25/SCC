@@ -20,12 +20,12 @@ scc::ir::Kind scc::ir::Type::GetKind() const
 
 size_t scc::ir::Type::GetElementCount() const
 {
-    return 0ull;
+    return 0;
 }
 
 scc::ir::Type *scc::ir::Type::GetElement(const size_t index) const
 {
-    ErrorIndexOutOfBounds(index, 0ull);
+    ErrorIndexOutOfBounds(index, 0);
 }
 
 std::ostream &scc::ir::operator<<(std::ostream &stream, const Type *type)

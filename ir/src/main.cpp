@@ -2,7 +2,6 @@
 #include <scc/ir/module.hpp>
 #include <scc/ir/parser.hpp>
 #include <scc/ir/platform.hpp>
-#include <scc/ir/type.hpp>
 
 #include <fstream>
 #include <iostream>

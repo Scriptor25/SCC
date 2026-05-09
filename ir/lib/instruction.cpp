@@ -45,10 +45,10 @@ bool scc::ir::Instruction::IsTerminator() const
 
 size_t scc::ir::Instruction::GetSuccessorCount() const
 {
-    return 0ull;
+    return 0;
 }
 
 scc::ir::Block *scc::ir::Instruction::GetSuccessor(const size_t index) const
 {
-    ErrorIndexOutOfBounds(index, 0ull);
+    ErrorIndexOutOfBounds(index, 0);
 }

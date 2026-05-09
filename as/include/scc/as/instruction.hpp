@@ -10,8 +10,39 @@ namespace scc::as
 {
     class Instruction : public Fragment
     {
+        template<bool constant>
+        struct iterator
+        {
+            using value_type = std::conditional_t<constant, const Operand, Operand>;
+            using collection_type = std::conditional_t<constant, const std::vector<Operand>, std::vector<Operand>>;
+
+            bool operator!=(const iterator &other) const
+            {
+                return index != other.index;
+            }
+
+            value_type &operator*() const
+            {
+                return operands[index];
+            }
+
+            iterator &operator++()
+            {
+                if (index == ~size_t())
+                    return *this;
+
+                if (++index >= operands.size())
+                    index = ~size_t();
+
+                return *this;
+            }
+
+            size_t index;
+            collection_type &operands;
+        };
+
     public:
-        Instruction(InstructionCode code, std::vector<Operand> operands);
+        explicit Instruction(InstructionCode code, std::vector<Operand> operands);
 
         void SetCode(InstructionCode code);
 
@@ -20,7 +51,14 @@ namespace scc::as
         [[nodiscard]] size_t GetOperandCount() const;
 
         Operand &operator[](size_t index);
+
         [[nodiscard]] const Operand &operator[](size_t index) const;
+
+        iterator<false> begin();
+        iterator<false> end();
+
+        [[nodiscard]] iterator<true> begin() const;
+        [[nodiscard]] iterator<true> end() const;
 
     private:
         InstructionCode m_Code;

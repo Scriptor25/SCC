@@ -10,8 +10,8 @@ scc::ir::IntType::IntType(Context &context, const unsigned bit_width)
 
 bool scc::ir::IntType::Compare(Type *type) const
 {
-    if (const auto p = dynamic_cast<IntType *>(type))
-        return m_BitWidth == p->m_BitWidth;
+    if (const auto *int_type = dynamic_cast<IntType *>(type))
+        return m_BitWidth == int_type->m_BitWidth;
 
     return false;
 }

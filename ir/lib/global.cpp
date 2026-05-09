@@ -14,8 +14,8 @@ std::ostream &scc::ir::Global::PrintOperand(std::ostream &stream) const
 
 bool scc::ir::Global::Compare(Constant *value) const
 {
-    if (const auto p = dynamic_cast<Global *>(value))
-        return m_Name == p->m_Name;
+    if (const auto *global_value = dynamic_cast<Global *>(value))
+        return m_Name == global_value->m_Name;
 
     return false;
 }

@@ -31,8 +31,8 @@ scc::ir::Variable *scc::ir::Builder::CreateString(
     buffer += value;
     buffer += static_cast<char>(0);
 
-    const auto initializer = m_Context.GetArray(buffer);
-    const auto type = initializer->GetType();
+    auto *initializer = m_Context.GetArray(buffer);
+    auto *type = initializer->GetType();
 
     return module.CreateVariable(type, std::move(name), initializer);
 }
@@ -42,7 +42,7 @@ scc::ir::Block *scc::ir::Builder::GetOrCreateBlock(Function *function, std::stri
     Assert(!!function, "function must not be null");
     Assert(!name.empty(), "name must not be empty");
 
-    if (const auto block = function->FindBlock(name))
+    if (auto *block = function->FindBlock(name))
         return block;
 
     return function->CreateBlock(std::move(name));
@@ -79,9 +79,9 @@ scc::ir::OperatorInstruction *scc::ir::Builder::CreateOperator(
 {
     Assert(!operands.empty(), "operands must not be empty");
 
-    auto type = operands.front()->GetType();
+    auto *type = operands.front()->GetType();
 
-    for (const auto operand : operands)
+    for (const auto *operand : operands)
         Assert(operand->GetType() == type, "non-uniform operands");
 
     return Create<OperatorInstruction>(
@@ -307,9 +307,9 @@ scc::ir::SelectInstruction *scc::ir::Builder::CreateSelect(
 {
     Assert(!options.empty(), "options must not be empty");
 
-    auto type = options.front().second->GetType();
+    auto *type = options.front().second->GetType();
 
-    for (const auto value : options | std::views::values)
+    for (const auto *value : options | std::views::values)
         Assert(value->GetType() == type, "non-uniform options");
 
     return Create<SelectInstruction>(
@@ -335,10 +335,10 @@ scc::ir::LoadInstruction *scc::ir::Builder::CreateLoad(Value *pointer, std::stri
     Assert(!!pointer, "pointer must not be null");
     Assert(pointer->GetType()->GetKind() == Kind::Pointer, "pointer type must be a kind of pointer");
 
-    auto type = dynamic_cast<PointerType *>(pointer->GetType())->GetElement();
+    auto *element_type = dynamic_cast<PointerType *>(pointer->GetType())->GetElement();
 
     return Create<LoadInstruction>(
-        type,
+        element_type,
         m_InsertBlock,
         std::move(name),
         pointer);
@@ -350,8 +350,9 @@ scc::ir::StoreInstruction *scc::ir::Builder::CreateStore(Value *pointer, Value *
     Assert(!!value, "value must not be null");
     Assert(pointer->GetType()->GetKind() == Kind::Pointer, "pointer type must be a kind of pointer");
 
-    const auto type = dynamic_cast<PointerType *>(pointer->GetType())->GetElement();
-    Assert(value->GetType() == type, "value type must be the same as pointer base type");
+    const auto *element_type = dynamic_cast<PointerType *>(pointer->GetType())->GetElement();
+
+    Assert(value->GetType() == element_type, "value type must be the same as pointer base type");
 
     return Create<StoreInstruction>(
         m_Context.GetVoidType(),
@@ -373,7 +374,7 @@ scc::ir::OffsetInstruction *scc::ir::Builder::CreateOffset(
     Assert(type->GetKind() == Kind::Pointer, "type must be a kind of pointer");
     Assert(base->GetType()->GetKind() == Kind::Pointer, "base type must be a kind of pointer");
 
-    for (const auto offset : offsets)
+    for (const auto *offset : offsets)
         Assert(offset->GetType()->GetKind() == Kind::Int, "offset type must be a kind of int");
 
     return Create<OffsetInstruction>(
@@ -394,10 +395,11 @@ scc::ir::OffsetInstruction *scc::ir::Builder::CreateConstOffset(
 
     Assert(base->GetType()->GetKind() == Kind::Pointer, "base type must be a kind of pointer");
 
-    auto type = base->GetType();
+    auto *type = base->GetType();
+
     std::vector<Value *> values(offsets.size());
 
-    for (auto i = 0ull; i < offsets.size(); ++i)
+    for (size_t i = 0; i < offsets.size(); ++i)
     {
         auto &offset = offsets[i];
         Assert(offset < type->GetElementCount(), "constant offset out of bounds");
@@ -422,23 +424,23 @@ scc::ir::CallInstruction *scc::ir::Builder::CreateCall(
     Assert(!!callee, "callee must not be null");
     Assert(!arguments.empty(), "arguments must not be empty");
 
-    const auto callee_type = callee->GetType();
+    auto *callee_type = callee->GetType();
 
     Assert(callee_type->GetKind() == Kind::Pointer, "callee type must be a kind of pointer");
 
-    const auto pointer_type = dynamic_cast<PointerType *>(callee_type);
-    const auto element_type = pointer_type->GetElement();
+    const auto *pointer_type = dynamic_cast<PointerType *>(callee_type);
+    auto *element_type = pointer_type->GetElement();
 
     Assert(element_type->GetKind() == Kind::Function, "callee element type must be a kind of function");
 
-    const auto function_type = dynamic_cast<FunctionType *>(element_type);
+    const auto *function_type = dynamic_cast<FunctionType *>(element_type);
 
     const auto count = function_type->GetArgumentCount();
 
     Assert(count <= arguments.size(), "not enough arguments");
     Assert(function_type->IsVariadic() || count == arguments.size(), "too many arguments");
 
-    for (auto i = 0ull; i < count; ++i)
+    for (size_t i = 0; i < count; ++i)
         Assert(function_type->GetArgument(i) == arguments[i]->GetType(), "invalid argument type");
 
     return Create<CallInstruction>(

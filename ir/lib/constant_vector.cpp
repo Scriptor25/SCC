@@ -7,7 +7,7 @@ scc::ir::ConstantVector::ConstantVector(VectorType *type, std::vector<Constant *
     : Constant(type),
       m_Values(std::move(values))
 {
-    for (const auto value : m_Values)
+    for (auto *value : m_Values)
         value->Use(this);
 }
 
@@ -59,16 +59,16 @@ std::ostream &scc::ir::ConstantVector::PrintOperand(std::ostream &stream) const
 
 bool scc::ir::ConstantVector::Compare(Constant *value) const
 {
-    if (const auto p = dynamic_cast<ConstantVector *>(value))
+    if (const auto *vector_value = dynamic_cast<ConstantVector *>(value))
     {
-        if (m_Type != p->m_Type)
+        if (m_Type != vector_value->m_Type)
             return false;
 
-        if (m_Values.size() != p->m_Values.size())
+        if (m_Values.size() != vector_value->m_Values.size())
             return false;
 
-        for (auto i = 0ull; i < m_Values.size(); ++i)
-            if (m_Values[i] != p->m_Values[i])
+        for (size_t i = 0; i < m_Values.size(); ++i)
+            if (m_Values[i] != vector_value->m_Values[i])
                 return false;
 
         return true;

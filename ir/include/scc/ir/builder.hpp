@@ -118,10 +118,10 @@ namespace scc::ir
         {
             Assert(!!m_InsertBlock, "insert block must not be null");
 
-            auto value = std::make_unique<T>(std::forward<Args>(args)...);
-            auto *ptr = value.get();
+            auto instruction = std::make_unique<T>(std::forward<Args>(args)...);
+            auto *ptr = instruction.get();
 
-            m_InsertBlock->Insert(std::move(value));
+            m_InsertBlock->Insert(std::move(instruction));
 
             return ptr;
         }
