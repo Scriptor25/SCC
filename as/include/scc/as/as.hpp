@@ -5,7 +5,6 @@
 namespace scc::as
 {
     using Immediate = uint64_t;
-    using InstructionCode = uint32_t;
 
     enum class OperandType;
 
@@ -23,6 +22,11 @@ namespace scc::as
     class Fill;
 
     class Operand;
+
+    class ImmediateOperand;
+    class RegisterOperand;
+    class ReferenceOperand;
+    class SymbolOperand;
 
     class Symbol;
 }

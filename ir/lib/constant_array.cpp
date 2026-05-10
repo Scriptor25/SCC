@@ -3,12 +3,12 @@
 
 #include <scc/assert.hpp>
 
-scc::ir::ConstantArray::ConstantArray(ArrayType *type, std::vector<Constant *> values)
+scc::ir::ConstantArray::ConstantArray(ArrayType *type, std::vector<Constant *> elements)
     : Constant(type),
-      m_Values(std::move(values))
+      m_Elements(std::move(elements))
 {
-    for (auto *value : m_Values)
-        value->Use(this);
+    for (auto *element : m_Elements)
+        element->Use(this);
 }
 
 scc::ir::ConstantArray::~ConstantArray()
@@ -18,26 +18,26 @@ scc::ir::ConstantArray::~ConstantArray()
 
 void scc::ir::ConstantArray::DropAll()
 {
-    for (auto &value : m_Values)
-        if (value)
+    for (auto &element : m_Elements)
+        if (element)
         {
-            value->Drop(this);
-            value = nullptr;
+            element->Drop(this);
+            element = nullptr;
         }
 
-    m_Values.clear();
+    m_Elements.clear();
 }
 
 void scc::ir::ConstantArray::Replace(Value *value, Value *with)
 {
-    for (auto &val : m_Values)
-        if (val == value)
+    for (auto &element : m_Elements)
+        if (element == value)
         {
             value->Drop(this);
             if (with)
                 with->Use(this);
 
-            val = dynamic_cast<Constant *>(with);
+            element = dynamic_cast<Constant *>(with);
         }
 }
 
@@ -51,8 +51,8 @@ std::ostream &scc::ir::ConstantArray::PrintOperand(std::ostream &stream, const b
     {
         stream << '"';
 
-        for (auto &value : m_Values)
-            if (const auto c = dynamic_cast<ConstantInt *>(value)->GetValue(); c >= 0x20)
+        for (auto &element : m_Elements)
+            if (const auto c = dynamic_cast<ConstantInt *>(element)->GetValue(); c >= 0x20)
                 stream << static_cast<char>(c);
             else
                 stream << "\\x" << std::hex << (c >> 4 & 0xF) << (c & 0xF);
@@ -62,9 +62,9 @@ std::ostream &scc::ir::ConstantArray::PrintOperand(std::ostream &stream, const b
 
     stream << '[';
 
-    for (auto i = m_Values.begin(); i != m_Values.end(); ++i)
+    for (auto i = m_Elements.begin(); i != m_Elements.end(); ++i)
     {
-        if (i != m_Values.begin())
+        if (i != m_Elements.begin())
             stream << ", ";
 
         (*i)->PrintOperand(stream, false);
@@ -80,11 +80,11 @@ bool scc::ir::ConstantArray::Compare(Constant *value) const
         if (m_Type != array_value->m_Type)
             return false;
 
-        if (m_Values.size() != array_value->m_Values.size())
+        if (m_Elements.size() != array_value->m_Elements.size())
             return false;
 
-        for (size_t i = 0; i < m_Values.size(); ++i)
-            if (m_Values[i] != array_value->m_Values[i])
+        for (size_t i = 0; i < m_Elements.size(); ++i)
+            if (m_Elements[i] != array_value->m_Elements[i])
                 return false;
 
         return true;
@@ -93,14 +93,14 @@ bool scc::ir::ConstantArray::Compare(Constant *value) const
     return false;
 }
 
-unsigned scc::ir::ConstantArray::GetValueCount() const
+size_t scc::ir::ConstantArray::GetElementCount() const
 {
-    return m_Values.size();
+    return m_Elements.size();
 }
 
-scc::ir::Constant *scc::ir::ConstantArray::GetValue(const unsigned index) const
+scc::ir::Constant *scc::ir::ConstantArray::GetElement(const size_t index) const
 {
-    AssertIndexInBounds(index, m_Values.size());
+    AssertIndexInBounds(index, m_Elements.size());
 
-    return m_Values[index];
+    return m_Elements[index];
 }

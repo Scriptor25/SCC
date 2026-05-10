@@ -3,12 +3,12 @@
 
 #include <scc/assert.hpp>
 
-scc::ir::ConstantStruct::ConstantStruct(StructType *type, std::vector<Constant *> values)
+scc::ir::ConstantStruct::ConstantStruct(StructType *type, std::vector<Constant *> elements)
     : Constant(type),
-      m_Values(std::move(values))
+      m_Elements(std::move(elements))
 {
-    for (auto *value : m_Values)
-        value->Use(this);
+    for (auto *element : m_Elements)
+        element->Use(this);
 }
 
 scc::ir::ConstantStruct::~ConstantStruct()
@@ -18,26 +18,26 @@ scc::ir::ConstantStruct::~ConstantStruct()
 
 void scc::ir::ConstantStruct::DropAll()
 {
-    for (auto &value : m_Values)
-        if (value)
+    for (auto &element : m_Elements)
+        if (element)
         {
-            value->Drop(this);
-            value = nullptr;
+            element->Drop(this);
+            element = nullptr;
         }
 
-    m_Values.clear();
+    m_Elements.clear();
 }
 
 void scc::ir::ConstantStruct::Replace(Value *value, Value *with)
 {
-    for (auto &val : m_Values)
-        if (val == value)
+    for (auto &element : m_Elements)
+        if (element == value)
         {
             value->Drop(this);
             if (with)
                 with->Use(this);
 
-            val = dynamic_cast<Constant *>(with);
+            element = dynamic_cast<Constant *>(with);
         }
 }
 
@@ -48,9 +48,9 @@ std::ostream &scc::ir::ConstantStruct::PrintOperand(std::ostream &stream, const 
 
     stream << '{';
 
-    for (auto i = m_Values.begin(); i != m_Values.end(); ++i)
+    for (auto i = m_Elements.begin(); i != m_Elements.end(); ++i)
     {
-        if (i != m_Values.begin())
+        if (i != m_Elements.begin())
             stream << ", ";
 
         (*i)->PrintOperand(stream, false);
@@ -66,11 +66,11 @@ bool scc::ir::ConstantStruct::Compare(Constant *value) const
         if (m_Type != struct_value->m_Type)
             return false;
 
-        if (m_Values.size() != struct_value->m_Values.size())
+        if (m_Elements.size() != struct_value->m_Elements.size())
             return false;
 
-        for (size_t i = 0; i < m_Values.size(); ++i)
-            if (m_Values[i] != struct_value->m_Values[i])
+        for (size_t i = 0; i < m_Elements.size(); ++i)
+            if (m_Elements[i] != struct_value->m_Elements[i])
                 return false;
 
         return true;
@@ -79,14 +79,14 @@ bool scc::ir::ConstantStruct::Compare(Constant *value) const
     return false;
 }
 
-unsigned scc::ir::ConstantStruct::GetValueCount() const
+size_t scc::ir::ConstantStruct::GetElementCount() const
 {
-    return m_Values.size();
+    return m_Elements.size();
 }
 
-scc::ir::Constant *scc::ir::ConstantStruct::GetValue(const unsigned index) const
+scc::ir::Constant *scc::ir::ConstantStruct::GetElement(const size_t index) const
 {
-    AssertIndexInBounds(index, m_Values.size());
+    AssertIndexInBounds(index, m_Elements.size());
 
-    return m_Values[index];
+    return m_Elements[index];
 }

@@ -1,6 +1,7 @@
 #include <scc/ir/context.hpp>
-#include <scc/ir/platform.hpp>
 #include <scc/ir/type.hpp>
+
+#include <scc/platform.hpp>
 
 scc::ir::StructType::StructType(Context &context, std::vector<Type *> elements)
     : Type(context, Kind::Struct),
@@ -51,7 +52,7 @@ size_t scc::ir::StructType::GetAlign() const
     for (const auto *element : m_Elements)
         align = std::max(align, element->GetAlign());
 
-    return std::min(align, m_Context.GetPlatform().MaxAggregateAlign);
+    return std::min(align, m_Context.GetPlatform().ABI.MaxAggregateAlign);
 }
 
 bool scc::ir::StructType::IsElement() const

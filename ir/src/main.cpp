@@ -1,7 +1,8 @@
 #include <scc/ir/context.hpp>
 #include <scc/ir/module.hpp>
 #include <scc/ir/parser.hpp>
-#include <scc/ir/platform.hpp>
+
+#include <scc/platform.hpp>
 
 #include <fstream>
 #include <iostream>
@@ -15,18 +16,26 @@ int main(int argc, const char **argv)
     if (!in)
         return 1;
 
-    const scc::ir::Platform platform
+    const scc::Platform platform
     {
-        .Endianness = scc::ir::Endian::Little,
-        .PointerSize = 8,
-        .PointerAlign = 8,
-        .StackAlign = 16,
-        .MaxIntAlign = 8,
-        .MaxFloatAlign = 8,
-        .MaxVectorAlign = 16,
-        .MaxAggregateAlign = 16,
-        .LegalIntWidth = { 8, 16, 32, 64 },
-        .LegalFloatWidth = { 32, 64 },
+        .IR = {
+            .LegalIntWidth = { 1, 8, 16, 32, 64 },
+            .LegalFloatWidth = { 32, 64 },
+        },
+        .ISA = {
+            .Architecture = scc::PlatformArchitecture::X86,
+            .Endianness = scc::PlatformEndianness::LittleEndian,
+        },
+        .ABI = {
+            .PointerSize = 8,
+            .PointerAlign = 8,
+            .StackAlign = 16,
+            .MaxIntAlign = 8,
+            .MaxFloatAlign = 8,
+            .MaxVectorAlign = 16,
+            .MaxAggregateAlign = 16,
+        },
+        .Features = {},
     };
 
     scc::ir::Context context(platform);

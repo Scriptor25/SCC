@@ -1,19 +1,19 @@
 #include <scc/as/instruction.hpp>
 
-scc::as::Instruction::Instruction(const InstructionCode code, std::vector<Operand> operands)
-    : m_Code(code),
+scc::as::Instruction::Instruction(const Mnemonic mnemonic, std::vector<std::unique_ptr<Operand>> operands)
+    : m_Mnemonic(mnemonic),
       m_Operands(std::move(operands))
 {
 }
 
-void scc::as::Instruction::SetCode(const InstructionCode code)
+void scc::as::Instruction::SetMnemonic(const Mnemonic mnemonic)
 {
-    m_Code = code;
+    m_Mnemonic = mnemonic;
 }
 
-scc::as::InstructionCode scc::as::Instruction::GetCode() const
+scc::Mnemonic scc::as::Instruction::GetMnemonic() const
 {
-    return m_Code;
+    return m_Mnemonic;
 }
 
 size_t scc::as::Instruction::GetOperandCount() const
@@ -23,12 +23,12 @@ size_t scc::as::Instruction::GetOperandCount() const
 
 scc::as::Operand &scc::as::Instruction::operator[](const size_t index)
 {
-    return m_Operands[index];
+    return *m_Operands[index];
 }
 
 const scc::as::Operand &scc::as::Instruction::operator[](const size_t index) const
 {
-    return m_Operands[index];
+    return *m_Operands[index];
 }
 
 scc::as::Instruction::iterator<false> scc::as::Instruction::begin()
@@ -49,4 +49,22 @@ scc::as::Instruction::iterator<true> scc::as::Instruction::begin() const
 scc::as::Instruction::iterator<true> scc::as::Instruction::end() const
 {
     return { ~size_t(), m_Operands };
+}
+
+std::ostream &scc::as::Instruction::Print(std::ostream &stream) const
+{
+    if (m_Operands.empty())
+        return stream << std::hex << m_Mnemonic;
+
+    stream << std::hex << m_Mnemonic << ' ';
+
+    for (auto it = m_Operands.begin(); it != m_Operands.end(); ++it)
+    {
+        if (it != m_Operands.begin())
+            stream << ", ";
+
+        (*it)->Print(stream);
+    }
+
+    return stream;
 }

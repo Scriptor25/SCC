@@ -1,6 +1,7 @@
 #include <scc/ir/context.hpp>
-#include <scc/ir/platform.hpp>
 #include <scc/ir/type.hpp>
+
+#include <scc/platform.hpp>
 
 scc::ir::PointerType::PointerType(Context &context, Type *element)
     : Type(context, Kind::Pointer),
@@ -18,12 +19,12 @@ bool scc::ir::PointerType::Compare(Type *type) const
 
 size_t scc::ir::PointerType::GetSize() const
 {
-    return m_Context.GetPlatform().PointerSize;
+    return m_Context.GetPlatform().ABI.PointerSize;
 }
 
 size_t scc::ir::PointerType::GetAlign() const
 {
-    return m_Context.GetPlatform().PointerAlign;
+    return m_Context.GetPlatform().ABI.PointerAlign;
 }
 
 bool scc::ir::PointerType::IsElement() const

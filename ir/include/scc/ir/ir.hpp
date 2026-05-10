@@ -8,8 +8,6 @@ namespace scc::ir
     using float32_t = std::conditional_t<sizeof(float) == 4, float, void>;
     using float64_t = std::conditional_t<sizeof(double) == 8, double, void>;
 
-    struct Platform;
-
     class Module;
     class Context;
 

@@ -1,7 +1,9 @@
 #pragma once
 
+#include <scc/as/as.hpp>
 #include <scc/as/fragment.hpp>
 
+#include <iosfwd>
 #include <memory>
 #include <string>
 #include <vector>
@@ -41,10 +43,11 @@ namespace scc::as
         };
 
     public:
-        explicit Section(std::string name = {});
+        explicit Section(Module *module, std::string name = {});
 
         void SetName(std::string name);
         void Insert(std::unique_ptr<Fragment> fragment);
+        Fragment *Insert(Instruction instruction);
 
         [[nodiscard]] const std::string &GetName() const;
 
@@ -60,7 +63,11 @@ namespace scc::as
         [[nodiscard]] iterator<true> begin() const;
         [[nodiscard]] iterator<true> end() const;
 
+        std::ostream &Print(std::ostream &stream) const;
+
     private:
+        Module *m_Module;
+
         std::string m_Name;
         std::vector<std::unique_ptr<Fragment>> m_Fragments;
     };

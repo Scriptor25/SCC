@@ -4,6 +4,8 @@
 #include <scc/ir/ir.hpp>
 #include <scc/ir/type.hpp>
 
+#include <scc/common.hpp>
+
 #include <cstdint>
 #include <memory>
 #include <vector>
@@ -35,6 +37,7 @@ namespace scc::ir
 
         FloatType *GetFloat32Type();
         FloatType *GetFloat64Type();
+        FloatType *GetFloatNType(uint64_t bit_width);
 
         PointerType *GetPointerType(Type *element);
 
@@ -55,13 +58,18 @@ namespace scc::ir
 
         ConstantFloat *GetFloat32(float32_t value);
         ConstantFloat *GetFloat64(float64_t value);
+        ConstantFloat *GetFloatN(uint64_t bit_width, float64_t value);
+        ConstantFloat *GetFloat(FloatType *type, float64_t value);
 
-        ConstantArray *GetArray(std::vector<Constant *> values);
+        ConstantArray *GetArray(std::vector<Constant *> elements);
+        ConstantArray *GetArray(ArrayType *type, std::vector<Constant *> elements);
         ConstantArray *GetArray(std::string_view value);
 
-        ConstantVector *GetVector(std::vector<Constant *> values);
+        ConstantVector *GetVector(std::vector<Constant *> elements);
+        ConstantVector *GetVector(VectorType *type, std::vector<Constant *> elements);
 
-        ConstantStruct *GetStruct(std::vector<Constant *> values);
+        ConstantStruct *GetStruct(std::vector<Constant *> elements);
+        ConstantStruct *GetStruct(StructType *type, std::vector<Constant *> elements);
 
     private:
         template<std::derived_from<Type> T, typename... Args>

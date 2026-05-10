@@ -50,7 +50,7 @@ namespace scc::ir
     class ConstantArray final : public Constant
     {
     public:
-        explicit ConstantArray(ArrayType *type, std::vector<Constant *> values);
+        explicit ConstantArray(ArrayType *type, std::vector<Constant *> elements);
         ~ConstantArray() override;
 
         void DropAll() override;
@@ -59,17 +59,17 @@ namespace scc::ir
         [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
         [[nodiscard]] bool Compare(Constant *value) const override;
 
-        [[nodiscard]] unsigned GetValueCount() const;
-        [[nodiscard]] Constant *GetValue(unsigned index) const;
+        [[nodiscard]] size_t GetElementCount() const;
+        [[nodiscard]] Constant *GetElement(size_t index) const;
 
     private:
-        std::vector<Constant *> m_Values;
+        std::vector<Constant *> m_Elements;
     };
 
     class ConstantVector final : public Constant
     {
     public:
-        explicit ConstantVector(VectorType *type, std::vector<Constant *> values);
+        explicit ConstantVector(VectorType *type, std::vector<Constant *> elements);
         ~ConstantVector() override;
 
         void DropAll() override;
@@ -78,17 +78,17 @@ namespace scc::ir
         [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
         [[nodiscard]] bool Compare(Constant *value) const override;
 
-        [[nodiscard]] unsigned GetValueCount() const;
-        [[nodiscard]] Constant *GetValue(unsigned index) const;
+        [[nodiscard]] size_t GetElementCount() const;
+        [[nodiscard]] Constant *GetElement(size_t index) const;
 
     private:
-        std::vector<Constant *> m_Values;
+        std::vector<Constant *> m_Elements;
     };
 
     class ConstantStruct final : public Constant
     {
     public:
-        explicit ConstantStruct(StructType *type, std::vector<Constant *> values);
+        explicit ConstantStruct(StructType *type, std::vector<Constant *> elements);
         ~ConstantStruct() override;
 
         void DropAll() override;
@@ -97,10 +97,10 @@ namespace scc::ir
         [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
         [[nodiscard]] bool Compare(Constant *value) const override;
 
-        [[nodiscard]] unsigned GetValueCount() const;
-        [[nodiscard]] Constant *GetValue(unsigned index) const;
+        [[nodiscard]] size_t GetElementCount() const;
+        [[nodiscard]] Constant *GetElement(size_t index) const;
 
     private:
-        std::vector<Constant *> m_Values;
+        std::vector<Constant *> m_Elements;
     };
 }

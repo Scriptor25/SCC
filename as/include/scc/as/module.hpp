@@ -4,6 +4,7 @@
 #include <scc/as/section.hpp>
 #include <scc/as/symbol.hpp>
 
+#include <iosfwd>
 #include <memory>
 #include <vector>
 
@@ -20,8 +21,12 @@ namespace scc::as
 
         [[nodiscard]] Section *GetSection(const std::string &name) const;
         [[nodiscard]] Symbol *GetSymbol(const std::string &name) const;
+        [[nodiscard]] Symbol *GetSymbol(Fragment *fragment) const;
 
         Section *GetOrCreateSection(const std::string &name);
+        Symbol *GetOrCreateSymbol(const std::string &name);
+
+        std::ostream &Print(std::ostream &stream) const;
 
     private:
         std::vector<std::unique_ptr<Section>> m_Sections;

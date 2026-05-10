@@ -1,6 +1,7 @@
 #include <scc/ir/context.hpp>
-#include <scc/ir/platform.hpp>
 #include <scc/ir/type.hpp>
+
+#include <scc/platform.hpp>
 
 scc::ir::FloatType::FloatType(Context &context, const size_t bit_width)
     : Type(context, Kind::Float),
@@ -23,7 +24,7 @@ size_t scc::ir::FloatType::GetSize() const
 
 size_t scc::ir::FloatType::GetAlign() const
 {
-    return std::min(GetSize(), m_Context.GetPlatform().MaxFloatAlign);
+    return std::min(GetSize(), m_Context.GetPlatform().ABI.MaxFloatAlign);
 }
 
 bool scc::ir::FloatType::IsElement() const

@@ -1,9 +1,9 @@
 .set STACK_SIZE, 0x800
 .set FORMAT_BUFFER_SIZE, 0x100
 
-.set FORMAT_STRING_0_LENGTH, .string_length format_string_0
-.set FORMAT_STRING_1_LENGTH, .string_length format_string_1
-.set FORMAT_STRING_2_LENGTH, .string_length format_string_2
+.set FORMAT_STRING_0_LENGTH, (.string_length format_string_0)
+.set FORMAT_STRING_1_LENGTH, (.string_length format_string_1)
+.set FORMAT_STRING_2_LENGTH, (.string_length format_string_2)
 
 .section .text
 
@@ -120,7 +120,7 @@ itoa:
 
     mov %rax, %rdi  # a = value
 
-    movb (%rsi, 0x00, %rcx, 0x01), 0x00 # buffer[c] = 0
+    movb (%rsi, %rcx), 0x00 # buffer[c] = 0
     dec %rcx                            # c--
 
 .loop:
@@ -133,7 +133,7 @@ itoa:
 
     add %dl, '0'    # d += '0'
 
-    mov (%rsi, 0x00, %rcx, 0x01), %dl   # buffer[c] = d
+    mov (%rsi, %rcx), %dl   # buffer[c] = d
     dec %rcx                            # c--
 
     cmp %rax, 0x00

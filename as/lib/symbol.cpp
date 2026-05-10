@@ -39,6 +39,11 @@ const std::string &scc::as::Symbol::GetName() const
     return m_Name;
 }
 
+scc::as::Fragment *scc::as::Symbol::GetFragment() const
+{
+    return m_Fragment;
+}
+
 scc::as::Fragment &scc::as::Symbol::operator*() const
 {
     return *m_Fragment;

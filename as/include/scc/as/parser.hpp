@@ -2,8 +2,12 @@
 
 #include <scc/as/as.hpp>
 
+#include <scc/common.hpp>
+
 #include <iosfwd>
+#include <memory>
 #include <string>
+#include <vector>
 
 namespace scc::as
 {
@@ -30,7 +34,7 @@ namespace scc::as
     class Parser
     {
     public:
-        explicit Parser(std::istream &stream);
+        explicit Parser(std::istream &stream, const Platform &platform, Module &module);
 
         Token Get();
 
@@ -39,19 +43,25 @@ namespace scc::as
 
         Token Expect(TokenType type, const std::string &value = {});
         [[nodiscard]] bool At(TokenType type, const std::string &value = {}) const;
-        bool SkipIf(TokenType type, const std::string &value = {});
+        bool Skip(TokenType type, const std::string &value = {});
 
         void Parse();
         void ParseLine();
         void ParseDirectiveArg();
-        void ParseInstruction();
-        void ParseOperandList();
-        void ParseOperand();
+        Instruction ParseInstruction();
+        std::vector<std::unique_ptr<Operand>> ParseOperands();
+        std::unique_ptr<Operand> ParseOperand();
 
     private:
         std::istream &m_Stream;
 
         int m_Buffer;
         Token m_Token;
+
+        const Platform &m_Platform;
+
+        Module &m_Module;
+        Section *m_Section;
+        Symbol *m_Symbol;
     };
 }

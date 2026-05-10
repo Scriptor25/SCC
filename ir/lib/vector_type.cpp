@@ -1,8 +1,8 @@
+#include <scc/ir/context.hpp>
 #include <scc/ir/type.hpp>
 
 #include <scc/assert.hpp>
-#include <scc/ir/context.hpp>
-#include <scc/ir/platform.hpp>
+#include <scc/platform.hpp>
 
 scc::ir::VectorType::VectorType(Context &context, Type *element, size_t element_count)
     : Type(context, Kind::Vector),
@@ -28,7 +28,7 @@ size_t scc::ir::VectorType::GetAlign() const
 {
     const auto size = GetSize();
     const auto align = std::bit_ceil(size);
-    return std::min<size_t>(align, m_Context.GetPlatform().MaxVectorAlign);
+    return std::min<size_t>(align, m_Context.GetPlatform().ABI.MaxVectorAlign);
 }
 
 bool scc::ir::VectorType::IsElement() const

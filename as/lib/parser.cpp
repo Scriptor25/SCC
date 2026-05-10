@@ -1,6 +1,14 @@
+#include <scc/as/instruction.hpp>
+#include <scc/as/module.hpp>
+#include <scc/as/operand.hpp>
 #include <scc/as/parser.hpp>
 
+#include <scc/platform.hpp>
+
 #include <istream>
+#include <memory>
+#include <vector>
+#include <scc/assert.hpp>
 
 static bool isdigit(const int c, const int base)
 {
@@ -17,8 +25,12 @@ static bool isdigit(const int c, const int base)
     }
 }
 
-scc::as::Parser::Parser(std::istream &stream)
-    : m_Stream(stream)
+scc::as::Parser::Parser(std::istream &stream, const Platform &platform, Module &module)
+    : m_Stream(stream),
+      m_Platform(platform),
+      m_Module(module),
+      m_Section(module.GetOrCreateSection(".text")),
+      m_Symbol()
 {
     m_Buffer = m_Stream.get();
     m_Token = Get();
@@ -236,10 +248,10 @@ scc::as::Token scc::as::Parser::Skip()
 scc::as::Token scc::as::Parser::Expect(const TokenType type, const std::string &value)
 {
     if (m_Token.Type != type)
-        throw std::runtime_error("");
+        throw std::runtime_error("TODO");
 
     if (!value.empty() && m_Token.Value != value)
-        throw std::runtime_error("");
+        throw std::runtime_error("TODO");
 
     return Skip();
 }
@@ -255,7 +267,7 @@ bool scc::as::Parser::At(const TokenType type, const std::string &value) const
     return true;
 }
 
-bool scc::as::Parser::SkipIf(const TokenType type, const std::string &value)
+bool scc::as::Parser::Skip(const TokenType type, const std::string &value)
 {
     if (!At(type, value))
         return false;
@@ -267,18 +279,15 @@ bool scc::as::Parser::SkipIf(const TokenType type, const std::string &value)
 void scc::as::Parser::Parse()
 {
     while (m_Token.Type != TokenType::EndOfFile)
-    {
         ParseLine();
-        // TODO: use line
-    }
 }
 
 void scc::as::Parser::ParseLine()
 {
     if (At(TokenType::Label))
     {
-        auto label = Skip();
-        // TODO: use label
+        const auto label = Skip().Value;
+        m_Symbol = m_Module.GetOrCreateSymbol(label);
     }
 
     if (At(TokenType::EndOfLine))
@@ -289,19 +298,31 @@ void scc::as::Parser::ParseLine()
 
     if (At(TokenType::Symbol) && m_Token.Value.front() == '.')
     {
-        auto directive = Skip();
-        // TODO: use directive
+        auto directive = Skip().Value;
 
         while (!At(TokenType::EndOfLine))
         {
             ParseDirectiveArg();
-            // TODO: use directive arg
+
+            if (!At(TokenType::EndOfLine))
+                Expect(TokenType::Other, ",");
+        }
+
+        if (m_Symbol)
+        {
+            // TODO: set symbol fragment
+            m_Symbol = {};
         }
     }
     else
     {
-        ParseInstruction();
-        // TODO: use instruction
+        auto *fragment = m_Section->Insert(ParseInstruction());
+
+        if (m_Symbol)
+        {
+            m_Symbol->SetFragment(*fragment);
+            m_Symbol = {};
+        }
     }
 
     Expect(TokenType::EndOfLine);
@@ -309,6 +330,28 @@ void scc::as::Parser::ParseLine()
 
 void scc::as::Parser::ParseDirectiveArg()
 {
+    if (Skip(TokenType::Other, "("))
+    {
+        auto directive = Expect(TokenType::Symbol).Value;
+        // TODO: use directive
+
+        if (directive.front() != '.')
+            throw std::runtime_error("TODO");
+
+        while (!At(TokenType::Other, ")"))
+        {
+            ParseDirectiveArg();
+            // TODO: use directive arg
+
+            if (!At(TokenType::Other, ")"))
+                Expect(TokenType::Other, ",");
+        }
+
+        Expect(TokenType::Other, ")");
+
+        return;
+    }
+
     if (At(TokenType::Symbol))
     {
         auto symbol = Skip();
@@ -333,77 +376,109 @@ void scc::as::Parser::ParseDirectiveArg()
         return;
     }
 
-    throw std::runtime_error("");
+    throw std::runtime_error("TODO");
 }
 
-void scc::as::Parser::ParseInstruction()
+scc::as::Instruction scc::as::Parser::ParseInstruction()
 {
-    auto mnemonic = Expect(TokenType::Symbol);
-    // TODO: use mnemonic
+    const auto name = Expect(TokenType::Symbol).Value;
+
+    const auto it = m_Platform.ISA.Mnemonics.find(name);
+    Assert(it != m_Platform.ISA.Mnemonics.end(), "undefined mnemonic '{}'", name);
 
     if (At(TokenType::EndOfLine))
-        return;
+        return Instruction(it->second);
 
-    ParseOperandList();
-    // TODO: use operand list
+    auto operands = ParseOperands();
+
+    return Instruction(it->second, std::move(operands));
 }
 
-void scc::as::Parser::ParseOperandList()
+std::vector<std::unique_ptr<scc::as::Operand>> scc::as::Parser::ParseOperands()
 {
+    std::vector<std::unique_ptr<Operand>> operands;
+
     do
-    {
-        ParseOperand();
-        // TODO: use operand
-    }
-    while (SkipIf(TokenType::Other, ","));
+        operands.push_back(ParseOperand());
+    while (Skip(TokenType::Other, ","));
+
+    return operands;
 }
 
-void scc::as::Parser::ParseOperand()
+std::unique_ptr<scc::as::Operand> scc::as::Parser::ParseOperand()
 {
-    if (SkipIf(TokenType::Other, "$"))
+    if (At(TokenType::Symbol))
     {
-        if (At(TokenType::Symbol))
-        {
-            auto symbol = Skip();
-            // TODO: use symbol
+        const auto name = Skip().Value;
 
-            return;
-        }
-
-        auto immediate = Expect(TokenType::Immediate);
-        // TODO: use immediate
-
-        return;
+        return std::make_unique<SymbolOperand>(m_Module.GetOrCreateSymbol(name));
     }
 
     if (At(TokenType::Register))
     {
-        Skip();
-        return;
+        const auto name = Skip().Value;
+
+        const auto it = m_Platform.ISA.Registers.find(name);
+        Assert(it != m_Platform.ISA.Registers.end(), "undefined register '{}'", name);
+
+        return std::make_unique<RegisterOperand>(it->second);
     }
+
+    Immediate immediate{};
+    bool has_immediate{};
 
     if (At(TokenType::Immediate))
     {
-        auto displacement = Skip();
-        // TODO: use displacement
+        immediate = Skip().Immediate;
+        has_immediate = true;
     }
 
-    Expect(TokenType::Other, "(");
-
-    auto base_register = Expect(TokenType::Register);
-    // TODO: use base register
-
-    if (SkipIf(TokenType::Other, ","))
+    if (Skip(TokenType::Other, "("))
     {
-        auto index_register = Expect(TokenType::Register);
-        // TODO: use index register
+        const auto base_name = Expect(TokenType::Register).Value;
 
-        if (SkipIf(TokenType::Other, ","))
+        std::string index_name;
+        Immediate scale = 0;
+
+        if (Skip(TokenType::Other, ","))
         {
-            auto scale = Expect(TokenType::Immediate);
-            // TODO: use scale
+            index_name = Expect(TokenType::Register).Value;
+
+            if (Skip(TokenType::Other, ","))
+            {
+                scale = Expect(TokenType::Immediate).Immediate;
+            }
         }
+
+        Expect(TokenType::Other, ")");
+
+        Register base_register{};
+        if (!base_name.empty())
+        {
+            const auto it = m_Platform.ISA.Registers.find(base_name);
+            Assert(it != m_Platform.ISA.Registers.end(), "undefined register '{}'", base_name);
+
+            base_register = it->second;
+        }
+
+        Register index_register{};
+        if (!index_name.empty())
+        {
+            const auto it = m_Platform.ISA.Registers.find(index_name);
+            Assert(it != m_Platform.ISA.Registers.end(), "undefined register '{}'", index_name);
+
+            index_register = it->second;
+        }
+
+        return std::make_unique<ReferenceOperand>(
+            immediate,
+            base_register,
+            index_register,
+            scale);
     }
 
-    Expect(TokenType::Other, ")");
+    if (has_immediate)
+        return std::make_unique<ImmediateOperand>(immediate);
+
+    throw std::runtime_error("TODO");
 }

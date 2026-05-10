@@ -4,6 +4,9 @@
 #include <scc/as/fragment.hpp>
 #include <scc/as/operand.hpp>
 
+#include <scc/common.hpp>
+
+#include <memory>
 #include <vector>
 
 namespace scc::as
@@ -14,7 +17,11 @@ namespace scc::as
         struct iterator
         {
             using value_type = std::conditional_t<constant, const Operand, Operand>;
-            using collection_type = std::conditional_t<constant, const std::vector<Operand>, std::vector<Operand>>;
+            using collection_type = std::conditional_t<
+                constant,
+                const std::vector<std::unique_ptr<Operand>>,
+                std::vector<std::unique_ptr<Operand>>
+            >;
 
             bool operator!=(const iterator &other) const
             {
@@ -23,7 +30,7 @@ namespace scc::as
 
             value_type &operator*() const
             {
-                return operands[index];
+                return *operands[index];
             }
 
             iterator &operator++()
@@ -42,11 +49,11 @@ namespace scc::as
         };
 
     public:
-        explicit Instruction(InstructionCode code, std::vector<Operand> operands);
+        explicit Instruction(Mnemonic mnemonic, std::vector<std::unique_ptr<Operand>> operands = {});
 
-        void SetCode(InstructionCode code);
+        void SetMnemonic(Mnemonic mnemonic);
 
-        [[nodiscard]] InstructionCode GetCode() const;
+        [[nodiscard]] Mnemonic GetMnemonic() const;
 
         [[nodiscard]] size_t GetOperandCount() const;
 
@@ -60,8 +67,10 @@ namespace scc::as
         [[nodiscard]] iterator<true> begin() const;
         [[nodiscard]] iterator<true> end() const;
 
+        std::ostream &Print(std::ostream &stream) const override;
+
     private:
-        InstructionCode m_Code;
-        std::vector<Operand> m_Operands;
+        Mnemonic m_Mnemonic;
+        std::vector<std::unique_ptr<Operand>> m_Operands;
     };
 }

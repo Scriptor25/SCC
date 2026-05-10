@@ -2,6 +2,8 @@
 
 #include <scc/as/as.hpp>
 
+#include <string>
+
 namespace scc::as
 {
     class Symbol
@@ -16,6 +18,7 @@ namespace scc::as
         void SetFragment(Section &section, size_t index);
 
         [[nodiscard]] const std::string &GetName() const;
+        [[nodiscard]] Fragment *GetFragment() const;
 
         Fragment &operator*() const;
         Fragment *operator->() const;

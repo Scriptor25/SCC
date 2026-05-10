@@ -1,6 +1,8 @@
 #include <scc/ir/context.hpp>
 #include <scc/ir/type.hpp>
 
+#include <scc/platform.hpp>
+
 #include <scc/assert.hpp>
 
 scc::ir::Context::Context(const Platform &platform)
@@ -36,7 +38,7 @@ scc::ir::Context &scc::ir::Context::operator=(Context &&context) noexcept
     return *this;
 }
 
-const scc::ir::Platform &scc::ir::Context::GetPlatform() const
+const scc::Platform &scc::ir::Context::GetPlatform() const
 {
     return *m_Platform;
 }
@@ -48,42 +50,57 @@ scc::ir::VoidType *scc::ir::Context::GetVoidType()
 
 scc::ir::IntType *scc::ir::Context::GetInt1Type()
 {
-    return Get<IntType>(1);
+    return GetIntNType(1);
 }
 
 scc::ir::IntType *scc::ir::Context::GetInt8Type()
 {
-    return Get<IntType>(8);
+    return GetIntNType(8);
 }
 
 scc::ir::IntType *scc::ir::Context::GetInt16Type()
 {
-    return Get<IntType>(16);
+    return GetIntNType(16);
 }
 
 scc::ir::IntType *scc::ir::Context::GetInt32Type()
 {
-    return Get<IntType>(32);
+    return GetIntNType(32);
 }
 
 scc::ir::IntType *scc::ir::Context::GetInt64Type()
 {
-    return Get<IntType>(64);
+    return GetIntNType(64);
 }
 
 scc::ir::IntType *scc::ir::Context::GetIntNType(uint64_t bit_width)
 {
+    Assert(
+        m_Platform->IR.LegalIntWidth.contains(bit_width),
+        "bit width {} is not legal for current platform",
+        bit_width);
+
     return Get<IntType>(bit_width);
 }
 
 scc::ir::FloatType *scc::ir::Context::GetFloat32Type()
 {
-    return Get<FloatType>(32);
+    return GetFloatNType(32);
 }
 
 scc::ir::FloatType *scc::ir::Context::GetFloat64Type()
 {
-    return Get<FloatType>(64);
+    return GetFloatNType(64);
+}
+
+scc::ir::FloatType *scc::ir::Context::GetFloatNType(uint64_t bit_width)
+{
+    Assert(
+        m_Platform->IR.LegalFloatWidth.contains(bit_width),
+        "bit width {} is not legal for current platform",
+        bit_width);
+
+    return Get<FloatType>(bit_width);
 }
 
 scc::ir::PointerType *scc::ir::Context::GetPointerType(Type *element)
@@ -123,36 +140,32 @@ scc::ir::FunctionType *scc::ir::Context::GetFunctionType(
 
 scc::ir::ConstantInt *scc::ir::Context::GetInt1(const bool value)
 {
-    return Get<ConstantInt>(GetInt1Type(), static_cast<uint64_t>(value) & 0b1);
+    return GetIntN(1, value);
 }
 
 scc::ir::ConstantInt *scc::ir::Context::GetInt8(const uint8_t value)
 {
-    return Get<ConstantInt>(GetInt8Type(), static_cast<uint64_t>(value));
+    return GetIntN(8, value);
 }
 
 scc::ir::ConstantInt *scc::ir::Context::GetInt16(const uint16_t value)
 {
-    return Get<ConstantInt>(GetInt16Type(), static_cast<uint64_t>(value));
+    return GetIntN(16, value);
 }
 
 scc::ir::ConstantInt *scc::ir::Context::GetInt32(const uint32_t value)
 {
-    return Get<ConstantInt>(GetInt32Type(), static_cast<uint64_t>(value));
+    return GetIntN(32, value);
 }
 
 scc::ir::ConstantInt *scc::ir::Context::GetInt64(const uint64_t value)
 {
-    return Get<ConstantInt>(GetInt64Type(), value);
+    return GetIntN(64, value);
 }
 
 scc::ir::ConstantInt *scc::ir::Context::GetIntN(const uint64_t bit_width, const uint64_t value)
 {
-    Assert(bit_width >= 1, "bit width must not be less than 1");
-    Assert(bit_width <= 64, "bit width must not be greater than 64");
-
-    const auto mask = ~uint64_t() >> (64 - bit_width);
-    return Get<ConstantInt>(GetIntNType(bit_width), value & mask);
+    return GetInt(GetIntNType(bit_width), value);
 }
 
 scc::ir::ConstantInt *scc::ir::Context::GetInt(IntType *type, const uint64_t value)
@@ -163,54 +176,130 @@ scc::ir::ConstantInt *scc::ir::Context::GetInt(IntType *type, const uint64_t val
 
 scc::ir::ConstantFloat *scc::ir::Context::GetFloat32(const float32_t value)
 {
-    return Get<ConstantFloat>(GetFloat32Type(), static_cast<float64_t>(value));
+    return GetFloatN(32, value);
 }
 
 scc::ir::ConstantFloat *scc::ir::Context::GetFloat64(const float64_t value)
 {
-    return Get<ConstantFloat>(GetFloat64Type(), value);
+    return GetFloatN(64, value);
 }
 
-scc::ir::ConstantArray *scc::ir::Context::GetArray(std::vector<Constant *> values)
+scc::ir::ConstantFloat *scc::ir::Context::GetFloatN(const uint64_t bit_width, const float64_t value)
 {
-    Assert(!values.empty(), "values must not be empty");
+    return GetFloat(GetFloatNType(bit_width), value);
+}
 
-    auto *element = values[0]->GetType();
+scc::ir::ConstantFloat *scc::ir::Context::GetFloat(FloatType *type, float64_t value)
+{
+    return Get<ConstantFloat>(type, value);
+}
 
-    for (const auto *value : values)
-        Assert(element == value->GetType(), "value types must be homogenous");
+scc::ir::ConstantArray *scc::ir::Context::GetArray(std::vector<Constant *> elements)
+{
+    Assert(!elements.empty(), "elements must not be empty");
 
-    return Get<ConstantArray>(GetArrayType(element, values.size()), std::move(values));
+    auto *element_type = elements[0]->GetType();
+
+    for (const auto *element : elements)
+        Assert(
+            element->GetType() == element_type,
+            "invalid element type: is {}, requires {}",
+            element->GetType(),
+            element_type);
+
+    return Get<ConstantArray>(GetArrayType(element_type, elements.size()), std::move(elements));
+}
+
+scc::ir::ConstantArray *scc::ir::Context::GetArray(ArrayType *type, std::vector<Constant *> elements)
+{
+    Assert(
+        elements.size() != type->GetElementCount(),
+        "invalid element count: is {}, requires {}",
+        elements.size(),
+        type->GetElementCount());
+
+    auto *element_type = type->GetElement();
+
+    for (const auto *element : elements)
+        Assert(
+            element->GetType() == element_type,
+            "invalid element type: is {}, requires {}",
+            element->GetType(),
+            element_type);
+
+    return Get<ConstantArray>(type, std::move(elements));
 }
 
 scc::ir::ConstantArray *scc::ir::Context::GetArray(const std::string_view value)
 {
-    std::vector<Constant *> values(value.size());
+    std::vector<Constant *> elements(value.size());
 
     for (size_t i = 0; i < value.size(); ++i)
-        values[i] = GetInt8(value[i]);
+        elements[i] = GetInt8(value[i]);
 
-    return Get<ConstantArray>(GetArrayType(GetInt8Type(), value.size()), std::move(values));
+    return Get<ConstantArray>(GetArrayType(GetInt8Type(), elements.size()), std::move(elements));
 }
 
-scc::ir::ConstantVector *scc::ir::Context::GetVector(std::vector<Constant *> values)
+scc::ir::ConstantVector *scc::ir::Context::GetVector(std::vector<Constant *> elements)
 {
-    Assert(!values.empty(), "values must not be empty");
+    Assert(!elements.empty(), "elements must not be empty");
 
-    auto *element = values[0]->GetType();
+    auto *element_type = elements[0]->GetType();
 
-    for (const auto *value : values)
-        Assert(element == value->GetType(), "value types must be homogenous");
+    for (const auto *element : elements)
+        Assert(
+            element->GetType() == element_type,
+            "invalid element type: is {}, requires {}",
+            element->GetType(),
+            element_type);
 
-    return Get<ConstantVector>(GetVectorType(element, values.size()), std::move(values));
+    return Get<ConstantVector>(GetVectorType(element_type, elements.size()), std::move(elements));
 }
 
-scc::ir::ConstantStruct *scc::ir::Context::GetStruct(std::vector<Constant *> values)
+scc::ir::ConstantVector *scc::ir::Context::GetVector(VectorType *type, std::vector<Constant *> elements)
 {
-    std::vector<Type *> elements(values.size());
+    Assert(
+        elements.size() != type->GetElementCount(),
+        "invalid element count: is {}, requires {}",
+        elements.size(),
+        type->GetElementCount());
 
-    for (size_t i = 0; i < values.size(); ++i)
-        elements[i] = values[i]->GetType();
+    auto *element_type = type->GetElement();
 
-    return Get<ConstantStruct>(GetStructType(std::move(elements)), std::move(values));
+    for (const auto *element : elements)
+        Assert(
+            element->GetType() == element_type,
+            "invalid element type: is {}, requires {}",
+            element->GetType(),
+            element_type);
+
+    return Get<ConstantVector>(type, std::move(elements));
+}
+
+scc::ir::ConstantStruct *scc::ir::Context::GetStruct(std::vector<Constant *> elements)
+{
+    std::vector<Type *> element_types(elements.size());
+
+    for (size_t i = 0; i < elements.size(); ++i)
+        element_types[i] = elements[i]->GetType();
+
+    return Get<ConstantStruct>(GetStructType(std::move(element_types)), std::move(elements));
+}
+
+scc::ir::ConstantStruct *scc::ir::Context::GetStruct(StructType *type, std::vector<Constant *> elements)
+{
+    Assert(
+        elements.size() != type->GetElementCount(),
+        "invalid element count: is {}, requires {}",
+        elements.size(),
+        type->GetElementCount());
+
+    for (size_t i = 0; i < elements.size(); ++i)
+        Assert(
+            elements[i]->GetType() == type->GetElement(i),
+            "invalid element type: is {}, requires {}",
+            elements[i]->GetType(),
+            type->GetElement(i));
+
+    return Get<ConstantStruct>(type, std::move(elements));
 }

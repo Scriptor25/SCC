@@ -1,6 +1,7 @@
 #include <scc/ir/context.hpp>
-#include <scc/ir/platform.hpp>
 #include <scc/ir/type.hpp>
+
+#include <scc/platform.hpp>
 
 scc::ir::IntType::IntType(Context &context, const size_t bit_width)
     : Type(context, Kind::Int),
@@ -23,7 +24,7 @@ size_t scc::ir::IntType::GetSize() const
 
 size_t scc::ir::IntType::GetAlign() const
 {
-    return std::min(GetSize(), m_Context.GetPlatform().MaxIntAlign);
+    return std::min(GetSize(), m_Context.GetPlatform().ABI.MaxIntAlign);
 }
 
 bool scc::ir::IntType::IsElement() const
