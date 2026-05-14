@@ -2,8 +2,8 @@
 
 namespace scc
 {
-    using Mnemonic = uint32_t;
-    using Register = uint32_t;
+    enum class Register;
+    enum class Mnemonic;
 
     struct Platform;
 }

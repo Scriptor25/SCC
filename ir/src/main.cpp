@@ -23,17 +23,21 @@ int main(int argc, const char **argv)
             .LegalFloatWidth = { 32, 64 },
         },
         .ISA = {
-            .Architecture = scc::PlatformArchitecture::X86,
-            .Endianness = scc::PlatformEndianness::LittleEndian,
+            .Architecture = scc::platform::TargetArchitecture::X86,
+            .Endianness = scc::platform::TargetEndianness::LittleEndian,
         },
         .ABI = {
-            .PointerSize = 8,
-            .PointerAlign = 8,
-            .StackAlign = 16,
-            .MaxIntAlign = 8,
-            .MaxFloatAlign = 8,
-            .MaxVectorAlign = 16,
-            .MaxAggregateAlign = 16,
+            .DataLayout = {
+                .PointerSize = 8,
+                .PointerAlign = 8,
+                .MaxIntAlign = 8,
+                .MaxFloatAlign = 8,
+                .MaxVectorAlign = 16,
+                .MaxAggregateAlign = 16,
+            },
+            .CallLayout = {
+                .StackAlign = 16,
+            },
         },
         .Features = {},
     };

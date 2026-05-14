@@ -24,7 +24,7 @@ size_t scc::ir::IntType::GetSize() const
 
 size_t scc::ir::IntType::GetAlign() const
 {
-    return std::min(GetSize(), m_Context.GetPlatform().ABI.MaxIntAlign);
+    return std::min(GetSize(), m_Context.GetPlatform().ABI.DataLayout.MaxIntAlign);
 }
 
 bool scc::ir::IntType::IsElement() const

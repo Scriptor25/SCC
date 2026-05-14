@@ -52,7 +52,7 @@ size_t scc::ir::StructType::GetAlign() const
     for (const auto *element : m_Elements)
         align = std::max(align, element->GetAlign());
 
-    return std::min(align, m_Context.GetPlatform().ABI.MaxAggregateAlign);
+    return std::min(align, m_Context.GetPlatform().ABI.DataLayout.MaxAggregateAlign);
 }
 
 bool scc::ir::StructType::IsElement() const

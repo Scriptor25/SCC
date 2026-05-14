@@ -19,12 +19,12 @@ bool scc::ir::PointerType::Compare(Type *type) const
 
 size_t scc::ir::PointerType::GetSize() const
 {
-    return m_Context.GetPlatform().ABI.PointerSize;
+    return m_Context.GetPlatform().ABI.DataLayout.PointerSize;
 }
 
 size_t scc::ir::PointerType::GetAlign() const
 {
-    return m_Context.GetPlatform().ABI.PointerAlign;
+    return m_Context.GetPlatform().ABI.DataLayout.PointerAlign;
 }
 
 bool scc::ir::PointerType::IsElement() const

@@ -24,7 +24,7 @@ size_t scc::ir::FloatType::GetSize() const
 
 size_t scc::ir::FloatType::GetAlign() const
 {
-    return std::min(GetSize(), m_Context.GetPlatform().ABI.MaxFloatAlign);
+    return std::min(GetSize(), m_Context.GetPlatform().ABI.DataLayout.MaxFloatAlign);
 }
 
 bool scc::ir::FloatType::IsElement() const

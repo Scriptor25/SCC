@@ -28,7 +28,7 @@ size_t scc::ir::VectorType::GetAlign() const
 {
     const auto size = GetSize();
     const auto align = std::bit_ceil(size);
-    return std::min<size_t>(align, m_Context.GetPlatform().ABI.MaxVectorAlign);
+    return std::min<size_t>(align, m_Context.GetPlatform().ABI.DataLayout.MaxVectorAlign);
 }
 
 bool scc::ir::VectorType::IsElement() const

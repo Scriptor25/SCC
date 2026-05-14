@@ -120,8 +120,8 @@ itoa:
 
     mov %rax, %rdi  # a = value
 
-    movb (%rsi, %rcx), 0x00 # buffer[c] = 0
-    dec %rcx                            # c--
+    mov (%rsi, %rcx), 0x00  # buffer[c] = 0
+    dec %rcx                # c--
 
 .loop:
     cmp %rcx, 0x00
@@ -134,7 +134,7 @@ itoa:
     add %dl, '0'    # d += '0'
 
     mov (%rsi, %rcx), %dl   # buffer[c] = d
-    dec %rcx                            # c--
+    dec %rcx                # c--
 
     cmp %rax, 0x00
     jne .loop   # if a != 0, goto .loop
