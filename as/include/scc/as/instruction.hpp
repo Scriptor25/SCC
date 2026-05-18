@@ -49,7 +49,10 @@ namespace scc::as
         };
 
     public:
-        explicit Instruction(Mnemonic mnemonic, std::vector<std::unique_ptr<Operand>> operands = {});
+        explicit Instruction(
+            const Platform &platform,
+            Mnemonic mnemonic,
+            std::vector<std::unique_ptr<Operand>> operands = {});
 
         void SetMnemonic(Mnemonic mnemonic);
 
@@ -70,6 +73,7 @@ namespace scc::as
         std::ostream &Print(std::ostream &stream) const override;
 
     private:
+        const Platform &m_Platform;
         Mnemonic m_Mnemonic;
         std::vector<std::unique_ptr<Operand>> m_Operands;
     };

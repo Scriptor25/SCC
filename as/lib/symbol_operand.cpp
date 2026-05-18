@@ -3,8 +3,9 @@
 
 #include <ostream>
 
-scc::as::SymbolOperand::SymbolOperand(Symbol *symbol)
-    : m_Symbol(symbol)
+scc::as::SymbolOperand::SymbolOperand(const Platform &platform, Symbol *symbol)
+    : Operand(platform),
+      m_Symbol(symbol)
 {
 }
 

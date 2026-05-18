@@ -1,7 +1,13 @@
 #include <scc/as/instruction.hpp>
 
-scc::as::Instruction::Instruction(const Mnemonic mnemonic, std::vector<std::unique_ptr<Operand>> operands)
-    : m_Mnemonic(mnemonic),
+#include <scc/platform.hpp>
+
+scc::as::Instruction::Instruction(
+    const Platform &platform,
+    const Mnemonic mnemonic,
+    std::vector<std::unique_ptr<Operand>> operands)
+    : m_Platform(platform),
+      m_Mnemonic(mnemonic),
       m_Operands(std::move(operands))
 {
 }
@@ -54,9 +60,9 @@ scc::as::Instruction::iterator<true> scc::as::Instruction::end() const
 std::ostream &scc::as::Instruction::Print(std::ostream &stream) const
 {
     if (m_Operands.empty())
-        return stream << std::hex << m_Mnemonic;
+        return stream << m_Platform.ISA.Mnemonics.at(m_Mnemonic).Name;
 
-    stream << std::hex << m_Mnemonic << ' ';
+    stream << m_Platform.ISA.Mnemonics.at(m_Mnemonic).Name << ' ';
 
     for (auto it = m_Operands.begin(); it != m_Operands.end(); ++it)
     {

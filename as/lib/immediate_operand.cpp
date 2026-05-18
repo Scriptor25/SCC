@@ -2,8 +2,9 @@
 
 #include <ostream>
 
-scc::as::ImmediateOperand::ImmediateOperand(const Immediate immediate)
-    : m_Immediate(immediate)
+scc::as::ImmediateOperand::ImmediateOperand(const Platform &platform, const Immediate immediate)
+    : Operand(platform),
+      m_Immediate(immediate)
 {
 }
 

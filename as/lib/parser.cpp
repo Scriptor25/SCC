@@ -383,15 +383,15 @@ scc::as::Instruction scc::as::Parser::ParseInstruction()
 {
     const auto name = Expect(TokenType::Symbol).Value;
 
-    const auto it = m_Platform.ISA.Mnemonics.find(name);
-    Assert(it != m_Platform.ISA.Mnemonics.end(), "undefined mnemonic '{}'", name);
+    const auto it = m_Platform.ISA.MnemonicNames.find(name);
+    Assert(it != m_Platform.ISA.MnemonicNames.end(), "undefined mnemonic '{}'", name);
 
     if (At(TokenType::EndOfLine))
-        return Instruction(it->second);
+        return Instruction(m_Platform, it->second);
 
     auto operands = ParseOperands();
 
-    return Instruction(it->second, std::move(operands));
+    return Instruction(m_Platform, it->second, std::move(operands));
 }
 
 std::vector<std::unique_ptr<scc::as::Operand>> scc::as::Parser::ParseOperands()
@@ -411,17 +411,17 @@ std::unique_ptr<scc::as::Operand> scc::as::Parser::ParseOperand()
     {
         const auto name = Skip().Value;
 
-        return std::make_unique<SymbolOperand>(m_Module.GetOrCreateSymbol(name));
+        return std::make_unique<SymbolOperand>(m_Platform, m_Module.GetOrCreateSymbol(name));
     }
 
     if (At(TokenType::Register))
     {
         const auto name = Skip().Value;
 
-        const auto it = m_Platform.ISA.Registers.find(name);
-        Assert(it != m_Platform.ISA.Registers.end(), "undefined register '{}'", name);
+        const auto it = m_Platform.ISA.RegisterNames.find(name);
+        Assert(it != m_Platform.ISA.RegisterNames.end(), "undefined register '{}'", name);
 
-        return std::make_unique<RegisterOperand>(it->second);
+        return std::make_unique<RegisterOperand>(m_Platform, it->second);
     }
 
     Immediate immediate{};
@@ -455,8 +455,8 @@ std::unique_ptr<scc::as::Operand> scc::as::Parser::ParseOperand()
         Register base_register{};
         if (!base_name.empty())
         {
-            const auto it = m_Platform.ISA.Registers.find(base_name);
-            Assert(it != m_Platform.ISA.Registers.end(), "undefined register '{}'", base_name);
+            const auto it = m_Platform.ISA.RegisterNames.find(base_name);
+            Assert(it != m_Platform.ISA.RegisterNames.end(), "undefined register '{}'", base_name);
 
             base_register = it->second;
         }
@@ -464,13 +464,14 @@ std::unique_ptr<scc::as::Operand> scc::as::Parser::ParseOperand()
         Register index_register{};
         if (!index_name.empty())
         {
-            const auto it = m_Platform.ISA.Registers.find(index_name);
-            Assert(it != m_Platform.ISA.Registers.end(), "undefined register '{}'", index_name);
+            const auto it = m_Platform.ISA.RegisterNames.find(index_name);
+            Assert(it != m_Platform.ISA.RegisterNames.end(), "undefined register '{}'", index_name);
 
             index_register = it->second;
         }
 
         return std::make_unique<ReferenceOperand>(
+            m_Platform,
             immediate,
             base_register,
             index_register,
@@ -478,7 +479,7 @@ std::unique_ptr<scc::as::Operand> scc::as::Parser::ParseOperand()
     }
 
     if (has_immediate)
-        return std::make_unique<ImmediateOperand>(immediate);
+        return std::make_unique<ImmediateOperand>(m_Platform, immediate);
 
     throw std::runtime_error("TODO");
 }

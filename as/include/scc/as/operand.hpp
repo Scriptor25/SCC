@@ -11,15 +11,19 @@ namespace scc::as
     class Operand
     {
     public:
+        explicit Operand(const Platform &platform);
         virtual ~Operand() = default;
 
         virtual std::ostream &Print(std::ostream &stream) const = 0;
+
+    protected:
+        const Platform &m_Platform;
     };
 
     class ImmediateOperand final : public Operand
     {
     public:
-        explicit ImmediateOperand(Immediate immediate);
+        explicit ImmediateOperand(const Platform &platform, Immediate immediate);
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -30,7 +34,7 @@ namespace scc::as
     class RegisterOperand final : public Operand
     {
     public:
-        explicit RegisterOperand(Register register_);
+        explicit RegisterOperand(const Platform &platform, Register register_);
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -41,7 +45,12 @@ namespace scc::as
     class ReferenceOperand final : public Operand
     {
     public:
-        ReferenceOperand(Immediate displacement, Register base_register, Register index_register, Immediate scale);
+        ReferenceOperand(
+            const Platform &platform,
+            Immediate displacement,
+            Register base_register,
+            Register index_register,
+            Immediate scale);
 
         std::ostream &Print(std::ostream &stream) const override;
 
@@ -55,7 +64,7 @@ namespace scc::as
     class SymbolOperand final : public Operand
     {
     public:
-        explicit SymbolOperand(Symbol *symbol);
+        explicit SymbolOperand(const Platform &platform, Symbol *symbol);
 
         std::ostream &Print(std::ostream &stream) const override;
 

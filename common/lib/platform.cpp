@@ -135,172 +135,47 @@ scc::platform::TargetIR scc::platform::TargetTriple::GetIR() const
 
 scc::platform::TargetISA scc::platform::TargetTriple::GetISA() const
 {
+    TargetISA isa;
+
     switch (GetArchitecture())
     {
     case TargetArchitecture::X86:
-        return {
+        isa = {
             .Architecture = TargetArchitecture::X86,
             .Endianness = TargetEndianness::LittleEndian,
             .Registers = {
                 // A
-                {
-                    0b0000,
-                    {
-                        .Code = 0b0000,
-                        .Class = TargetRegisterClass::GeneralPurpose,
-                        .Allocatable = true,
-                    }
-                },
-
+                { 0b0000, { .Code = 0b0000, .Class = TargetRegisterClass::GeneralPurpose, .Allocatable = true } },
                 // C
-                {
-                    0b0001,
-                    {
-                        .Code = 0b0001,
-                        .Class = TargetRegisterClass::GeneralPurpose,
-                        .Allocatable = true,
-                    }
-                },
-
+                { 0b0001, { .Code = 0b0001, .Class = TargetRegisterClass::GeneralPurpose, .Allocatable = true } },
                 // D
-                {
-                    0b0010,
-                    {
-                        .Code = 0b0010,
-                        .Class = TargetRegisterClass::GeneralPurpose,
-                        .Allocatable = true,
-                    }
-                },
-
+                { 0b0010, { .Code = 0b0010, .Class = TargetRegisterClass::GeneralPurpose, .Allocatable = true } },
                 // B
-                {
-                    0b0011,
-                    {
-                        .Code = 0b0011,
-                        .Class = TargetRegisterClass::GeneralPurpose,
-                        .Allocatable = true,
-                    }
-                },
-
+                { 0b0011, { .Code = 0b0011, .Class = TargetRegisterClass::GeneralPurpose, .Allocatable = true } },
                 // SP
-                {
-                    0b0100,
-                    {
-                        .Code = 0b0100,
-                        .Class = TargetRegisterClass::GeneralPurpose,
-                        .Allocatable = true,
-                    }
-                },
-
+                { 0b0100, { .Code = 0b0100, .Class = TargetRegisterClass::GeneralPurpose, .Allocatable = true } },
                 // BP
-                {
-                    0b0101,
-                    {
-                        .Code = 0b0101,
-                        .Class = TargetRegisterClass::GeneralPurpose,
-                        .Allocatable = true,
-                    }
-                },
-
+                { 0b0101, { .Code = 0b0101, .Class = TargetRegisterClass::GeneralPurpose, .Allocatable = true } },
                 // SI
-                {
-                    0b0110,
-                    {
-                        .Code = 0b0110,
-                        .Class = TargetRegisterClass::GeneralPurpose,
-                        .Allocatable = true,
-                    }
-                },
-
+                { 0b0110, { .Code = 0b0110, .Class = TargetRegisterClass::GeneralPurpose, .Allocatable = true } },
                 // DI
-                {
-                    0b0111,
-                    {
-                        .Code = 0b0111,
-                        .Class = TargetRegisterClass::GeneralPurpose,
-                        .Allocatable = true,
-                    }
-                },
-
+                { 0b0111, { .Code = 0b0111, .Class = TargetRegisterClass::GeneralPurpose, .Allocatable = true } },
                 // R8
-                {
-                    0b1000,
-                    {
-                        .Code = 0b1000,
-                        .Class = TargetRegisterClass::GeneralPurpose,
-                        .Allocatable = true,
-                    }
-                },
-
+                { 0b1000, { .Code = 0b1000, .Class = TargetRegisterClass::GeneralPurpose, .Allocatable = true } },
                 // R9
-                {
-                    0b1001,
-                    {
-                        .Code = 0b1001,
-                        .Class = TargetRegisterClass::GeneralPurpose,
-                        .Allocatable = true,
-                    }
-                },
-
+                { 0b1001, { .Code = 0b1001, .Class = TargetRegisterClass::GeneralPurpose, .Allocatable = true } },
                 // R10
-                {
-                    0b1010,
-                    {
-                        .Code = 0b1010,
-                        .Class = TargetRegisterClass::GeneralPurpose,
-                        .Allocatable = true,
-                    }
-                },
-
+                { 0b1010, { .Code = 0b1010, .Class = TargetRegisterClass::GeneralPurpose, .Allocatable = true } },
                 // R11
-                {
-                    0b1011,
-                    {
-                        .Code = 0b1011,
-                        .Class = TargetRegisterClass::GeneralPurpose,
-                        .Allocatable = true,
-                    }
-                },
-
+                { 0b1011, { .Code = 0b1011, .Class = TargetRegisterClass::GeneralPurpose, .Allocatable = true } },
                 // R12
-                {
-                    0b1100,
-                    {
-                        .Code = 0b1100,
-                        .Class = TargetRegisterClass::GeneralPurpose,
-                        .Allocatable = true,
-                    }
-                },
-
+                { 0b1100, { .Code = 0b1100, .Class = TargetRegisterClass::GeneralPurpose, .Allocatable = true } },
                 // R13
-                {
-                    0b1101,
-                    {
-                        .Code = 0b1101,
-                        .Class = TargetRegisterClass::GeneralPurpose,
-                        .Allocatable = true,
-                    }
-                },
-
+                { 0b1101, { .Code = 0b1101, .Class = TargetRegisterClass::GeneralPurpose, .Allocatable = true } },
                 // R14
-                {
-                    0b1110,
-                    {
-                        .Code = 0b1110,
-                        .Class = TargetRegisterClass::GeneralPurpose,
-                        .Allocatable = true,
-                    }
-                },
-
+                { 0b1110, { .Code = 0b1110, .Class = TargetRegisterClass::GeneralPurpose, .Allocatable = true } },
                 // R15
-                {
-                    0b1111,
-                    {
-                        .Code = 0b1111,
-                        .Class = TargetRegisterClass::GeneralPurpose,
-                        .Allocatable = true,
-                    }
-                },
+                { 0b1111, { .Code = 0b1111, .Class = TargetRegisterClass::GeneralPurpose, .Allocatable = true } },
             },
             .RegisterViews = {
                 { Register::X86_AL, { .Code = 0b0000, .Name = "al", .BitWidth = 8 } },
@@ -387,152 +262,73 @@ scc::platform::TargetISA scc::platform::TargetTriple::GetISA() const
                 { Register::X86_R15D, { .Code = 0b1000, .Name = "r15d", .BitWidth = 32 } },
                 { Register::X86_R15, { .Code = 0b1000, .Name = "r15", .BitWidth = 64 } },
             },
-            .Mnemonics = {},
-            .RegisterNames = {
-                { "al", Register::X86_AL },
-                { "ah", Register::X86_AH },
-                { "ax", Register::X86_AX },
-                { "eax", Register::X86_EAX },
-                { "rax", Register::X86_RAX },
-
-                { "bl", Register::X86_BL },
-                { "bh", Register::X86_BH },
-                { "bx", Register::X86_BX },
-                { "ebx", Register::X86_EBX },
-                { "rbx", Register::X86_RBX },
-
-                { "cl", Register::X86_CL },
-                { "ch", Register::X86_CH },
-                { "cx", Register::X86_CX },
-                { "ecx", Register::X86_ECX },
-                { "rcx", Register::X86_RCX },
-
-                { "dl", Register::X86_DL },
-                { "dh", Register::X86_DH },
-                { "dx", Register::X86_DX },
-                { "edx", Register::X86_EDX },
-                { "rdx", Register::X86_RDX },
-
-                { "sil", Register::X86_SIL },
-                { "si", Register::X86_SI },
-                { "esi", Register::X86_ESI },
-                { "rsi", Register::X86_RSI },
-
-                { "dil", Register::X86_DIL },
-                { "di", Register::X86_DI },
-                { "edi", Register::X86_EDI },
-                { "rdi", Register::X86_RDI },
-
-                { "bpl", Register::X86_BPL },
-                { "bp", Register::X86_BP },
-                { "ebp", Register::X86_EBP },
-                { "rbp", Register::X86_RBP },
-
-                { "spl", Register::X86_SPL },
-                { "sp", Register::X86_SP },
-                { "esp", Register::X86_ESP },
-                { "rsp", Register::X86_RSP },
-
-                { "r8b", Register::X86_R8B },
-                { "r8w", Register::X86_R8W },
-                { "r8d", Register::X86_R8D },
-                { "r8", Register::X86_R8 },
-
-                { "r9b", Register::X86_R9B },
-                { "r9w", Register::X86_R9W },
-                { "r9d", Register::X86_R9D },
-                { "r9", Register::X86_R9 },
-
-                { "r10b", Register::X86_R10B },
-                { "r10w", Register::X86_R10W },
-                { "r10d", Register::X86_R10D },
-                { "r10", Register::X86_R10 },
-
-                { "r11b", Register::X86_R11B },
-                { "r11w", Register::X86_R11W },
-                { "r11d", Register::X86_R11D },
-                { "r11", Register::X86_R11 },
-
-                { "r12b", Register::X86_R12B },
-                { "r12w", Register::X86_R12W },
-                { "r12d", Register::X86_R12D },
-                { "r12", Register::X86_R12 },
-
-                { "r13b", Register::X86_R13B },
-                { "r13w", Register::X86_R13W },
-                { "r13d", Register::X86_R13D },
-                { "r13", Register::X86_R13 },
-
-                { "r14b", Register::X86_R14B },
-                { "r14w", Register::X86_R14W },
-                { "r14d", Register::X86_R14D },
-                { "r14", Register::X86_R14 },
-
-                { "r15b", Register::X86_R15B },
-                { "r15w", Register::X86_R15W },
-                { "r15d", Register::X86_R15D },
-                { "r15", Register::X86_R15 },
-            },
-            .MnemonicNames = {
-                { "mov", Mnemonic::X86_MOV },
-                { "add", Mnemonic::X86_ADD },
-                { "sub", Mnemonic::X86_SUB },
-                { "imul", Mnemonic::X86_IMUL },
-                { "div", Mnemonic::X86_DIV },
-                { "inc", Mnemonic::X86_INC },
-                { "dec", Mnemonic::X86_DEC },
-                { "xor", Mnemonic::X86_XOR },
-                { "call", Mnemonic::X86_CALL },
-                { "ret", Mnemonic::X86_RET },
-                { "push", Mnemonic::X86_PUSH },
-                { "pop", Mnemonic::X86_POP },
-                { "jmp", Mnemonic::X86_JMP },
-                { "cmp", Mnemonic::X86_CMP },
-                { "jeq", Mnemonic::X86_JEQ },
-                { "jne", Mnemonic::X86_JNE },
-                { "jlt", Mnemonic::X86_JLT },
-                { "jle", Mnemonic::X86_JLE },
-                { "jgt", Mnemonic::X86_JGT },
-                { "jge", Mnemonic::X86_JGE },
-                { "syscall", Mnemonic::X86_SYSCALL },
+            .Mnemonics = {
+                { Mnemonic::X86_MOV, { .Name = "mov" } },
+                { Mnemonic::X86_ADD, { .Name = "add" } },
+                { Mnemonic::X86_SUB, { .Name = "sub" } },
+                { Mnemonic::X86_IMUL, { .Name = "imul" } },
+                { Mnemonic::X86_DIV, { .Name = "div" } },
+                { Mnemonic::X86_INC, { .Name = "inc" } },
+                { Mnemonic::X86_DEC, { .Name = "dec" } },
+                { Mnemonic::X86_XOR, { .Name = "xor" } },
+                { Mnemonic::X86_CALL, { .Name = "call" } },
+                { Mnemonic::X86_RET, { .Name = "ret" } },
+                { Mnemonic::X86_PUSH, { .Name = "push" } },
+                { Mnemonic::X86_POP, { .Name = "pop" } },
+                { Mnemonic::X86_JMP, { .Name = "jmp" } },
+                { Mnemonic::X86_CMP, { .Name = "cmp" } },
+                { Mnemonic::X86_JEQ, { .Name = "jeq" } },
+                { Mnemonic::X86_JNE, { .Name = "jne" } },
+                { Mnemonic::X86_JLT, { .Name = "jlt" } },
+                { Mnemonic::X86_JLE, { .Name = "jle" } },
+                { Mnemonic::X86_JGT, { .Name = "jgt" } },
+                { Mnemonic::X86_JGE, { .Name = "jge" } },
+                { Mnemonic::X86_SYSCALL, { .Name = "syscall" } },
             },
         };
+        break;
 
     case TargetArchitecture::PPC:
-        return {
+        isa = {
             .Architecture = TargetArchitecture::PPC,
             .Endianness = TargetEndianness::BigEndian,
             .Registers = {},
             .RegisterViews = {},
             .Mnemonics = {},
-            .RegisterNames = {},
-            .MnemonicNames = {},
         };
+        break;
 
     case TargetArchitecture::ARM:
-        return {
+        isa = {
             .Architecture = TargetArchitecture::ARM,
             .Endianness = TargetEndianness::LittleEndian,
             .Registers = {},
             .RegisterViews = {},
             .Mnemonics = {},
-            .RegisterNames = {},
-            .MnemonicNames = {},
         };
+        break;
 
     case TargetArchitecture::RiscV:
-        return {
+        isa = {
             .Architecture = TargetArchitecture::RiscV,
             .Endianness = TargetEndianness::LittleEndian,
             .Registers = {},
             .RegisterViews = {},
             .Mnemonics = {},
-            .RegisterNames = {},
-            .MnemonicNames = {},
         };
+        break;
+
+    default:
+        throw std::runtime_error("TODO");
     }
 
-    throw std::runtime_error("TODO");
+    for (auto &[fst, snd] : isa.RegisterViews)
+        isa.RegisterNames[snd.Name] = fst;
+
+    for (auto &[fst, snd] : isa.Mnemonics)
+        isa.MnemonicNames[snd.Name] = fst;
+
+    return isa;
 }
 
 scc::platform::TargetABI scc::platform::TargetTriple::GetABI() const

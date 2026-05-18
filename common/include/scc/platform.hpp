@@ -184,6 +184,7 @@ namespace scc::platform
 
     struct TargetMnemonic
     {
+        std::string_view Name;
     };
 
     struct TargetIR
