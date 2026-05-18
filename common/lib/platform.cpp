@@ -76,7 +76,7 @@ static std::vector<std::string_view> split(const std::string_view str)
     std::vector<std::string_view> result;
 
     size_t b, e;
-    for (b = 0, e = 0; (e = str.find('-', b)) != std::string_view::npos; b = e)
+    for (b = 0, e = 0; (e = str.find('-', b)) != std::string_view::npos; b = e + 1)
         if (b != e)
             result.push_back(str.substr(b, e - b));
 

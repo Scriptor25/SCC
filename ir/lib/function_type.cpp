@@ -57,7 +57,7 @@ std::ostream &scc::ir::FunctionType::Print(std::ostream &stream) const
     for (auto i = m_Arguments.begin(); i != m_Arguments.end(); ++i)
     {
         if (i != m_Arguments.begin())
-            stream << ',';
+            stream << ", ";
 
         (*i)->Print(stream);
     }
@@ -65,7 +65,7 @@ std::ostream &scc::ir::FunctionType::Print(std::ostream &stream) const
     if (m_Variadic)
     {
         if (!m_Arguments.empty())
-            stream << ',';
+            stream << ", ";
 
         stream << "...";
     }
@@ -83,7 +83,7 @@ size_t scc::ir::FunctionType::GetArgumentCount() const
     return m_Arguments.size();
 }
 
-scc::ir::Type *scc::ir::FunctionType::GetArgument(size_t index) const
+scc::ir::Type *scc::ir::FunctionType::GetArgument(const size_t index) const
 {
     return m_Arguments[index];
 }

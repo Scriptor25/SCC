@@ -71,12 +71,11 @@ std::ostream &scc::ir::CallInstruction::Print(std::ostream &stream) const
 
     const auto *type = m_Callee->GetType()->GetElement();
     const auto *function_type = dynamic_cast<const FunctionType *>(type);
-    const auto argument_count = function_type->GetArgumentCount();
 
     m_Callee->PrintOperand(function_type->Print(stream << "call ") << ' ', false);
 
-    for (size_t i = 0; i < m_Arguments.size(); ++i)
-        m_Arguments[i]->PrintOperand(stream << ", ", i >= argument_count);
+    for (const auto *argument : m_Arguments)
+        argument->PrintOperand(stream << ", ", true);
 
     return stream;
 }

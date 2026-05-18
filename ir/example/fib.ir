@@ -19,14 +19,13 @@ function i32 @fib(i32 %n) {
 .end:
     ret %a
 }
-
 function i32 @main(i32 %argc, [[i8]] %argv) {
 .entry:
     %np = element [[i8]] %argv, i64 0x1
     %ns = load [[i8]] %np
-    %n = call i32([i8]) @atoi, %ns
-    %r = call i32(i32) @fib, %n
+    %n = call i32([i8]) @atoi, [i8] %ns
+    %r = call i32(i32) @fib, i32 %n
     %f = element [[i8 x 15]] @format, i64 0x0, i64 0x0
-    call i32([i8], ...) @printf, %f, i32 %n, i32 %r
+    call i32([i8], ...) @printf, [i8] %f, i32 %n, i32 %r
     ret %r
 }

@@ -837,14 +837,7 @@ scc::ir::Instruction *scc::ir::Parser::ParseCallInstruction(Module &module, Buil
     {
         Expect(TokenType::Other, ",");
 
-        const auto index = arguments.size();
-
-        Type *argument_type;
-        if (index < argument_count)
-            argument_type = function_type->GetArgument(index);
-        else
-            argument_type = ParseType(context);
-
+        auto *argument_type = ParseType(context);
         auto *argument = ParseValue(module, builder, argument_type);
 
         arguments.push_back(argument);
