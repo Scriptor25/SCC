@@ -11,7 +11,7 @@ scc::ir::Module::~Module()
 {
     for (auto &symbol : m_Symbols)
     {
-        symbol->ReplaceWith(nullptr);
+        symbol->ReplaceWith({});
         symbol->DropAll();
         symbol.reset();
     }

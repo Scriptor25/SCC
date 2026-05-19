@@ -20,11 +20,15 @@ int main(int argc, const char **argv)
     auto platform = triple.GetPlatform({});
 
     scc::ir::Context context(platform);
-    scc::ir::Parser parser(in);
 
-    auto module = parser.ParseModule(context);
+    scc::ir::Module module;
+    scc::ir::Parser parser(in, context, module);
+
+    parser.Parse();
 
     module.Print(std::cout);
+
+    // TODO: print assembly
 
     return 0;
 }

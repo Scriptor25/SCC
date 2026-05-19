@@ -12,7 +12,7 @@ namespace scc::ir
     public:
         explicit Global(Type *type, std::string name);
 
-        [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
+        std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
 
         [[nodiscard]] bool Compare(Constant *value) const override;
 

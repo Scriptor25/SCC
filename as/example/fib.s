@@ -1,63 +1,59 @@
 .set STACK_SIZE, 0x800
 .set FORMAT_BUFFER_SIZE, 0x100
 
-.set FORMAT_STRING_0_LENGTH, (.string_length format_string_0)
-.set FORMAT_STRING_1_LENGTH, (.string_length format_string_1)
-.set FORMAT_STRING_2_LENGTH, (.string_length format_string_2)
-
 .section .text
 
 # compute fib of n, write result to stdout with format "fib(<n>) = <result>\n"
 _start:
     # setup stack
-    mov %rsp, stack_top
+    mov %rsp, $stack_top
 
     # a = fib(10)
-    mov %rdi, 0x0A
+    mov %rdi, $0x0A
     call fib
 
     mov %r12, %rax  # _12 = a
 
     # write(1, format_string_0, FORMAT_STRING_0_LENGTH)
-    mov %rdi, 0x01
-    mov %rsi, format_string_0
-    mov %rdx, FORMAT_STRING_0_LENGTH
+    mov %rdi, $0x01
+    mov %rsi, $format_string_0
+    mov %rdx, $FORMAT_STRING_0_LENGTH
     call write
 
     # a = itoa(10, format_buffer, FORMAT_BUFFER_SIZE)
-    mov %rdi, 0x0A
-    mov %rsi, format_buffer
-    mov %rdx, FORMAT_BUFFER_SIZE
+    mov %rdi, $0x0A
+    mov %rsi, $format_buffer
+    mov %rdx, $FORMAT_BUFFER_SIZE
     call itoa
 
     # write(1, format_buffer, a)
-    mov %rdi, 0x01
-    mov %rsi, format_buffer
+    mov %rdi, $0x01
+    mov %rsi, $format_buffer
     mov %rdx, %rax
     call write
 
     # write(1, format_string_1, FORMAT_STRING_1_LENGTH)
-    mov %rdi, 0x01
-    mov %rsi, format_string_1
-    mov %rdx, FORMAT_STRING_1_LENGTH
+    mov %rdi, $0x01
+    mov %rsi, $format_string_1
+    mov %rdx, $FORMAT_STRING_1_LENGTH
     call write
 
     # a = itoa(_12, format_buffer, FORMAT_BUFFER_SIZE)
     mov %rdi, %r12
-    mov %rsi, format_buffer
-    mov %rdx, FORMAT_BUFFER_SIZE
+    mov %rsi, $format_buffer
+    mov %rdx, $FORMAT_BUFFER_SIZE
     call itoa
 
     # write(1, format_buffer, a)
-    mov %rdi, 0x01
-    mov %rsi, format_buffer
+    mov %rdi, $0x01
+    mov %rsi, $format_buffer
     mov %rdx, %rax
     call write
 
     # write(1, format_string_2, FORMAT_STRING_2_LENGTH)
-    mov %rdi, 0x01
-    mov %rsi, format_string_2
-    mov %rdx, FORMAT_STRING_2_LENGTH
+    mov %rdi, $0x01
+    mov %rsi, $format_string_2
+    mov %rdx, $FORMAT_STRING_2_LENGTH
     call write
 
     # exit(0)
@@ -75,12 +71,12 @@ fib:
     # save registers
     push %rbx
 
-    mov %rax, 0x00  # a = 0
-    mov %rbx, 0x01  # b = 1
+    mov %rax, $0x00 # a = 0
+    mov %rbx, $0x01 # b = 1
 
 .loop:
-    cmp %rdi, 0x00
-    jle .done   # if n <= 0, goto .done
+    cmp %rdi, $0x00
+    jle .done       # if n <= 0, goto .done
 
     mov %rcx, %rax  # c = a
     add %rcx, %rbx  # c += b
@@ -88,7 +84,7 @@ fib:
     mov %rax, %rbx  # a = b
     mov %rbx, %rcx  # b = c
 
-    dec %rdi  # n--
+    dec %rdi        # n--
 
     jmp .loop
 
@@ -120,23 +116,23 @@ itoa:
 
     mov %rax, %rdi  # a = value
 
-    mov (%rsi, %rcx), 0x00  # buffer[c] = 0
+    mov (%rsi, %rcx), $0x00 # buffer[c] = 0
     dec %rcx                # c--
 
 .loop:
-    cmp %rcx, 0x00
-    jlt .done   # if c < 0, goto .done
+    cmp %rcx, $0x00
+    jlt .done       # if c < 0, goto .done
 
     xor %rdx, %rdx  # d = 0
-    mov %rbx, 0x0A  # b = 10
+    mov %rbx, $0x0A # b = 10
     div %rbx        # a = a / b, d = a % b
 
-    add %dl, '0'    # d += '0'
+    add %dl, $'0'   # d += '0'
 
     mov (%rsi, %rcx), %dl   # buffer[c] = d
     dec %rcx                # c--
 
-    cmp %rax, 0x00
+    cmp %rax, $0x00
     jne .loop   # if a != 0, goto .loop
 
 .done:
@@ -175,23 +171,23 @@ itoa:
 
 # void write(int fd, const void *buffer, int count)
 write:
-    mov %rax, 0x01  # a = 1
+    mov %rax, $0x01 # a = 1
     syscall         # write
     ret
 
 # void exit(int value)
 exit:
-    mov %rax, 0x3C  # a = 60
+    mov %rax, $0x3C # a = 60
     syscall         # exit
 
 .section .bss
 
 stack_end:
-    .skip STACK_SIZE
+    .fill STACK_SIZE, 0x00
 stack_top:
 
 format_buffer:
-    .skip FORMAT_BUFFER_SIZE
+    .fill FORMAT_BUFFER_SIZE, 0x00
 
 .section .rodata
 
@@ -201,3 +197,7 @@ format_string_1:
     .string ") = "
 format_string_2:
     .string "\n"
+
+.set FORMAT_STRING_0_LENGTH, (.sub (.length format_string_0), 0x01)
+.set FORMAT_STRING_1_LENGTH, (.sub (.length format_string_1), 0x01)
+.set FORMAT_STRING_2_LENGTH, (.sub (.length format_string_2), 0x01)

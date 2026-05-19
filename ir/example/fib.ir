@@ -19,6 +19,7 @@ function i32 @fib(i32 %n) {
 .end:
     ret %a
 }
+
 function i32 @main(i32 %argc, [[i8]] %argv) {
 .entry:
     %np = element [[i8]] %argv, i64 0x1
@@ -28,4 +29,9 @@ function i32 @main(i32 %argc, [[i8]] %argv) {
     %f = element [[i8 x 15]] @format, i64 0x0, i64 0x0
     call i32([i8], ...) @printf, [i8] %f, i32 %n, i32 %r
     ret %r
+}
+
+function f32 @pi() {
+.entry:
+    ret 0x40490FDB
 }

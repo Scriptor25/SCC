@@ -45,7 +45,7 @@ namespace scc::ir
         Xor,
     };
 
-    class OperatorInstruction final : public Instruction
+    class OperatorInstruction : public Instruction
     {
     public:
         explicit OperatorInstruction(
@@ -84,7 +84,7 @@ namespace scc::ir
         NEQ,
     };
 
-    class ComparatorInstruction final : public Instruction
+    class ComparatorInstruction : public Instruction
     {
     public:
         explicit ComparatorInstruction(
@@ -110,7 +110,7 @@ namespace scc::ir
         Value *m_LHS, *m_RHS;
     };
 
-    class DirectBranchInstruction final : public Instruction
+    class DirectBranchInstruction : public Instruction
     {
     public:
         explicit DirectBranchInstruction(
@@ -134,7 +134,7 @@ namespace scc::ir
         Block *m_Destination;
     };
 
-    class BranchInstruction final : public Instruction
+    class BranchInstruction : public Instruction
     {
     public:
         explicit BranchInstruction(
@@ -163,7 +163,7 @@ namespace scc::ir
         Block *m_Then, *m_Else;
     };
 
-    class ReturnInstruction final : public Instruction
+    class ReturnInstruction : public Instruction
     {
     public:
         explicit ReturnInstruction(
@@ -188,7 +188,7 @@ namespace scc::ir
         Value *m_Value;
     };
 
-    class SelectInstruction final : public Instruction
+    class SelectInstruction : public Instruction
     {
     public:
         explicit SelectInstruction(
@@ -211,7 +211,7 @@ namespace scc::ir
         std::vector<std::pair<Block *, Value *>> m_Nodes;
     };
 
-    class AllocInstruction final : public Instruction
+    class AllocInstruction : public Instruction
     {
     public:
         explicit AllocInstruction(
@@ -228,7 +228,7 @@ namespace scc::ir
         uint64_t m_Count;
     };
 
-    class LoadInstruction final : public Instruction
+    class LoadInstruction : public Instruction
     {
     public:
         explicit LoadInstruction(
@@ -249,7 +249,7 @@ namespace scc::ir
         Value *m_Pointer;
     };
 
-    class StoreInstruction final : public Instruction
+    class StoreInstruction : public Instruction
     {
     public:
         explicit StoreInstruction(
@@ -272,7 +272,7 @@ namespace scc::ir
         Value *m_Value;
     };
 
-    class ElementPointerInstruction final : public Instruction
+    class ElementPointerInstruction : public Instruction
     {
     public:
         explicit ElementPointerInstruction(
@@ -297,7 +297,7 @@ namespace scc::ir
         std::vector<Value *> m_Indices;
     };
 
-    class CallInstruction final : public Instruction
+    class CallInstruction : public Instruction
     {
     public:
         explicit CallInstruction(
@@ -322,7 +322,7 @@ namespace scc::ir
         std::vector<Value *> m_Arguments;
     };
 
-    class CastInstruction final : public Instruction
+    class CastInstruction : public Instruction
     {
     public:
         explicit CastInstruction(

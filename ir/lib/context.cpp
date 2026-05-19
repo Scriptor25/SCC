@@ -14,7 +14,7 @@ scc::ir::Context::~Context()
 {
     for (auto &constant : m_Constants)
     {
-        constant->ReplaceWith(nullptr);
+        constant->ReplaceWith({});
         constant->DropAll();
         constant.reset();
     }

@@ -28,12 +28,12 @@ void scc::ir::ComparatorInstruction::DropAll()
     if (m_LHS)
     {
         m_LHS->Drop(this);
-        m_LHS = nullptr;
+        m_LHS = {};
     }
     if (m_RHS)
     {
         m_RHS->Drop(this);
-        m_RHS = nullptr;
+        m_RHS = {};
     }
 }
 

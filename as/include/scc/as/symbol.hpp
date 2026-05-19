@@ -10,23 +10,28 @@ namespace scc::as
     {
     public:
         explicit Symbol(std::string name = {});
-        explicit Symbol(Fragment &fragment, std::string name = {});
         explicit Symbol(Section &section, size_t index, std::string name = {});
 
         void SetName(std::string name);
-        void SetFragment(Fragment &fragment);
-        void SetFragment(Section &section, size_t index);
+        void SetLocation(Section &section, size_t index);
+        void SetAddress(size_t address);
 
         [[nodiscard]] const std::string &GetName() const;
+
+        [[nodiscard]] bool IsResolved() const;
+
+        [[nodiscard]] Section *GetSection() const;
+        [[nodiscard]] size_t GetIndex() const;
+
         [[nodiscard]] Fragment *GetFragment() const;
 
-        Fragment &operator*() const;
-        Fragment *operator->() const;
-
-        explicit operator bool() const;
+        [[nodiscard]] Immediate GetAddress() const;
 
     private:
         std::string m_Name;
-        Fragment *m_Fragment;
+
+        bool m_Resolved;
+        Section *m_Section;
+        size_t m_Index;
     };
 }

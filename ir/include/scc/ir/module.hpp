@@ -9,7 +9,7 @@
 
 namespace scc::ir
 {
-    class Module final
+    class Module
     {
     public:
         Module() = default;

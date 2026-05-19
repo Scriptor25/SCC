@@ -7,7 +7,7 @@
 
 namespace scc::ir
 {
-    class Variable final : public Global
+    class Variable : public Global
     {
     public:
         explicit Variable(Type *type, std::string name, Constant *initializer);

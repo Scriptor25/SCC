@@ -8,7 +8,7 @@
 
 namespace scc::ir
 {
-    class Argument final : public Value
+    class Argument : public Value
     {
     public:
         explicit Argument(Type *type);

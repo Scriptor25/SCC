@@ -29,14 +29,14 @@ void scc::ir::CallInstruction::DropAll()
     if (m_Callee)
     {
         m_Callee->Drop(this);
-        m_Callee = nullptr;
+        m_Callee = {};
     }
 
     for (auto &argument : m_Arguments)
         if (argument)
         {
             argument->Drop(this);
-            argument = nullptr;
+            argument = {};
         }
 
     m_Arguments.clear();

@@ -14,13 +14,6 @@ scc::as::Symbol *scc::as::Module::CreateSymbol(std::string name)
     return m_Symbols.back().get();
 }
 
-scc::as::Symbol *scc::as::Module::CreateSymbol(Fragment &fragment, std::string name)
-{
-    m_Symbols.push_back(std::make_unique<Symbol>(fragment, std::move(name)));
-
-    return m_Symbols.back().get();
-}
-
 scc::as::Symbol *scc::as::Module::CreateSymbol(Section &section, const size_t index, std::string name)
 {
     m_Symbols.push_back(std::make_unique<Symbol>(section, index, std::move(name)));
@@ -34,7 +27,7 @@ scc::as::Section *scc::as::Module::GetSection(const std::string &name) const
         if (section->GetName() == name)
             return section.get();
 
-    return nullptr;
+    return {};
 }
 
 scc::as::Symbol *scc::as::Module::GetSymbol(const std::string &name) const
@@ -43,16 +36,29 @@ scc::as::Symbol *scc::as::Module::GetSymbol(const std::string &name) const
         if (symbol->GetName() == name)
             return symbol.get();
 
-    return nullptr;
+    return {};
 }
 
-scc::as::Symbol *scc::as::Module::GetSymbol(Fragment *fragment) const
+std::vector<scc::as::Symbol *> scc::as::Module::GetSymbols(const Section &section, const size_t index) const
 {
-    for (auto &symbol : m_Symbols)
-        if (symbol->GetFragment() == fragment)
-            return symbol.get();
+    std::vector<Symbol *> symbols;
 
-    return nullptr;
+    for (auto &symbol : m_Symbols)
+        if (symbol->GetSection() == &section && symbol->GetIndex() == index)
+            symbols.push_back(symbol.get());
+
+    return symbols;
+}
+
+std::vector<scc::as::Symbol *> scc::as::Module::GetSymbols(const Fragment &fragment) const
+{
+    std::vector<Symbol *> symbols;
+
+    for (auto &symbol : m_Symbols)
+        if (symbol->GetFragment() == &fragment)
+            symbols.push_back(symbol.get());
+
+    return symbols;
 }
 
 scc::as::Section *scc::as::Module::GetOrCreateSection(const std::string &name)

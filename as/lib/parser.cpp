@@ -1,14 +1,17 @@
+#include <scc/as/data.hpp>
+#include <scc/as/fill.hpp>
 #include <scc/as/instruction.hpp>
 #include <scc/as/module.hpp>
 #include <scc/as/operand.hpp>
 #include <scc/as/parser.hpp>
 
+#include <scc/assert.hpp>
+#include <scc/error.hpp>
 #include <scc/platform.hpp>
 
 #include <istream>
 #include <memory>
 #include <vector>
-#include <scc/assert.hpp>
 
 static bool isdigit(const int c, const int base)
 {
@@ -30,7 +33,7 @@ scc::as::Parser::Parser(std::istream &stream, const Platform &platform, Module &
       m_Platform(platform),
       m_Module(module),
       m_Section(module.GetOrCreateSection(".text")),
-      m_Symbol()
+      m_Primary()
 {
     m_Buffer = m_Stream.get();
     m_Token = Get();
@@ -156,8 +159,8 @@ scc::as::Token scc::as::Parser::Get()
             if (!isdigit(m_Buffer, base))
             {
                 const auto immediate = sign
-                                           ? static_cast<Immediate>(std::stoll(value, nullptr, base))
-                                           : std::stoull(value, nullptr, base);
+                                           ? static_cast<Immediate>(std::stoll(value, {}, base))
+                                           : std::stoull(value, {}, base);
                 return {
                     .Type = TokenType::Immediate,
                     .Raw = std::move(raw),
@@ -200,6 +203,39 @@ scc::as::Token scc::as::Parser::Get()
                     .Raw = std::move(raw),
                     .Value = std::move(value),
                 };
+            }
+
+            if (m_Buffer == '\\')
+            {
+                m_Buffer = m_Stream.get();
+
+                switch (m_Buffer)
+                {
+                case 'a':
+                    m_Buffer = '\a';
+                    break;
+                case 'b':
+                    m_Buffer = '\b';
+                    break;
+                case 'f':
+                    m_Buffer = '\f';
+                    break;
+                case 'n':
+                    m_Buffer = '\n';
+                    break;
+                case 'r':
+                    m_Buffer = '\r';
+                    break;
+                case 't':
+                    m_Buffer = '\t';
+                    break;
+                case 'v':
+                    m_Buffer = '\v';
+                    break;
+
+                default:
+                    break;
+                }
             }
 
             raw += static_cast<char>(m_Buffer);
@@ -245,17 +281,6 @@ scc::as::Token scc::as::Parser::Skip()
     return t;
 }
 
-scc::as::Token scc::as::Parser::Expect(const TokenType type, const std::string &value)
-{
-    if (m_Token.Type != type)
-        throw std::runtime_error("TODO");
-
-    if (!value.empty() && m_Token.Value != value)
-        throw std::runtime_error("TODO");
-
-    return Skip();
-}
-
 bool scc::as::Parser::At(const TokenType type, const std::string &value) const
 {
     if (m_Token.Type != type)
@@ -276,6 +301,17 @@ bool scc::as::Parser::Skip(const TokenType type, const std::string &value)
     return true;
 }
 
+scc::as::Token scc::as::Parser::Expect(const TokenType type, const std::string &value)
+{
+    if (m_Token.Type != type)
+        Error("TODO");
+
+    if (!value.empty() && m_Token.Value != value)
+        Error("TODO");
+
+    return Skip();
+}
+
 void scc::as::Parser::Parse()
 {
     while (m_Token.Type != TokenType::EndOfFile)
@@ -286,62 +322,74 @@ void scc::as::Parser::ParseLine()
 {
     if (At(TokenType::Label))
     {
-        const auto label = Skip().Value;
-        m_Symbol = m_Module.GetOrCreateSymbol(label);
+        auto label = Skip().Value;
+
+        const auto local = label.front() == '.';
+
+        if (local)
+        {
+            Assert(!!m_Primary, "local label '{}' in global space", label);
+
+            label = m_Primary->GetName() + label;
+        }
+
+        auto *symbol = m_Module.GetOrCreateSymbol(label);
+        symbol->SetLocation(*m_Section, m_Section->GetFragmentCount());
+
+        if (!local)
+        {
+            m_Primary = symbol;
+        }
     }
 
-    if (At(TokenType::EndOfLine))
+    if (Skip(TokenType::EndOfLine))
+        return;
+
+    if (Skip(TokenType::Symbol, ".section"))
     {
-        Next();
+        const auto name = Expect(TokenType::Symbol).Value;
+
+        m_Section = m_Module.GetOrCreateSection(name);
+
+        Expect(TokenType::EndOfLine);
         return;
     }
 
     if (At(TokenType::Symbol) && m_Token.Value.front() == '.')
     {
-        auto directive = Skip().Value;
+        const auto directive = Skip().Value;
+        std::vector<OperandPtr> operands;
 
         while (!At(TokenType::EndOfLine))
         {
-            ParseDirectiveArg();
+            operands.push_back(ParseDirectiveOperand());
 
             if (!At(TokenType::EndOfLine))
                 Expect(TokenType::Other, ",");
         }
 
-        if (m_Symbol)
-        {
-            // TODO: set symbol fragment
-            m_Symbol = {};
-        }
+        Evaluate(directive, operands);
     }
     else
     {
-        auto *fragment = m_Section->Insert(ParseInstruction());
-
-        if (m_Symbol)
-        {
-            m_Symbol->SetFragment(*fragment);
-            m_Symbol = {};
-        }
+        m_Section->Insert(ParseInstruction());
     }
 
     Expect(TokenType::EndOfLine);
 }
 
-void scc::as::Parser::ParseDirectiveArg()
+scc::as::OperandPtr scc::as::Parser::ParseDirectiveOperand()
 {
     if (Skip(TokenType::Other, "("))
     {
-        auto directive = Expect(TokenType::Symbol).Value;
-        // TODO: use directive
+        const auto directive = Expect(TokenType::Symbol).Value;
+        std::vector<OperandPtr> operands;
 
-        if (directive.front() != '.')
-            throw std::runtime_error("TODO");
+        Assert(directive.front() == '.', "TODO");
 
         while (!At(TokenType::Other, ")"))
         {
-            ParseDirectiveArg();
-            // TODO: use directive arg
+            operands.push_back(ParseDirectiveOperand());
 
             if (!At(TokenType::Other, ")"))
                 Expect(TokenType::Other, ",");
@@ -349,34 +397,31 @@ void scc::as::Parser::ParseDirectiveArg()
 
         Expect(TokenType::Other, ")");
 
-        return;
+        return Evaluate(directive, operands);
     }
 
     if (At(TokenType::Symbol))
     {
-        auto symbol = Skip();
-        // TODO: use symbol
+        const auto name = Skip().Value;
 
-        return;
+        return std::make_unique<SymbolAddressOperand>(m_Platform, m_Module.GetOrCreateSymbol(name));
     }
 
     if (At(TokenType::Immediate))
     {
-        auto immediate = Skip();
-        // TODO: use immediate
+        auto immediate = Skip().Immediate;
 
-        return;
+        return std::make_unique<ImmediateOperand>(m_Platform, immediate);
     }
 
     if (At(TokenType::String))
     {
-        auto string = Skip();
-        // TODO: use string
+        auto string = Skip().Value;
 
-        return;
+        return std::make_unique<StringOperand>(m_Platform, std::move(string));
     }
 
-    throw std::runtime_error("TODO");
+    Error("TODO");
 }
 
 scc::as::Instruction scc::as::Parser::ParseInstruction()
@@ -394,9 +439,9 @@ scc::as::Instruction scc::as::Parser::ParseInstruction()
     return Instruction(m_Platform, it->second, std::move(operands));
 }
 
-std::vector<std::unique_ptr<scc::as::Operand>> scc::as::Parser::ParseOperands()
+std::vector<scc::as::OperandPtr> scc::as::Parser::ParseOperands()
 {
-    std::vector<std::unique_ptr<Operand>> operands;
+    std::vector<OperandPtr> operands;
 
     do
         operands.push_back(ParseOperand());
@@ -405,13 +450,33 @@ std::vector<std::unique_ptr<scc::as::Operand>> scc::as::Parser::ParseOperands()
     return operands;
 }
 
-std::unique_ptr<scc::as::Operand> scc::as::Parser::ParseOperand()
+scc::as::OperandPtr scc::as::Parser::ParseOperand()
 {
-    if (At(TokenType::Symbol))
+    if (Skip(TokenType::Other, "$"))
     {
-        const auto name = Skip().Value;
+        if (At(TokenType::Symbol))
+        {
+            auto label = Skip().Value;
 
-        return std::make_unique<SymbolOperand>(m_Platform, m_Module.GetOrCreateSymbol(name));
+            if (label.front() == '.')
+            {
+                Assert(!!m_Primary, "local label '{}' in global space", label);
+
+                label = m_Primary->GetName() + label;
+            }
+
+            return std::make_unique<SymbolAddressOperand>(m_Platform, m_Module.GetOrCreateSymbol(label));
+        }
+
+        if (At(TokenType::Immediate))
+        {
+            auto value = Skip().Immediate;
+
+            if (!At(TokenType::Other, "("))
+                return std::make_unique<ImmediateOperand>(m_Platform, value);
+        }
+
+        Error("TODO");
     }
 
     if (At(TokenType::Register))
@@ -424,13 +489,27 @@ std::unique_ptr<scc::as::Operand> scc::as::Parser::ParseOperand()
         return std::make_unique<RegisterOperand>(m_Platform, it->second);
     }
 
-    Immediate immediate{};
-    bool has_immediate{};
+    if (At(TokenType::Symbol))
+    {
+        auto label = Skip().Value;
 
+        if (label.front() == '.')
+        {
+            Assert(!!m_Primary, "local label '{}' in global space", label);
+
+            label = m_Primary->GetName() + label;
+        }
+
+        return std::make_unique<SymbolOperand>(m_Platform, m_Module.GetOrCreateSymbol(label));
+    }
+
+    Immediate immediate{};
     if (At(TokenType::Immediate))
     {
         immediate = Skip().Immediate;
-        has_immediate = true;
+
+        if (!At(TokenType::Other, "("))
+            return std::make_unique<DirectOperand>(m_Platform, immediate);
     }
 
     if (Skip(TokenType::Other, "("))
@@ -478,8 +557,125 @@ std::unique_ptr<scc::as::Operand> scc::as::Parser::ParseOperand()
             scale);
     }
 
-    if (has_immediate)
-        return std::make_unique<ImmediateOperand>(m_Platform, immediate);
+    Error("TODO");
+}
 
-    throw std::runtime_error("TODO");
+static scc::as::OperandPtr directive_set(
+    const scc::as::EvaluationContext &context,
+    const std::vector<scc::as::OperandPtr> &operands)
+{
+    scc::Assert(operands.size() == 2, ".set requires 2 operands");
+
+    const auto *dst = dynamic_cast<scc::as::SymbolAddressOperand *>(operands[0].get());
+    scc::Assert(!!dst, "1st operand for .set must be symbol");
+
+    auto *symbol = dst->GetSymbol();
+    const auto value = operands[1]->GetImmediate();
+
+    symbol->SetAddress(value);
+
+    return {};
+}
+
+static scc::as::OperandPtr directive_add(
+    const scc::as::EvaluationContext &context,
+    const std::vector<scc::as::OperandPtr> &operands)
+{
+    scc::Assert(operands.size() == 2, ".add requires 2 operands");
+
+    const auto lhs = operands[0]->GetImmediate();
+    const auto rhs = operands[1]->GetImmediate();
+
+    return std::make_unique<scc::as::ImmediateOperand>(context.MPlatform, lhs + rhs);
+}
+
+static scc::as::OperandPtr directive_sub(
+    const scc::as::EvaluationContext &context,
+    const std::vector<scc::as::OperandPtr> &operands)
+{
+    scc::Assert(operands.size() == 2, ".sub requires 2 operands");
+
+    const auto lhs = operands[0]->GetImmediate();
+    const auto rhs = operands[1]->GetImmediate();
+
+    return std::make_unique<scc::as::ImmediateOperand>(context.MPlatform, lhs - rhs);
+}
+
+static scc::as::OperandPtr directive_length(
+    const scc::as::EvaluationContext &context,
+    const std::vector<scc::as::OperandPtr> &operands)
+{
+    scc::Assert(operands.size() == 1, ".length requires 1 operand");
+
+    const auto *src = dynamic_cast<scc::as::SymbolAddressOperand *>(operands[0].get());
+
+    scc::Assert(!!src, "1st operand for .length must be symbol");
+
+    const auto *symbol = src->GetSymbol();
+    const auto *fragment = dynamic_cast<scc::as::Data *>(symbol->GetFragment());
+
+    auto value = fragment->GetData().size();
+
+    return std::make_unique<scc::as::ImmediateOperand>(context.MPlatform, value);
+}
+
+static scc::as::OperandPtr directive_fill(
+    const scc::as::EvaluationContext &context,
+    const std::vector<scc::as::OperandPtr> &operands)
+{
+    scc::Assert(operands.size() == 2, ".fill requires 2 operands");
+
+    auto count = operands[0]->GetImmediate();
+    auto value = operands[1]->GetImmediate();
+
+    context.MSection->Insert(std::make_unique<scc::as::Fill>(count, value));
+
+    return {};
+}
+
+static scc::as::OperandPtr directive_string(
+    const scc::as::EvaluationContext &context,
+    const std::vector<scc::as::OperandPtr> &operands)
+{
+    scc::Assert(operands.size() == 1, ".string requires 1 operands");
+
+    const auto *operand = dynamic_cast<scc::as::StringOperand *>(operands[0].get());
+
+    auto &value = operand->GetValue();
+
+    std::vector<uint8_t> data(value.size() + 1);
+    for (size_t i = 0; i < value.size(); ++i)
+        data[i] = value[i];
+    data[value.size()] = 0;
+
+    context.MSection->Insert(std::make_unique<scc::as::Data>(std::move(data)));
+
+    return {};
+}
+
+scc::as::OperandPtr scc::as::Parser::Evaluate(
+    const std::string &directive,
+    const std::vector<OperandPtr> &operands)
+{
+    static const std::unordered_map<std::string, OperandPtr(*)(
+        const EvaluationContext &,
+        const std::vector<OperandPtr> &)> map
+    {
+        { ".set", directive_set },
+        { ".add", directive_add },
+        { ".sub", directive_sub },
+        { ".length", directive_length },
+        { ".fill", directive_fill },
+        { ".string", directive_string },
+    };
+
+    const auto it = map.find(directive);
+    Assert(it != map.end(), "undefined directive '{}'", directive);
+
+    return it->second(
+        {
+            .MPlatform = m_Platform,
+            .MSection = m_Section,
+        },
+        operands);
 }

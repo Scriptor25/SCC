@@ -22,7 +22,7 @@ void scc::ir::ConstantStruct::DropAll()
         if (element)
         {
             element->Drop(this);
-            element = nullptr;
+            element = {};
         }
 
     m_Elements.clear();

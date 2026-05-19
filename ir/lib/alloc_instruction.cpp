@@ -24,7 +24,7 @@ std::ostream &scc::ir::AllocInstruction::Print(std::ostream &stream) const
     if (m_Count == 1)
         return stream;
 
-    return stream << " 0x" << std::hex << m_Count;
+    return stream << std::format(" 0x{:X}", m_Count);
 }
 
 uint64_t scc::ir::AllocInstruction::GetCount() const

@@ -12,11 +12,116 @@
 #include <map>
 #include <unordered_map>
 
-scc::ir::Parser::Parser(std::istream &stream)
-    : m_Stream(stream)
+scc::ir::Parser::Parser(std::istream &stream, Context &context, Module &module)
+    : m_Stream(stream),
+      m_Context(context),
+      m_Module(module),
+      m_Builder(context)
 {
     m_Buffer = m_Stream.get();
     Next();
+}
+
+void scc::ir::Parser::Parse()
+{
+    while (m_Token.Type != TokenType::EndOfFile)
+    {
+        if (Skip(TokenType::EndOfLine))
+            continue;
+
+        if (Skip(TokenType::Identifier, "variable"))
+        {
+            Expect(TokenType::Other, "@");
+
+            auto name = Expect(TokenType::Identifier).Value;
+
+            Expect(TokenType::Other, "=");
+
+            auto *type = ParseType();
+            auto *value = ParseConstant(type);
+
+            m_Module.CreateVariable(type, std::move(name), value);
+
+            Expect(TokenType::EndOfLine);
+            continue;
+        }
+
+        if (Skip(TokenType::Identifier, "function"))
+        {
+            auto *result = ParseType();
+
+            Expect(TokenType::Other, "@");
+
+            auto name = Expect(TokenType::Identifier).Value;
+
+            auto variadic = false;
+
+            std::vector<Type *> arguments;
+            std::vector<std::string> labels;
+
+            Expect(TokenType::Other, "(");
+
+            while (!At(TokenType::Other, ")"))
+            {
+                if (Skip(TokenType::Other, "..."))
+                {
+                    variadic = true;
+                    break;
+                }
+
+                arguments.push_back(ParseType());
+
+                auto &label = labels.emplace_back();
+
+                if (Skip(TokenType::Other, "%"))
+                    label = Expect(TokenType::Identifier).Value;
+
+                if (!At(TokenType::Other, ")"))
+                    Expect(TokenType::Other, ",");
+            }
+
+            Expect(TokenType::Other, ")");
+
+            auto *type = m_Context.GetFunctionType(result, std::move(arguments), variadic);
+            auto *function = m_Module.CreateFunction(type, std::move(name));
+
+            for (size_t i = 0; i < labels.size(); ++i)
+                if (!labels[i].empty())
+                    function->GetArgument(i)->SetName(std::move(labels[i]));
+
+            if (Skip(TokenType::Other, "{"))
+            {
+                Expect(TokenType::EndOfLine);
+
+                while (!At(TokenType::Other, "}"))
+                {
+                    if (Skip(TokenType::Other, "."))
+                    {
+                        auto block_name = Expect(TokenType::Identifier).Value;
+                        Expect(TokenType::Other, ":");
+                        Expect(TokenType::EndOfLine);
+
+                        auto *block = m_Builder.GetOrCreateBlock(function, std::move(block_name));
+                        m_Builder.SetInsertBlock(block);
+                    }
+
+                    ParseInstruction();
+                    Expect(TokenType::EndOfLine);
+                }
+
+                Expect(TokenType::Other, "}");
+
+                m_Builder.ClearInsertBlock();
+            }
+
+            Expect(TokenType::EndOfLine);
+            continue;
+        }
+
+        std::cout << m_Token.Type << ':' << m_Token.Value << std::endl;
+
+        Next();
+    }
 }
 
 int scc::ir::Parser::Get()
@@ -153,7 +258,7 @@ scc::ir::Token &scc::ir::Parser::Next()
                 break;
             }
             {
-                const auto int_value = std::stoull(value, nullptr, static_cast<int>(base));
+                const auto int_value = std::stoull(value, {}, static_cast<int>(base));
                 return m_Token = { .Type = TokenType::Integer, .Value = std::move(value), .IntValue = int_value };
             }
 
@@ -205,7 +310,7 @@ scc::ir::Token &scc::ir::Parser::Next()
                         buffer[1] = static_cast<char>(m_Buffer);
                         buffer[2] = 0;
 
-                        m_Buffer = std::stoi(buffer, nullptr, 0x10);
+                        m_Buffer = std::stoi(buffer, {}, 0x10);
                         break;
                     }
                     default:
@@ -315,119 +420,12 @@ scc::ir::Token scc::ir::Parser::Expect(const TokenType type, const std::vector<s
     Error("unexpected token");
 }
 
-scc::ir::Module scc::ir::Parser::ParseModule(Context &context)
-{
-    Module module;
-    Builder builder(context);
-
-    while (m_Token.Type != TokenType::EndOfFile)
-    {
-        if (Skip(TokenType::EndOfLine))
-            continue;
-
-        if (Skip(TokenType::Identifier, "variable"))
-        {
-            Expect(TokenType::Other, "@");
-
-            auto name = Expect(TokenType::Identifier).Value;
-
-            Expect(TokenType::Other, "=");
-
-            auto *type = ParseType(context);
-            auto *value = ParseConstant(builder, type);
-
-            module.CreateVariable(type, std::move(name), value);
-
-            Expect(TokenType::EndOfLine);
-            continue;
-        }
-
-        if (Skip(TokenType::Identifier, "function"))
-        {
-            auto *result = ParseType(builder.GetContext());
-
-            Expect(TokenType::Other, "@");
-
-            auto name = Expect(TokenType::Identifier).Value;
-
-            auto variadic = false;
-
-            std::vector<Type *> arguments;
-            std::vector<std::string> labels;
-
-            Expect(TokenType::Other, "(");
-
-            while (!At(TokenType::Other, ")"))
-            {
-                if (Skip(TokenType::Other, "..."))
-                {
-                    variadic = true;
-                    break;
-                }
-
-                arguments.push_back(ParseType(builder.GetContext()));
-
-                auto &label = labels.emplace_back();
-
-                if (Skip(TokenType::Other, "%"))
-                    label = Expect(TokenType::Identifier).Value;
-
-                if (!At(TokenType::Other, ")"))
-                    Expect(TokenType::Other, ",");
-            }
-
-            Expect(TokenType::Other, ")");
-
-            auto *type = context.GetFunctionType(result, std::move(arguments), variadic);
-            auto *function = module.CreateFunction(type, std::move(name));
-
-            for (size_t i = 0; i < labels.size(); ++i)
-                if (!labels[i].empty())
-                    function->GetArgument(i)->SetName(std::move(labels[i]));
-
-            if (Skip(TokenType::Other, "{"))
-            {
-                Expect(TokenType::EndOfLine);
-
-                while (!At(TokenType::Other, "}"))
-                {
-                    if (Skip(TokenType::Other, "."))
-                    {
-                        auto block_name = Expect(TokenType::Identifier).Value;
-                        Expect(TokenType::Other, ":");
-                        Expect(TokenType::EndOfLine);
-
-                        auto *block = builder.GetOrCreateBlock(function, std::move(block_name));
-                        builder.SetInsertBlock(block);
-                    }
-
-                    ParseInstruction(module, builder);
-                    Expect(TokenType::EndOfLine);
-                }
-
-                Expect(TokenType::Other, "}");
-
-                builder.ClearInsertBlock();
-            }
-
-            Expect(TokenType::EndOfLine);
-            continue;
-        }
-
-        std::cout << m_Token.Type << ':' << m_Token.Value << std::endl;
-
-        Next();
-    }
-
-    return module;
-}
-
-scc::ir::Type *scc::ir::Parser::ParseType(Context &context)
+scc::ir::Type *scc::ir::Parser::ParseType()
 {
     Type *base;
     if (Skip(TokenType::Other, "["))
     {
-        auto *element = ParseType(context);
+        auto *element = ParseType();
 
         if (Skip(TokenType::Identifier, "x"))
         {
@@ -435,18 +433,18 @@ scc::ir::Type *scc::ir::Parser::ParseType(Context &context)
 
             Expect(TokenType::Other, "]");
 
-            base = context.GetArrayType(element, length);
+            base = m_Context.GetArrayType(element, length);
         }
         else
         {
             Expect(TokenType::Other, "]");
 
-            base = context.GetPointerType(element);
+            base = m_Context.GetPointerType(element);
         }
     }
     else if (Skip(TokenType::Other, "<"))
     {
-        auto *element = ParseType(context);
+        auto *element = ParseType();
 
         Expect(TokenType::Identifier, "x");
 
@@ -454,7 +452,7 @@ scc::ir::Type *scc::ir::Parser::ParseType(Context &context)
 
         Expect(TokenType::Other, ">");
 
-        base = context.GetVectorType(element, length);
+        base = m_Context.GetVectorType(element, length);
     }
     else if (Skip(TokenType::Other, "{"))
     {
@@ -462,7 +460,7 @@ scc::ir::Type *scc::ir::Parser::ParseType(Context &context)
 
         while (!At(TokenType::Other, "}"))
         {
-            elements.push_back(ParseType(context));
+            elements.push_back(ParseType());
 
             if (!At(TokenType::Other, "}"))
                 Expect(TokenType::Other, ",");
@@ -470,26 +468,26 @@ scc::ir::Type *scc::ir::Parser::ParseType(Context &context)
 
         Expect(TokenType::Other, "}");
 
-        base = context.GetStructType(std::move(elements));
+        base = m_Context.GetStructType(std::move(elements));
     }
     else
     {
         if (const auto symbol = Expect(TokenType::Identifier).Value; symbol == "void")
-            base = context.GetVoidType();
+            base = m_Context.GetVoidType();
         else if (symbol == "i1")
-            base = context.GetInt1Type();
+            base = m_Context.GetInt1Type();
         else if (symbol == "i8")
-            base = context.GetInt8Type();
+            base = m_Context.GetInt8Type();
         else if (symbol == "i16")
-            base = context.GetInt16Type();
+            base = m_Context.GetInt16Type();
         else if (symbol == "i32")
-            base = context.GetInt32Type();
+            base = m_Context.GetInt32Type();
         else if (symbol == "i64")
-            base = context.GetInt64Type();
+            base = m_Context.GetInt64Type();
         else if (symbol == "f32")
-            base = context.GetFloat32Type();
+            base = m_Context.GetFloat32Type();
         else if (symbol == "f64")
-            base = context.GetFloat64Type();
+            base = m_Context.GetFloat64Type();
         else
             Error("unexpected token");
     }
@@ -508,7 +506,7 @@ scc::ir::Type *scc::ir::Parser::ParseType(Context &context)
                 break;
             }
 
-            arguments.push_back(ParseType(context));
+            arguments.push_back(ParseType());
 
             if (!At(TokenType::Other, ")"))
                 Expect(TokenType::Other, ",");
@@ -516,13 +514,13 @@ scc::ir::Type *scc::ir::Parser::ParseType(Context &context)
 
         Expect(TokenType::Other, ")");
 
-        return context.GetFunctionType(base, std::move(arguments), variadic);
+        return m_Context.GetFunctionType(base, std::move(arguments), variadic);
     }
 
     return base;
 }
 
-scc::ir::Constant *scc::ir::Parser::ParseConstant(Builder &builder, Type *type)
+scc::ir::Constant *scc::ir::Parser::ParseConstant(Type *type)
 {
     if (At(TokenType::String))
     {
@@ -539,32 +537,39 @@ scc::ir::Constant *scc::ir::Parser::ParseConstant(Builder &builder, Type *type)
 
         Assert(int_type->GetBitWidth() == 8, "invalid value for non-8-bit int array type");
 
-        return builder.GetContext().GetArray(value);
+        return m_Builder.GetContext().GetArray(value);
     }
 
     if (At(TokenType::Integer))
     {
         const auto value = Skip().IntValue;
 
-        Assert(type->GetKind() == Kind::Int, "invalid value for non-int type");
+        switch (type->GetKind())
+        {
+        case Kind::Int:
+            return m_Builder.GetContext().GetInt(dynamic_cast<IntType *>(type), value);
+        case Kind::Float:
+            return m_Builder.GetContext().GetFloat(
+                dynamic_cast<FloatType *>(type),
+                reinterpret_cast<const float64_t &>(value));
 
-        auto *int_type = dynamic_cast<IntType *>(type);
-
-        return builder.GetContext().GetInt(int_type, value);
+        default:
+            Error("invalid value for type {}", type);
+        }
     }
 
     Error("unexpected token");
 }
 
-scc::ir::Value *scc::ir::Parser::ParseValue(Module &module, Builder &builder, Type *type)
+scc::ir::Value *scc::ir::Parser::ParseValue(Type *type)
 {
     if (Skip(TokenType::Other, "%"))
     {
         auto name = Expect(TokenType::Identifier).Value;
-        auto *value = builder.GetInsertFunction()->FindValue(name);
+        auto *value = m_Builder.GetInsertFunction()->FindValue(name);
 
         if (!value)
-            value = builder.CreateEmpty(type, std::move(name));
+            value = m_Builder.CreateEmpty(type, std::move(name));
 
         return value;
     }
@@ -573,20 +578,20 @@ scc::ir::Value *scc::ir::Parser::ParseValue(Module &module, Builder &builder, Ty
     {
         const auto name = Expect(TokenType::Identifier).Value;
 
-        return module.GetSymbol(name);
+        return m_Module.GetSymbol(name);
     }
 
-    return ParseConstant(builder, type);
+    return ParseConstant(type);
 }
 
-scc::ir::Instruction *scc::ir::Parser::ParseInstruction(Module &module, Builder &builder)
+scc::ir::Instruction *scc::ir::Parser::ParseInstruction()
 {
     if (At(TokenType::Identifier, "br"))
-        return ParseBranchInstruction(module, builder);
+        return ParseBranchInstruction();
     if (At(TokenType::Identifier, "ret"))
-        return ParseReturnInstruction(module, builder);
+        return ParseReturnInstruction();
     if (At(TokenType::Identifier, "store"))
-        return ParseStoreInstruction(module, builder);
+        return ParseStoreInstruction();
 
     std::string name;
     if (Skip(TokenType::Other, "%"))
@@ -597,22 +602,22 @@ scc::ir::Instruction *scc::ir::Parser::ParseInstruction(Module &module, Builder 
     }
 
     if (At(TokenType::Identifier, "load"))
-        return ParseLoadInstruction(module, builder, std::move(name));
+        return ParseLoadInstruction(std::move(name));
 
     if (At(TokenType::Identifier, "call"))
-        return ParseCallInstruction(module, builder, std::move(name));
+        return ParseCallInstruction(std::move(name));
 
     if (At(TokenType::Identifier, "element"))
-        return ParseElementInstruction(module, builder, std::move(name));
+        return ParseElementInstruction(std::move(name));
 
     if (At(TokenType::Identifier, "select"))
-        return ParseSelectInstruction(module, builder, std::move(name));
+        return ParseSelectInstruction(std::move(name));
 
     if (At(TokenType::Identifier, "alloc"))
-        return ParseAllocInstruction(module, builder, std::move(name));
+        return ParseAllocInstruction(std::move(name));
 
     if (At(TokenType::Identifier, "cast"))
-        return ParseCastInstruction(module, builder, std::move(name));
+        return ParseCastInstruction(std::move(name));
 
     if (At(
         TokenType::Identifier,
@@ -626,7 +631,7 @@ scc::ir::Instruction *scc::ir::Parser::ParseInstruction(Module &module, Builder 
         "uge",
         "equ",
         "neq"))
-        return ParseComparatorInstruction(module, builder, std::move(name));
+        return ParseComparatorInstruction(std::move(name));
 
     if (At(
         TokenType::Identifier,
@@ -640,84 +645,80 @@ scc::ir::Instruction *scc::ir::Parser::ParseInstruction(Module &module, Builder 
         "and",
         "or",
         "xor"))
-        return ParseOperatorInstruction(module, builder, std::move(name));
+        return ParseOperatorInstruction(std::move(name));
 
     Error("unexpected token");
 }
 
-scc::ir::Instruction *scc::ir::Parser::ParseBranchInstruction(Module &module, Builder &builder)
+scc::ir::Instruction *scc::ir::Parser::ParseBranchInstruction()
 {
-    auto &context = builder.GetContext();
+    auto &context = m_Builder.GetContext();
 
     Expect(TokenType::Identifier, "br");
 
     if (Skip(TokenType::Other, "."))
     {
         auto destination_name = Expect(TokenType::Identifier).Value;
-        auto *destination = builder.GetOrCreateBlock(builder.GetInsertFunction(), std::move(destination_name));
+        auto *destination = m_Builder.GetOrCreateBlock(m_Builder.GetInsertFunction(), std::move(destination_name));
 
-        return builder.CreateBranch(destination);
+        return m_Builder.CreateBranch(destination);
     }
 
-    auto *condition = ParseValue(module, builder, context.GetInt1Type());
+    auto *condition = ParseValue(context.GetInt1Type());
 
     Expect(TokenType::Other, ",");
 
     Expect(TokenType::Other, ".");
 
     auto then_name = Expect(TokenType::Identifier).Value;
-    auto *then = builder.GetOrCreateBlock(builder.GetInsertFunction(), std::move(then_name));
+    auto *then = m_Builder.GetOrCreateBlock(m_Builder.GetInsertFunction(), std::move(then_name));
 
     Expect(TokenType::Other, ",");
 
     Expect(TokenType::Other, ".");
 
     auto else_name = Expect(TokenType::Identifier).Value;
-    auto *else_ = builder.GetOrCreateBlock(builder.GetInsertFunction(), std::move(else_name));
+    auto *else_ = m_Builder.GetOrCreateBlock(m_Builder.GetInsertFunction(), std::move(else_name));
 
-    return builder.CreateBranch(condition, then, else_);
+    return m_Builder.CreateBranch(condition, then, else_);
 }
 
-scc::ir::Instruction *scc::ir::Parser::ParseReturnInstruction(Module &module, Builder &builder)
+scc::ir::Instruction *scc::ir::Parser::ParseReturnInstruction()
 {
     Expect(TokenType::Identifier, "ret");
 
     if (At(TokenType::EndOfLine))
-        return builder.CreateRet();
+        return m_Builder.CreateRet();
 
-    auto *value = ParseValue(module, builder, builder.GetInsertFunctionResult());
+    auto *value = ParseValue(m_Builder.GetInsertFunctionResult());
 
-    return builder.CreateRet(value);
+    return m_Builder.CreateRet(value);
 }
 
-scc::ir::Instruction *scc::ir::Parser::ParseStoreInstruction(Module &module, Builder &builder)
+scc::ir::Instruction *scc::ir::Parser::ParseStoreInstruction()
 {
-    auto &context = builder.GetContext();
-
     Expect(TokenType::Identifier, "store");
 
-    auto *pointer_type = ParseType(context);
-    auto *pointer = ParseValue(module, builder, pointer_type);
+    auto *pointer_type = ParseType();
+    auto *pointer = ParseValue(pointer_type);
 
     auto *value_type = pointer_type->GetElement();
-    auto *value = ParseValue(module, builder, value_type);
+    auto *value = ParseValue(value_type);
 
-    return builder.CreateStore(pointer, value);
+    return m_Builder.CreateStore(pointer, value);
 }
 
-scc::ir::Instruction *scc::ir::Parser::ParseLoadInstruction(Module &module, Builder &builder, std::string name)
+scc::ir::Instruction *scc::ir::Parser::ParseLoadInstruction(std::string name)
 {
-    auto &context = builder.GetContext();
-
     Expect(TokenType::Identifier, "load");
 
-    auto *pointer_type = ParseType(context);
-    auto *pointer = ParseValue(module, builder, pointer_type);
+    auto *pointer_type = ParseType();
+    auto *pointer = ParseValue(pointer_type);
 
-    return builder.CreateLoad(pointer, std::move(name));
+    return m_Builder.CreateLoad(pointer, std::move(name));
 }
 
-scc::ir::Instruction *scc::ir::Parser::ParseComparatorInstruction(Module &module, Builder &builder, std::string name)
+scc::ir::Instruction *scc::ir::Parser::ParseComparatorInstruction(std::string name)
 {
     static const std::unordered_map<std::string_view, Comparator> map
     {
@@ -733,8 +734,6 @@ scc::ir::Instruction *scc::ir::Parser::ParseComparatorInstruction(Module &module
         { "neq", Comparator::NEQ },
     };
 
-    auto &context = builder.GetContext();
-
     const auto comparator = Expect(
         TokenType::Identifier,
         "slt",
@@ -749,22 +748,22 @@ scc::ir::Instruction *scc::ir::Parser::ParseComparatorInstruction(Module &module
         "neq"
     ).Value;
 
-    auto *type = ParseType(context);
+    auto *type = ParseType();
 
-    auto *lhs = ParseValue(module, builder, type);
+    auto *lhs = ParseValue(type);
 
     Expect(TokenType::Other, ",");
 
-    auto *rhs = ParseValue(module, builder, type);
+    auto *rhs = ParseValue(type);
 
     const auto it = map.find(comparator);
 
     Assert(it != map.end(), "undefined comparator '{}'", comparator);
 
-    return builder.CreateComparator(it->second, type, lhs, rhs, std::move(name));
+    return m_Builder.CreateComparator(it->second, type, lhs, rhs, std::move(name));
 }
 
-scc::ir::Instruction *scc::ir::Parser::ParseOperatorInstruction(Module &module, Builder &builder, std::string name)
+scc::ir::Instruction *scc::ir::Parser::ParseOperatorInstruction(std::string name)
 {
     static const std::unordered_map<std::string_view, Operator> map
     {
@@ -780,8 +779,6 @@ scc::ir::Instruction *scc::ir::Parser::ParseOperatorInstruction(Module &module, 
         { "xor", Operator::Xor },
     };
 
-    auto &context = builder.GetContext();
-
     auto operator_ = Expect(
         TokenType::Identifier,
         "add",
@@ -796,13 +793,13 @@ scc::ir::Instruction *scc::ir::Parser::ParseOperatorInstruction(Module &module, 
         "xor"
     ).Value;
 
-    auto *type = ParseType(context);
+    auto *type = ParseType();
 
     std::vector<Value *> operands;
 
     while (!At(TokenType::EndOfLine))
     {
-        operands.push_back(ParseValue(module, builder, type));
+        operands.push_back(ParseValue(type));
 
         if (!At(TokenType::EndOfLine))
             Expect(TokenType::Other, ",");
@@ -812,23 +809,21 @@ scc::ir::Instruction *scc::ir::Parser::ParseOperatorInstruction(Module &module, 
 
     Assert(it != map.end(), "undefined operator '{}'", operator_);
 
-    return builder.CreateOperator(it->second, type, std::move(operands), std::move(name));
+    return m_Builder.CreateOperator(it->second, type, std::move(operands), std::move(name));
 }
 
-scc::ir::Instruction *scc::ir::Parser::ParseCallInstruction(Module &module, Builder &builder, std::string name)
+scc::ir::Instruction *scc::ir::Parser::ParseCallInstruction(std::string name)
 {
-    auto &context = builder.GetContext();
-
     Expect(TokenType::Identifier, "call");
 
-    auto *type = ParseType(context);
+    auto *type = ParseType();
 
     Assert(type->GetKind() == Kind::Function, "type {} is not a kind of function", type);
 
     auto *function_type = dynamic_cast<FunctionType *>(type);
     const auto argument_count = function_type->GetArgumentCount();
 
-    auto *callee = ParseValue(module, builder, context.GetPointerType(function_type));
+    auto *callee = ParseValue(m_Context.GetPointerType(function_type));
 
     std::vector<Value *> arguments;
     arguments.reserve(argument_count);
@@ -837,26 +832,21 @@ scc::ir::Instruction *scc::ir::Parser::ParseCallInstruction(Module &module, Buil
     {
         Expect(TokenType::Other, ",");
 
-        auto *argument_type = ParseType(context);
-        auto *argument = ParseValue(module, builder, argument_type);
+        auto *argument_type = ParseType();
+        auto *argument = ParseValue(argument_type);
 
         arguments.push_back(argument);
     }
 
-    return builder.CreateCall(function_type, callee, std::move(arguments), std::move(name));
+    return m_Builder.CreateCall(function_type, callee, std::move(arguments), std::move(name));
 }
 
-scc::ir::Instruction *scc::ir::Parser::ParseElementInstruction(
-    Module &module,
-    Builder &builder,
-    std::string name)
+scc::ir::Instruction *scc::ir::Parser::ParseElementInstruction(std::string name)
 {
-    auto &context = builder.GetContext();
-
     Expect(TokenType::Identifier, "element");
 
-    auto *pointer_type = ParseType(context);
-    auto *pointer = ParseValue(module, builder, pointer_type);
+    auto *pointer_type = ParseType();
+    auto *pointer = ParseValue(pointer_type);
 
     Expect(TokenType::Other, ",");
 
@@ -864,8 +854,8 @@ scc::ir::Instruction *scc::ir::Parser::ParseElementInstruction(
 
     while (!At(TokenType::EndOfLine))
     {
-        auto *index_type = ParseType(context);
-        auto *index = ParseValue(module, builder, index_type);
+        auto *index_type = ParseType();
+        auto *index = ParseValue(index_type);
 
         indices.push_back(index);
 
@@ -873,16 +863,14 @@ scc::ir::Instruction *scc::ir::Parser::ParseElementInstruction(
             Expect(TokenType::Other, ",");
     }
 
-    return builder.CreateElementPointer(pointer, std::move(indices), std::move(name));
+    return m_Builder.CreateElementPointer(pointer, std::move(indices), std::move(name));
 }
 
-scc::ir::Instruction *scc::ir::Parser::ParseSelectInstruction(Module &module, Builder &builder, std::string name)
+scc::ir::Instruction *scc::ir::Parser::ParseSelectInstruction(std::string name)
 {
-    auto &context = builder.GetContext();
-
     Expect(TokenType::Identifier, "select");
 
-    auto *type = ParseType(context);
+    auto *type = ParseType();
 
     std::vector<std::pair<Block *, Value *>> nodes;
 
@@ -893,11 +881,11 @@ scc::ir::Instruction *scc::ir::Parser::ParseSelectInstruction(Module &module, Bu
         Expect(TokenType::Other, ".");
 
         auto block_name = Expect(TokenType::Identifier).Value;
-        auto *block = builder.GetOrCreateBlock(builder.GetInsertFunction(), std::move(block_name));
+        auto *block = m_Builder.GetOrCreateBlock(m_Builder.GetInsertFunction(), std::move(block_name));
 
         Expect(TokenType::Other, ",");
 
-        auto *value = ParseValue(module, builder, type);
+        auto *value = ParseValue(type);
 
         Expect(TokenType::Other, "]");
 
@@ -907,36 +895,32 @@ scc::ir::Instruction *scc::ir::Parser::ParseSelectInstruction(Module &module, Bu
             Expect(TokenType::Other, ",");
     }
 
-    return builder.CreateSelect(type, std::move(nodes), std::move(name));
+    return m_Builder.CreateSelect(type, std::move(nodes), std::move(name));
 }
 
-scc::ir::Instruction *scc::ir::Parser::ParseAllocInstruction(Module &module, Builder &builder, std::string name)
+scc::ir::Instruction *scc::ir::Parser::ParseAllocInstruction(std::string name)
 {
-    auto &context = builder.GetContext();
-
     Expect(TokenType::Identifier, "alloc");
 
-    auto *type = ParseType(context);
+    auto *type = ParseType();
 
     const auto count = Expect(TokenType::Integer).IntValue;
 
-    return builder.CreateAlloc(type, count, std::move(name));
+    return m_Builder.CreateAlloc(type, count, std::move(name));
 }
 
-scc::ir::Instruction *scc::ir::Parser::ParseCastInstruction(Module &module, Builder &builder, std::string name)
+scc::ir::Instruction *scc::ir::Parser::ParseCastInstruction(std::string name)
 {
-    auto &context = builder.GetContext();
-
     Expect(TokenType::Identifier, "cast");
 
-    auto *type = ParseType(context);
+    auto *type = ParseType();
 
     Expect(TokenType::Other, ",");
 
-    auto *value_type = ParseType(context);
-    auto *value = ParseValue(module, builder, value_type);
+    auto *value_type = ParseType();
+    auto *value = ParseValue(value_type);
 
-    return builder.CreateCast(type, value, std::move(name));
+    return m_Builder.CreateCast(type, value, std::move(name));
 }
 
 std::ostream &scc::ir::operator<<(std::ostream &stream, const TokenType type)

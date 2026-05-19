@@ -19,12 +19,12 @@ namespace scc::ir
         [[nodiscard]] virtual bool Compare(Constant *value) const = 0;
     };
 
-    class ConstantInt final : public Constant
+    class ConstantInt : public Constant
     {
     public:
         explicit ConstantInt(IntType *type, uint64_t value);
 
-        [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
+        std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
         [[nodiscard]] bool Compare(Constant *value) const override;
 
         [[nodiscard]] uint64_t GetValue() const;
@@ -33,12 +33,12 @@ namespace scc::ir
         uint64_t m_Value;
     };
 
-    class ConstantFloat final : public Constant
+    class ConstantFloat : public Constant
     {
     public:
         explicit ConstantFloat(FloatType *type, float64_t value);
 
-        [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
+        std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
         [[nodiscard]] bool Compare(Constant *value) const override;
 
         [[nodiscard]] float64_t GetValue() const;
@@ -47,7 +47,7 @@ namespace scc::ir
         float64_t m_Value;
     };
 
-    class ConstantArray final : public Constant
+    class ConstantArray : public Constant
     {
     public:
         explicit ConstantArray(ArrayType *type, std::vector<Constant *> elements);
@@ -56,7 +56,7 @@ namespace scc::ir
         void DropAll() override;
         void Replace(Value *value, Value *with) override;
 
-        [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
+        std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
         [[nodiscard]] bool Compare(Constant *value) const override;
 
         [[nodiscard]] size_t GetElementCount() const;
@@ -66,7 +66,7 @@ namespace scc::ir
         std::vector<Constant *> m_Elements;
     };
 
-    class ConstantVector final : public Constant
+    class ConstantVector : public Constant
     {
     public:
         explicit ConstantVector(VectorType *type, std::vector<Constant *> elements);
@@ -75,7 +75,7 @@ namespace scc::ir
         void DropAll() override;
         void Replace(Value *value, Value *with) override;
 
-        [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
+        std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
         [[nodiscard]] bool Compare(Constant *value) const override;
 
         [[nodiscard]] size_t GetElementCount() const;
@@ -85,7 +85,7 @@ namespace scc::ir
         std::vector<Constant *> m_Elements;
     };
 
-    class ConstantStruct final : public Constant
+    class ConstantStruct : public Constant
     {
     public:
         explicit ConstantStruct(StructType *type, std::vector<Constant *> elements);
@@ -94,7 +94,7 @@ namespace scc::ir
         void DropAll() override;
         void Replace(Value *value, Value *with) override;
 
-        [[nodiscard]] std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
+        std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
         [[nodiscard]] bool Compare(Constant *value) const override;
 
         [[nodiscard]] size_t GetElementCount() const;

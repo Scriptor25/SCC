@@ -12,7 +12,7 @@
 
 namespace scc::ir
 {
-    class Block final : public Value
+    class Block : public Value
     {
     public:
         explicit Block(std::string name, Function *function);

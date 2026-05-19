@@ -27,7 +27,7 @@ void scc::ir::OperatorInstruction::DropAll()
         if (operand)
         {
             operand->Drop(this);
-            operand = nullptr;
+            operand = {};
         }
 
     m_Operands.clear();

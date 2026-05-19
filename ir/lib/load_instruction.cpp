@@ -23,7 +23,7 @@ void scc::ir::LoadInstruction::DropAll()
     if (m_Pointer)
     {
         m_Pointer->Drop(this);
-        m_Pointer = nullptr;
+        m_Pointer = {};
     }
 }
 

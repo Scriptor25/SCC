@@ -16,12 +16,13 @@ namespace scc::as
         Section *CreateSection(std::string name = {});
 
         Symbol *CreateSymbol(std::string name = {});
-        Symbol *CreateSymbol(Fragment &fragment, std::string name = {});
         Symbol *CreateSymbol(Section &section, size_t index, std::string name = {});
 
         [[nodiscard]] Section *GetSection(const std::string &name) const;
+
         [[nodiscard]] Symbol *GetSymbol(const std::string &name) const;
-        [[nodiscard]] Symbol *GetSymbol(Fragment *fragment) const;
+        [[nodiscard]] std::vector<Symbol *> GetSymbols(const Section &section, size_t index) const;
+        [[nodiscard]] std::vector<Symbol *> GetSymbols(const Fragment &fragment) const;
 
         Section *GetOrCreateSection(const std::string &name);
         Symbol *GetOrCreateSymbol(const std::string &name);

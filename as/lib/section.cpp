@@ -13,9 +13,13 @@ void scc::as::Section::SetName(std::string name)
     m_Name = std::move(name);
 }
 
-void scc::as::Section::Insert(std::unique_ptr<Fragment> fragment)
+scc::as::Fragment *scc::as::Section::Insert(std::unique_ptr<Fragment> fragment)
 {
+    auto *ptr = fragment.get();
+
     m_Fragments.push_back(std::move(fragment));
+
+    return ptr;
 }
 
 scc::as::Fragment *scc::as::Section::Insert(Instruction instruction)
@@ -72,14 +76,12 @@ std::ostream &scc::as::Section::Print(std::ostream &stream) const
 {
     stream << ".section " << m_Name << '\n';
 
-    for (auto &fragment : m_Fragments)
+    for (size_t i = 0; i < m_Fragments.size(); ++i)
     {
-        if (const auto *symbol = m_Module->GetSymbol(fragment.get()))
-        {
+        for (auto symbols = m_Module->GetSymbols(*this, i); const auto *symbol : symbols)
             stream << symbol->GetName() << ":\n";
-        }
 
-        fragment->Print(stream << "    ") << '\n';
+        m_Fragments[i]->Print(stream << "    ") << '\n';
     }
 
     return stream;

@@ -29,13 +29,13 @@ void scc::ir::SelectInstruction::DropAll()
         if (key)
         {
             key->Drop(this);
-            key = nullptr;
+            key = {};
         }
 
         if (value)
         {
             value->Drop(this);
-            value = nullptr;
+            value = {};
         }
     }
 

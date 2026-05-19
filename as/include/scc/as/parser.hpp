@@ -31,6 +31,12 @@ namespace scc::as
         Immediate Immediate = 0;
     };
 
+    struct EvaluationContext
+    {
+        const Platform &MPlatform;
+        Section *MSection;
+    };
+
     class Parser
     {
     public:
@@ -41,16 +47,21 @@ namespace scc::as
         Token &Next();
         Token Skip();
 
-        Token Expect(TokenType type, const std::string &value = {});
         [[nodiscard]] bool At(TokenType type, const std::string &value = {}) const;
+
         bool Skip(TokenType type, const std::string &value = {});
+        Token Expect(TokenType type, const std::string &value = {});
 
         void Parse();
         void ParseLine();
-        void ParseDirectiveArg();
+
+        OperandPtr ParseDirectiveOperand();
+
         Instruction ParseInstruction();
-        std::vector<std::unique_ptr<Operand>> ParseOperands();
-        std::unique_ptr<Operand> ParseOperand();
+        std::vector<OperandPtr> ParseOperands();
+        OperandPtr ParseOperand();
+
+        OperandPtr Evaluate(const std::string &directive, const std::vector<OperandPtr> &operands);
 
     private:
         std::istream &m_Stream;
@@ -62,6 +73,6 @@ namespace scc::as
 
         Module &m_Module;
         Section *m_Section;
-        Symbol *m_Symbol;
+        Symbol *m_Primary;
     };
 }

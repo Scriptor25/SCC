@@ -22,7 +22,7 @@ void scc::ir::ConstantArray::DropAll()
         if (element)
         {
             element->Drop(this);
-            element = nullptr;
+            element = {};
         }
 
     m_Elements.clear();
@@ -55,7 +55,7 @@ std::ostream &scc::ir::ConstantArray::PrintOperand(std::ostream &stream, const b
             if (const auto c = dynamic_cast<ConstantInt *>(element)->GetValue(); c >= 0x20)
                 stream << static_cast<char>(c);
             else
-                stream << "\\x" << std::hex << (c >> 4 & 0xF) << (c & 0xF);
+                stream << std::format("\\x{:02X}", c);
 
         return stream << '"';
     }

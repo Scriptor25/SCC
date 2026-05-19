@@ -13,7 +13,7 @@
 
 namespace scc::ir
 {
-    class Builder final
+    class Builder
     {
     public:
         explicit Builder(Context &context);

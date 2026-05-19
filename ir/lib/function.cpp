@@ -20,7 +20,7 @@ scc::ir::Function::~Function()
 {
     for (auto &block : m_Blocks)
     {
-        block->ReplaceWith(nullptr);
+        block->ReplaceWith({});
         block->DropAll();
         block.reset();
     }
@@ -29,7 +29,7 @@ scc::ir::Function::~Function()
 
     for (auto &argument : m_Arguments)
     {
-        argument->ReplaceWith(nullptr);
+        argument->ReplaceWith({});
         argument.reset();
     }
 
@@ -91,7 +91,7 @@ scc::ir::Block *scc::ir::Function::FindBlock(const std::string &name) const
         if (block->GetName() == name)
             return block.get();
 
-    return nullptr;
+    return {};
 }
 
 scc::ir::Value *scc::ir::Function::CreateEmpty(Type *type, std::string name)
@@ -118,7 +118,7 @@ scc::ir::Value *scc::ir::Function::FindValue(const std::string &name) const
         if (empty->GetName() == name)
             return empty.get();
 
-    return nullptr;
+    return {};
 }
 
 unsigned scc::ir::Function::GetArgumentCount() const

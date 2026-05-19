@@ -62,7 +62,7 @@ void scc::ir::Builder::SetInsertBlock(Block *block)
 
 void scc::ir::Builder::ClearInsertBlock()
 {
-    m_InsertBlock = nullptr;
+    m_InsertBlock = {};
 }
 
 scc::ir::Block *scc::ir::Builder::GetInsertBlock() const

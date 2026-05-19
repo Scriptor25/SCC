@@ -29,17 +29,17 @@ void scc::ir::BranchInstruction::DropAll()
     if (m_Condition)
     {
         m_Condition->Drop(this);
-        m_Condition = nullptr;
+        m_Condition = {};
     }
     if (m_Then)
     {
         m_Then->Drop(this);
-        m_Then = nullptr;
+        m_Then = {};
     }
     if (m_Else)
     {
         m_Else->Drop(this);
-        m_Else = nullptr;
+        m_Else = {};
     }
 }
 

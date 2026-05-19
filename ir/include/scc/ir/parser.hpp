@@ -1,5 +1,6 @@
 #pragma once
 
+#include <scc/ir/builder.hpp>
 #include <scc/ir/module.hpp>
 
 #include <cstdint>
@@ -20,18 +21,21 @@ namespace scc::ir
         Other,
     };
 
-    struct Token final
+    struct Token
     {
         TokenType Type{};
         std::string Value;
         uint64_t IntValue{};
     };
 
-    class Parser final
+    class Parser
     {
     public:
-        explicit Parser(std::istream &stream);
+        explicit Parser(std::istream &stream, Context &context, Module &module);
 
+        void Parse();
+
+    protected:
         int Get();
         Token &Next();
 
@@ -76,30 +80,34 @@ namespace scc::ir
             return Expect(type, std::vector<std::string_view>{ values... });
         }
 
-        Module ParseModule(Context &context);
+        Type *ParseType();
+        Constant *ParseConstant(Type *type);
+        Value *ParseValue(Type *type);
+        Instruction *ParseInstruction();
 
-        Type *ParseType(Context &context);
-        Constant *ParseConstant(Builder &builder, Type *type);
-        Value *ParseValue(Module &module, Builder &builder, Type *type);
-        Instruction *ParseInstruction(Module &module, Builder &builder);
+        Instruction *ParseBranchInstruction();
+        Instruction *ParseReturnInstruction();
+        Instruction *ParseStoreInstruction();
 
-        Instruction *ParseBranchInstruction(Module &module, Builder &builder);
-        Instruction *ParseReturnInstruction(Module &module, Builder &builder);
-        Instruction *ParseStoreInstruction(Module &module, Builder &builder);
-
-        Instruction *ParseLoadInstruction(Module &module, Builder &builder, std::string name);
-        Instruction *ParseComparatorInstruction(Module &module, Builder &builder, std::string name);
-        Instruction *ParseOperatorInstruction(Module &module, Builder &builder, std::string name);
-        Instruction *ParseCallInstruction(Module &module, Builder &builder, std::string name);
-        Instruction *ParseElementInstruction(Module &module, Builder &builder, std::string name);
-        Instruction *ParseSelectInstruction(Module &module, Builder &builder, std::string name);
-        Instruction *ParseAllocInstruction(Module &module, Builder &builder, std::string name);
-        Instruction *ParseCastInstruction(Module &module, Builder &builder, std::string name);
+        Instruction *ParseLoadInstruction(std::string name);
+        Instruction *ParseComparatorInstruction(std::string name);
+        Instruction *ParseOperatorInstruction(std::string name);
+        Instruction *ParseCallInstruction(std::string name);
+        Instruction *ParseElementInstruction(std::string name);
+        Instruction *ParseSelectInstruction(std::string name);
+        Instruction *ParseAllocInstruction(std::string name);
+        Instruction *ParseCastInstruction(std::string name);
 
     private:
         std::istream &m_Stream;
+
+        Context &m_Context;
+        Module &m_Module;
+
         int m_Buffer;
         Token m_Token;
+
+        Builder m_Builder;
     };
 
     std::ostream &operator<<(std::ostream &stream, TokenType type);

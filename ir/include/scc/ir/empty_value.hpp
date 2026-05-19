@@ -5,7 +5,7 @@
 
 namespace scc::ir
 {
-    class EmptyValue final : public Value
+    class EmptyValue : public Value
     {
     public:
         explicit EmptyValue(Type *type, std::string name = {});

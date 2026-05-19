@@ -14,3 +14,8 @@ std::ostream &scc::as::RegisterOperand::Print(std::ostream &stream) const
 {
     return stream << '%' << m_Platform.ISA.RegisterViews.at(m_Register).Name;
 }
+
+scc::Register scc::as::RegisterOperand::GetRegister() const
+{
+    return m_Register;
+}

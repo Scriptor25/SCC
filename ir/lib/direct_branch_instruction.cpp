@@ -22,7 +22,7 @@ void scc::ir::DirectBranchInstruction::DropAll()
     if (m_Destination)
     {
         m_Destination->Drop(this);
-        m_Destination = nullptr;
+        m_Destination = {};
     }
 }
 

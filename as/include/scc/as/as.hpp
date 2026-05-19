@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <memory>
 
 namespace scc::as
 {
@@ -24,9 +25,12 @@ namespace scc::as
     class Operand;
 
     class ImmediateOperand;
+    class StringOperand;
     class RegisterOperand;
     class ReferenceOperand;
     class SymbolOperand;
 
     class Symbol;
+
+    using OperandPtr = std::unique_ptr<Operand>;
 }

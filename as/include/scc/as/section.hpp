@@ -46,7 +46,7 @@ namespace scc::as
         explicit Section(Module *module, std::string name = {});
 
         void SetName(std::string name);
-        void Insert(std::unique_ptr<Fragment> fragment);
+        Fragment *Insert(std::unique_ptr<Fragment> fragment);
         Fragment *Insert(Instruction instruction);
 
         [[nodiscard]] const std::string &GetName() const;

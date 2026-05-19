@@ -29,14 +29,14 @@ void scc::ir::ElementPointerInstruction::DropAll()
     if (m_Pointer)
     {
         m_Pointer->Drop(this);
-        m_Pointer = nullptr;
+        m_Pointer = {};
     }
 
     for (auto &index : m_Indices)
         if (index)
         {
             index->Drop(this);
-            index = nullptr;
+            index = {};
         }
 
     m_Indices.clear();

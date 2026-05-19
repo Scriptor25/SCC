@@ -12,7 +12,7 @@
 
 namespace scc::ir
 {
-    class Function final : public Global
+    class Function : public Global
     {
     public:
         explicit Function(FunctionType *type, std::string name);

@@ -1,6 +1,5 @@
 #pragma once
 
-#include <scc/as/as.hpp>
 #include <scc/as/fragment.hpp>
 #include <scc/as/operand.hpp>
 

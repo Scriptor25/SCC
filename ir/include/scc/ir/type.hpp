@@ -46,7 +46,7 @@ namespace scc::ir
         Kind m_Kind;
     };
 
-    class VoidType final : public Type
+    class VoidType : public Type
     {
     public:
         explicit VoidType(Context &context);
@@ -59,7 +59,7 @@ namespace scc::ir
         std::ostream &Print(std::ostream &stream) const override;
     };
 
-    class IntType final : public Type
+    class IntType : public Type
     {
     public:
         explicit IntType(Context &context, size_t bit_width);
@@ -77,7 +77,7 @@ namespace scc::ir
         size_t m_BitWidth;
     };
 
-    class FloatType final : public Type
+    class FloatType : public Type
     {
     public:
         explicit FloatType(Context &context, size_t bit_width);
@@ -95,7 +95,7 @@ namespace scc::ir
         size_t m_BitWidth;
     };
 
-    class PointerType final : public Type
+    class PointerType : public Type
     {
     public:
         explicit PointerType(Context &context, Type *element);
@@ -116,7 +116,7 @@ namespace scc::ir
         Type *m_Element;
     };
 
-    class ArrayType final : public Type
+    class ArrayType : public Type
     {
     public:
         explicit ArrayType(Context &context, Type *element, size_t element_count);
@@ -138,7 +138,7 @@ namespace scc::ir
         size_t m_ElementCount;
     };
 
-    class VectorType final : public Type
+    class VectorType : public Type
     {
     public:
         explicit VectorType(Context &context, Type *element, size_t element_count);
@@ -160,7 +160,7 @@ namespace scc::ir
         size_t m_ElementCount;
     };
 
-    class StructType final : public Type
+    class StructType : public Type
     {
     public:
         explicit StructType(Context &context, std::vector<Type *> elements);
@@ -182,7 +182,7 @@ namespace scc::ir
         std::vector<Type *> m_Elements;
     };
 
-    class FunctionType final : public Type
+    class FunctionType : public Type
     {
     public:
         explicit FunctionType(

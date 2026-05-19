@@ -25,5 +25,7 @@ int main(const int argc, const char **argv)
 
     module.Print(std::cout);
 
+    // TODO: print binary
+
     return 0;
 }

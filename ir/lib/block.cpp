@@ -9,7 +9,7 @@
 #include <ostream>
 
 scc::ir::Block::Block(std::string name, Function *function)
-    : Value(nullptr),
+    : Value({}),
       m_Name(std::move(name)),
       m_Function(function)
 {
@@ -19,7 +19,7 @@ void scc::ir::Block::DropAll()
 {
     for (auto &instruction : m_Instructions)
     {
-        instruction->ReplaceWith(nullptr);
+        instruction->ReplaceWith({});
         instruction->DropAll();
         instruction.reset();
     }
@@ -125,7 +125,7 @@ scc::ir::Value *scc::ir::Block::FindValue(const std::string &name) const
         if (instruction->GetName() == name)
             return instruction.get();
 
-    return nullptr;
+    return {};
 }
 
 scc::ir::Instruction *scc::ir::Block::GetTerminator() const
@@ -134,7 +134,7 @@ scc::ir::Instruction *scc::ir::Block::GetTerminator() const
         if (instruction->IsTerminator())
             return instruction.get();
 
-    return nullptr;
+    return {};
 }
 
 std::unordered_set<scc::ir::Block *> scc::ir::Block::GetPredecessors() const

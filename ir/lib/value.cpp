@@ -8,7 +8,7 @@ scc::ir::Value::Value(Type *type)
 
 scc::ir::Value::~Value()
 {
-    ReplaceWith(nullptr);
+    ReplaceWith({});
 }
 
 void scc::ir::Value::Use(User *user)

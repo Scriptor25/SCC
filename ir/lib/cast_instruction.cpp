@@ -24,7 +24,7 @@ void scc::ir::CastInstruction::DropAll()
     if (m_Value)
     {
         m_Value->Drop(this);
-        m_Value = nullptr;
+        m_Value = {};
     }
 }
 

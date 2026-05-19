@@ -12,7 +12,7 @@
 
 namespace scc::ir
 {
-    class Context final
+    class Context
     {
     public:
         explicit Context(const Platform &platform);

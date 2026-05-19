@@ -1,14 +1,24 @@
 #include <scc/as/operand.hpp>
 
-#include <ostream>
+#include <format>
 
-scc::as::ImmediateOperand::ImmediateOperand(const Platform &platform, const Immediate immediate)
+scc::as::ImmediateOperand::ImmediateOperand(const Platform &platform, const Immediate value)
     : Operand(platform),
-      m_Immediate(immediate)
+      m_Value(value)
 {
+}
+
+scc::as::Immediate scc::as::ImmediateOperand::GetImmediate() const
+{
+    return m_Value;
 }
 
 std::ostream &scc::as::ImmediateOperand::Print(std::ostream &stream) const
 {
-    return stream << "0x" << std::hex << m_Immediate;
+    return stream << std::format("$0x{:X}", m_Value);
+}
+
+scc::as::Immediate scc::as::ImmediateOperand::GetValue() const
+{
+    return m_Value;
 }

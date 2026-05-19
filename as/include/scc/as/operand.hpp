@@ -5,6 +5,7 @@
 #include <scc/common.hpp>
 
 #include <iosfwd>
+#include <string>
 
 namespace scc::as
 {
@@ -14,35 +15,84 @@ namespace scc::as
         explicit Operand(const Platform &platform);
         virtual ~Operand() = default;
 
+        [[nodiscard]] virtual Immediate GetImmediate() const;
+
         virtual std::ostream &Print(std::ostream &stream) const = 0;
 
     protected:
         const Platform &m_Platform;
     };
 
-    class ImmediateOperand final : public Operand
+    class ImmediateOperand : public Operand
     {
     public:
-        explicit ImmediateOperand(const Platform &platform, Immediate immediate);
+        explicit ImmediateOperand(const Platform &platform, Immediate value);
+
+        [[nodiscard]] Immediate GetImmediate() const override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
+        [[nodiscard]] Immediate GetValue() const;
+
     private:
-        Immediate m_Immediate;
+        Immediate m_Value;
     };
 
-    class RegisterOperand final : public Operand
+    class StringOperand : public Operand
+    {
+    public:
+        explicit StringOperand(const Platform &platform, std::string value);
+
+        std::ostream &Print(std::ostream &stream) const override;
+
+        [[nodiscard]] const std::string &GetValue() const;
+
+    private:
+        std::string m_Value;
+    };
+
+    class SymbolAddressOperand : public Operand
+    {
+    public:
+        explicit SymbolAddressOperand(const Platform &platform, Symbol *symbol);
+
+        [[nodiscard]] Immediate GetImmediate() const override;
+
+        std::ostream &Print(std::ostream &stream) const override;
+
+        [[nodiscard]] Symbol *GetSymbol() const;
+
+    private:
+        Symbol *m_Symbol;
+    };
+
+    class RegisterOperand : public Operand
     {
     public:
         explicit RegisterOperand(const Platform &platform, Register register_);
 
         std::ostream &Print(std::ostream &stream) const override;
 
+        [[nodiscard]] Register GetRegister() const;
+
     private:
         Register m_Register;
     };
 
-    class ReferenceOperand final : public Operand
+    class DirectOperand : public Operand
+    {
+    public:
+        explicit DirectOperand(const Platform &platform, Immediate address);
+
+        std::ostream &Print(std::ostream &stream) const override;
+
+        [[nodiscard]] Immediate GetAddress() const;
+
+    private:
+        Immediate m_Address;
+    };
+
+    class ReferenceOperand : public Operand
     {
     public:
         ReferenceOperand(
@@ -54,6 +104,11 @@ namespace scc::as
 
         std::ostream &Print(std::ostream &stream) const override;
 
+        [[nodiscard]] Immediate GetDisplacement() const;
+        [[nodiscard]] Register GetBaseRegister() const;
+        [[nodiscard]] Register GetIndexRegister() const;
+        [[nodiscard]] Immediate GetScale() const;
+
     private:
         Immediate m_Displacement;
         Register m_BaseRegister;
@@ -61,12 +116,14 @@ namespace scc::as
         Immediate m_Scale;
     };
 
-    class SymbolOperand final : public Operand
+    class SymbolOperand : public Operand
     {
     public:
         explicit SymbolOperand(const Platform &platform, Symbol *symbol);
 
         std::ostream &Print(std::ostream &stream) const override;
+
+        [[nodiscard]] Symbol *GetSymbol() const;
 
     private:
         Symbol *m_Symbol;
