@@ -12,6 +12,7 @@
 #include <istream>
 #include <memory>
 #include <vector>
+#include <scc/as/align.hpp>
 
 static bool isdigit(const int c, const int base)
 {
@@ -633,11 +634,24 @@ static scc::as::OperandPtr directive_fill(
     return {};
 }
 
+static scc::as::OperandPtr directive_align(
+    const scc::as::EvaluationContext &context,
+    const std::vector<scc::as::OperandPtr> &operands)
+{
+    scc::Assert(operands.size() == 1, ".align requires 1 operand");
+
+    auto alignment = operands[0]->GetImmediate();
+
+    context.MSection->Insert(std::make_unique<scc::as::Align>(alignment));
+
+    return {};
+}
+
 static scc::as::OperandPtr directive_string(
     const scc::as::EvaluationContext &context,
     const std::vector<scc::as::OperandPtr> &operands)
 {
-    scc::Assert(operands.size() == 1, ".string requires 1 operands");
+    scc::Assert(operands.size() == 1, ".string requires 1 operand");
 
     const auto *operand = dynamic_cast<scc::as::StringOperand *>(operands[0].get());
 
@@ -666,6 +680,7 @@ scc::as::OperandPtr scc::as::Parser::Evaluate(
         { ".sub", directive_sub },
         { ".length", directive_length },
         { ".fill", directive_fill },
+        { ".align", directive_align },
         { ".string", directive_string },
     };
 
