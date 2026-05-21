@@ -7,14 +7,19 @@ scc::as::Data::Data(std::vector<uint8_t> data)
 {
 }
 
-const std::vector<uint8_t> &scc::as::Data::GetData() const
+std::span<const uint8_t> scc::as::Data::GetData() const
 {
     return m_Data;
 }
 
+size_t scc::as::Data::GetDataSize() const
+{
+    return m_Data.size();
+}
+
 std::ostream &scc::as::Data::Print(std::ostream &stream) const
 {
-    stream << ".byte ";
+    stream << ".data ";
     for (auto it = m_Data.begin(); it != m_Data.end(); ++it)
     {
         if (it != m_Data.begin())

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <span>
 #include <scc/as/as.hpp>
 #include <scc/as/fragment.hpp>
 
@@ -12,7 +13,8 @@ namespace scc::as
     public:
         explicit Data(std::vector<uint8_t> data);
 
-        [[nodiscard]] const std::vector<uint8_t> &GetData() const;
+        [[nodiscard]] std::span<const uint8_t> GetData() const;
+        [[nodiscard]] size_t GetDataSize() const;
 
         std::ostream &Print(std::ostream &stream) const override;
 

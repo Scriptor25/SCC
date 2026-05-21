@@ -182,12 +182,12 @@ exit:
 
 .section .bss
 
+format_buffer:
+    .fill FORMAT_BUFFER_SIZE, 0x00
+
 stack_end:
     .fill STACK_SIZE, 0x00
 stack_top:
-
-format_buffer:
-    .fill FORMAT_BUFFER_SIZE, 0x00
 
 .section .rodata
 

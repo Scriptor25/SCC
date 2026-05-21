@@ -7,8 +7,6 @@ namespace scc::as
 {
     using Immediate = uint64_t;
 
-    enum class OperandType;
-
     class Parser;
     class Writer;
 

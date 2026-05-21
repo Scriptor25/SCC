@@ -76,13 +76,18 @@ std::ostream &scc::as::Section::Print(std::ostream &stream) const
 {
     stream << ".section " << m_Name << '\n';
 
-    for (size_t i = 0; i < m_Fragments.size(); ++i)
+    size_t i;
+
+    for (i = 0; i < m_Fragments.size(); ++i)
     {
-        for (auto symbols = m_Module->GetSymbols(*this, i); const auto *symbol : symbols)
+        for (const auto symbols = m_Module->GetSymbols(*this, i); const auto *symbol : symbols)
             stream << symbol->GetName() << ":\n";
 
         m_Fragments[i]->Print(stream << "    ") << '\n';
     }
+
+    for (const auto symbols = m_Module->GetSymbols(*this, i); const auto *symbol : symbols)
+        stream << symbol->GetName() << ":\n";
 
     return stream;
 }

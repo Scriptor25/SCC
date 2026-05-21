@@ -614,7 +614,7 @@ static scc::as::OperandPtr directive_length(
     const auto *symbol = src->GetSymbol();
     const auto *fragment = dynamic_cast<scc::as::Data *>(symbol->GetFragment());
 
-    auto value = fragment->GetData().size();
+    auto value = fragment->GetDataSize();
 
     return std::make_unique<scc::as::ImmediateOperand>(context.MPlatform, value);
 }
