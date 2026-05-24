@@ -128,7 +128,7 @@ unsigned scc::ir::Function::GetArgumentCount() const
 
 scc::ir::Argument *scc::ir::Function::GetArgument(const unsigned index) const
 {
-    AssertIndexInBounds(index, m_Arguments.size());
+    AssertInBounds(index, m_Arguments.size());
 
     return m_Arguments[index].get();
 }

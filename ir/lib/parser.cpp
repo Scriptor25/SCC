@@ -4,9 +4,6 @@
 #include <scc/ir/function.hpp>
 #include <scc/ir/parser.hpp>
 
-#include <scc/assert.hpp>
-#include <scc/error.hpp>
-
 #include <iostream>
 #include <istream>
 #include <map>
@@ -576,9 +573,9 @@ scc::ir::Value *scc::ir::Parser::ParseValue(Type *type)
 
     if (Skip(TokenType::Other, "@"))
     {
-        const auto name = Expect(TokenType::Identifier).Value;
+        auto name = Expect(TokenType::Identifier).Value;
 
-        return m_Module.GetSymbol(name);
+        return m_Module.GetOrCreateSymbol(type, std::move(name));
     }
 
     return ParseConstant(type);

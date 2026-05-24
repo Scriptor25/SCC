@@ -98,7 +98,7 @@ size_t scc::ir::BranchInstruction::GetSuccessorCount() const
 
 scc::ir::Block *scc::ir::BranchInstruction::GetSuccessor(const size_t index) const
 {
-    AssertIndexInBounds(index, 2);
+    AssertInBounds(index, 2);
 
     return index == 0 ? m_Then : m_Else;
 }

@@ -1,6 +1,6 @@
 #include <scc/as/data.hpp>
 
-#include <format>
+#include <iomanip>
 
 scc::as::Data::Data(std::vector<uint8_t> data)
     : m_Data(std::move(data))
@@ -24,7 +24,12 @@ std::ostream &scc::as::Data::Print(std::ostream &stream) const
     {
         if (it != m_Data.begin())
             stream << ", ";
-        stream << std::format("0x{:02X}", *it);
+        stream << "0x" << std::hex << std::setfill('0') << std::setw(2) << *it;
     }
     return stream;
+}
+
+void scc::as::Data::Encode(std::vector<uint8_t> &buffer, SymbolTable &, FixupTable &) const
+{
+    buffer.insert(buffer.end(), m_Data.begin(), m_Data.end());
 }

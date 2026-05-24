@@ -1,7 +1,7 @@
-#include <scc/assert.hpp>
-#include <scc/error.hpp>
 #include <scc/ir/instruction.hpp>
 #include <scc/ir/type.hpp>
+
+#include <scc/assert.hpp>
 
 scc::ir::Instruction::Instruction(Type *type, Block *block)
     : User(type),
@@ -53,5 +53,5 @@ size_t scc::ir::Instruction::GetSuccessorCount() const
 
 scc::ir::Block *scc::ir::Instruction::GetSuccessor(const size_t index) const
 {
-    ErrorIndexOutOfBounds(index, 0);
+    ErrorOutOfBounds(index, 0);
 }

@@ -1,7 +1,5 @@
 #include <scc/as/align.hpp>
 
-#include <format>
-
 scc::as::Align::Align(const uint8_t alignment)
     : m_Alignment(alignment)
 {
@@ -14,5 +12,15 @@ uint8_t scc::as::Align::GetAlignment() const
 
 std::ostream &scc::as::Align::Print(std::ostream &stream) const
 {
-    return stream << std::format(".align {}", m_Alignment);
+    return stream << ".align " << std::dec << m_Alignment;
+}
+
+void scc::as::Align::Encode(std::vector<uint8_t> &buffer, SymbolTable &, FixupTable &) const
+{
+    const auto rem = buffer.size() % m_Alignment;
+
+    if (!rem)
+        return;
+
+    buffer.resize(buffer.size() + m_Alignment - rem);
 }

@@ -54,7 +54,7 @@ size_t scc::ir::ArrayType::GetElementCount() const
 
 scc::ir::Type *scc::ir::ArrayType::GetElement(const size_t index) const
 {
-    AssertIndexInBounds(index, m_ElementCount);
+    AssertInBounds(index, m_ElementCount);
 
     return m_Element;
 }

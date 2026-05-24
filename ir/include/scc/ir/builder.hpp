@@ -122,7 +122,7 @@ namespace scc::ir
         template<std::derived_from<Instruction> T, typename... Args>
         [[nodiscard]] T *Create(Args &&... args) const
         {
-            Assert(!!m_InsertBlock, "insert block must not be null");
+            Assert(m_InsertBlock, "insert block must not be null");
 
             auto instruction = std::make_unique<T>(std::forward<Args>(args)...);
             auto *ptr = instruction.get();

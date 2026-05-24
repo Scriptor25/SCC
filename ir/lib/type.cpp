@@ -1,6 +1,6 @@
 #include <scc/ir/type.hpp>
 
-#include <scc/error.hpp>
+#include <scc/assert.hpp>
 
 scc::ir::Type::Type(Context &context, const Kind kind)
     : m_Context(context),
@@ -30,7 +30,7 @@ size_t scc::ir::Type::GetElementCount() const
 
 scc::ir::Type *scc::ir::Type::GetElement(const size_t index) const
 {
-    ErrorIndexOutOfBounds(index, 0);
+    ErrorOutOfBounds(index, 0);
 }
 
 std::ostream &scc::ir::operator<<(std::ostream &stream, const Type *type)

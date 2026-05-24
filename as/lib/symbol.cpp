@@ -1,7 +1,7 @@
 #include <scc/as/section.hpp>
 #include <scc/as/symbol.hpp>
 
-#include <scc/error.hpp>
+#include <scc/assert.hpp>
 
 scc::as::Symbol::Symbol(std::string name)
     : m_Name(std::move(name)),
@@ -69,9 +69,7 @@ scc::as::Fragment *scc::as::Symbol::GetFragment() const
 scc::as::Immediate scc::as::Symbol::GetAddress() const
 {
     if (!m_Section)
-    {
         return m_Index;
-    }
 
-    Error("TODO");
+    Error("symbol is not a constant address");
 }

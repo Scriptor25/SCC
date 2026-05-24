@@ -1,6 +1,7 @@
-#include <scc/assert.hpp>
 #include <scc/ir/block.hpp>
 #include <scc/ir/instruction.hpp>
+
+#include <scc/assert.hpp>
 
 scc::ir::DirectBranchInstruction::DirectBranchInstruction(
     Type *type,
@@ -55,7 +56,7 @@ size_t scc::ir::DirectBranchInstruction::GetSuccessorCount() const
 
 scc::ir::Block *scc::ir::DirectBranchInstruction::GetSuccessor(const size_t index) const
 {
-    AssertIndexInBounds(index, 1);
+    AssertInBounds(index, 1);
 
     return m_Destination;
 }

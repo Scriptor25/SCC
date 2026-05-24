@@ -37,7 +37,7 @@ const std::string &scc::as::Section::GetName() const
     return m_Name;
 }
 
-size_t scc::as::Section::GetFragmentCount() const
+size_t scc::as::Section::size() const
 {
     return m_Fragments.size();
 }

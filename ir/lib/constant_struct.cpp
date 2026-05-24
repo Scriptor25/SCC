@@ -86,7 +86,7 @@ size_t scc::ir::ConstantStruct::GetElementCount() const
 
 scc::ir::Constant *scc::ir::ConstantStruct::GetElement(const size_t index) const
 {
-    AssertIndexInBounds(index, m_Elements.size());
+    AssertInBounds(index, m_Elements.size());
 
     return m_Elements[index];
 }

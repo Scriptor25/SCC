@@ -6,7 +6,6 @@
 #include <scc/common.hpp>
 
 #include <memory>
-#include <vector>
 
 namespace scc::as
 {
@@ -18,8 +17,8 @@ namespace scc::as
             using value_type = std::conditional_t<constant, const Operand, Operand>;
             using collection_type = std::conditional_t<
                 constant,
-                const std::vector<std::unique_ptr<Operand>>,
-                std::vector<std::unique_ptr<Operand>>
+                const std::vector<OperandPtr>,
+                std::vector<OperandPtr>
             >;
 
             bool operator!=(const iterator &other) const
@@ -51,7 +50,7 @@ namespace scc::as
         explicit Instruction(
             const Platform &platform,
             Mnemonic mnemonic,
-            std::vector<std::unique_ptr<Operand>> operands = {});
+            std::vector<OperandPtr> operands = {});
 
         void SetMnemonic(Mnemonic mnemonic);
 
@@ -70,10 +69,11 @@ namespace scc::as
         [[nodiscard]] iterator<true> end() const;
 
         std::ostream &Print(std::ostream &stream) const override;
+        void Encode(std::vector<uint8_t> &buffer, SymbolTable &symbol_table, FixupTable &fixup_table) const override;
 
     private:
         const Platform &m_Platform;
         Mnemonic m_Mnemonic;
-        std::vector<std::unique_ptr<Operand>> m_Operands;
+        std::vector<OperandPtr> m_Operands;
     };
 }

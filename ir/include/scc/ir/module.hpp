@@ -24,8 +24,8 @@ namespace scc::ir
         void SetName(std::string name);
         std::string GetName();
 
-        [[nodiscard]] bool HasSymbol(const std::string &name) const;
         [[nodiscard]] Global *GetSymbol(const std::string &name) const;
+        Global *GetOrCreateSymbol(Type *type, std::string name);
 
         Variable *CreateVariable(Type *type, std::string name, Constant *initializer);
         Function *CreateFunction(FunctionType *type, std::string name);

@@ -7,7 +7,6 @@
 #include <scc/ir/value.hpp>
 
 #include <scc/assert.hpp>
-#include <scc/error.hpp>
 
 #include <ranges>
 
@@ -44,7 +43,7 @@ scc::ir::Variable *scc::ir::Builder::CreateString(
 
 scc::ir::Block *scc::ir::Builder::GetOrCreateBlock(Function *function, std::string name) const
 {
-    Assert(!!function, "function must not be null");
+    Assert(function, "function must not be null");
     Assert(!name.empty(), "name must not be empty");
 
     if (auto *block = function->FindBlock(name))
@@ -55,7 +54,7 @@ scc::ir::Block *scc::ir::Builder::GetOrCreateBlock(Function *function, std::stri
 
 void scc::ir::Builder::SetInsertBlock(Block *block)
 {
-    Assert(!!block, "block must not be null");
+    Assert(block, "block must not be null");
 
     m_InsertBlock = block;
 }
@@ -72,14 +71,14 @@ scc::ir::Block *scc::ir::Builder::GetInsertBlock() const
 
 scc::ir::Function *scc::ir::Builder::GetInsertFunction() const
 {
-    Assert(!!m_InsertBlock, "insert block must not be null");
+    Assert(m_InsertBlock, "insert block must not be null");
 
     return m_InsertBlock->GetFunction();
 }
 
 scc::ir::Type *scc::ir::Builder::GetInsertFunctionResult() const
 {
-    Assert(!!m_InsertBlock, "insert block must not be null");
+    Assert(m_InsertBlock, "insert block must not be null");
 
     const auto *function = m_InsertBlock->GetFunction();
     const auto *function_type = dynamic_cast<FunctionType *>(function->GetType()->GetElement());
@@ -89,7 +88,7 @@ scc::ir::Type *scc::ir::Builder::GetInsertFunctionResult() const
 
 scc::ir::Value *scc::ir::Builder::CreateEmpty(Type *type, std::string name) const
 {
-    Assert(!!m_InsertBlock, "insert block must not be null");
+    Assert(m_InsertBlock, "insert block must not be null");
 
     return m_InsertBlock->CreateEmpty(type, std::move(name));
 }
@@ -100,7 +99,7 @@ scc::ir::OperatorInstruction *scc::ir::Builder::CreateOperator(
     std::vector<Value *> operands,
     std::string name)
 {
-    Assert(!!type, "type must not be null");
+    Assert(type, "type must not be null");
     Assert(!operands.empty(), "operands must not be empty");
 
     for (const auto *operand : operands)
@@ -201,9 +200,9 @@ scc::ir::ComparatorInstruction *scc::ir::Builder::CreateComparator(
     Value *rhs,
     std::string name)
 {
-    Assert(!!type, "type must not be null");
-    Assert(!!lhs, "lhs must not be null");
-    Assert(!!rhs, "rhs must not be null");
+    Assert(type, "type must not be null");
+    Assert(lhs, "lhs must not be null");
+    Assert(rhs, "rhs must not be null");
 
     assert_type_match(lhs->GetType(), type);
     assert_type_match(rhs->GetType(), type);
@@ -309,7 +308,7 @@ scc::ir::ComparatorInstruction *scc::ir::Builder::CreateNE(
 
 scc::ir::DirectBranchInstruction *scc::ir::Builder::CreateBranch(Block *destination)
 {
-    Assert(!!destination, "destination must not be null");
+    Assert(destination, "destination must not be null");
 
     return Create<DirectBranchInstruction>(
         m_Context.GetVoidType(),
@@ -322,9 +321,9 @@ scc::ir::BranchInstruction *scc::ir::Builder::CreateBranch(
     Block *then,
     Block *else_)
 {
-    Assert(!!condition, "condition must not be null");
-    Assert(!!then, "then must not be null");
-    Assert(!!else_, "else must not be null");
+    Assert(condition, "condition must not be null");
+    Assert(then, "then must not be null");
+    Assert(else_, "else must not be null");
 
     assert_type_match(condition->GetType(), m_Context.GetInt1Type());
 
@@ -343,7 +342,7 @@ scc::ir::ReturnInstruction *scc::ir::Builder::CreateRet()
 
 scc::ir::ReturnInstruction *scc::ir::Builder::CreateRet(Value *value)
 {
-    Assert(!!value, "value must not be null");
+    Assert(value, "value must not be null");
 
     assert_type_match(value->GetType(), GetInsertFunctionResult());
 
@@ -355,7 +354,7 @@ scc::ir::SelectInstruction *scc::ir::Builder::CreateSelect(
     std::vector<std::pair<Block *, Value *>> nodes,
     std::string name)
 {
-    Assert(!!type, "type must not be null");
+    Assert(type, "type must not be null");
     Assert(!nodes.empty(), "nodes must not be empty");
 
     for (const auto *value : nodes | std::views::values)
@@ -370,8 +369,8 @@ scc::ir::SelectInstruction *scc::ir::Builder::CreateSelect(
 
 scc::ir::AllocInstruction *scc::ir::Builder::CreateAlloc(Type *type, uint64_t count, std::string name)
 {
-    Assert(!!type, "type must not be null");
-    Assert(!!count, "count must not be 0");
+    Assert(type, "type must not be null");
+    Assert(count, "count must not be 0");
 
     return Create<AllocInstruction>(
         m_Context.GetPointerType(type),
@@ -382,7 +381,7 @@ scc::ir::AllocInstruction *scc::ir::Builder::CreateAlloc(Type *type, uint64_t co
 
 scc::ir::LoadInstruction *scc::ir::Builder::CreateLoad(Value *pointer, std::string name)
 {
-    Assert(!!pointer, "pointer must not be null");
+    Assert(pointer, "pointer must not be null");
 
     auto *pointer_type = pointer->GetType();
     Assert(pointer_type->GetKind() == Kind::Pointer, "type {} is not a kind of pointer", pointer_type);
@@ -398,8 +397,8 @@ scc::ir::LoadInstruction *scc::ir::Builder::CreateLoad(Value *pointer, std::stri
 
 scc::ir::StoreInstruction *scc::ir::Builder::CreateStore(Value *pointer, Value *value)
 {
-    Assert(!!pointer, "pointer must not be null");
-    Assert(!!value, "value must not be null");
+    Assert(pointer, "pointer must not be null");
+    Assert(value, "value must not be null");
 
     auto *pointer_type = pointer->GetType();
     Assert(pointer_type->GetKind() == Kind::Pointer, "type {} is not a kind of pointer", pointer_type);
@@ -421,7 +420,7 @@ scc::ir::ElementPointerInstruction *scc::ir::Builder::CreateElementPointer(
     std::vector<Value *> indices,
     std::string name)
 {
-    Assert(!!pointer, "pointer must not be null");
+    Assert(pointer, "pointer must not be null");
     Assert(!indices.empty(), "indices must not be empty");
 
     auto *pointer_type = pointer->GetType();
@@ -430,7 +429,7 @@ scc::ir::ElementPointerInstruction *scc::ir::Builder::CreateElementPointer(
 
     for (auto *index : indices)
     {
-        Assert(!!pointer_type->GetElementCount(), "type {} does not have any elements to index into", pointer_type);
+        Assert(pointer_type->GetElementCount(), "type {} does not have any elements to index into", pointer_type);
 
         auto *index_type = index->GetType();
         Assert(index_type->GetKind() == Kind::Int, "type {} is not a kind of int", index_type);
@@ -439,7 +438,7 @@ scc::ir::ElementPointerInstruction *scc::ir::Builder::CreateElementPointer(
         {
             const auto *constant_index = dynamic_cast<ConstantInt *>(index);
 
-            Assert(!!constant_index, "index must be constant");
+            Assert(constant_index, "index must be constant");
 
             const auto index_value = constant_index->GetValue();
 
@@ -464,7 +463,7 @@ scc::ir::ElementPointerInstruction *scc::ir::Builder::CreateElementPointer(
     const std::vector<size_t> &indices,
     std::string name)
 {
-    Assert(!!pointer, "pointer must not be null");
+    Assert(pointer, "pointer must not be null");
     Assert(!indices.empty(), "indices must not be empty");
 
     auto *pointer_type = pointer->GetType();
@@ -495,8 +494,8 @@ scc::ir::CallInstruction *scc::ir::Builder::CreateCall(
     std::vector<Value *> arguments,
     std::string name)
 {
-    Assert(!!function_type, "function type must not be null");
-    Assert(!!callee, "callee must not be null");
+    Assert(function_type, "function type must not be null");
+    Assert(callee, "callee must not be null");
     Assert(!arguments.empty(), "arguments must not be empty");
 
     auto *callee_type = callee->GetType();
@@ -528,8 +527,8 @@ scc::ir::CastInstruction *scc::ir::Builder::CreateCast(
     Value *value,
     std::string name)
 {
-    Assert(!!type, "type must not be null");
-    Assert(!!value, "value must not be null");
+    Assert(type, "type must not be null");
+    Assert(value, "value must not be null");
 
     Assert(type->GetKind() == Kind::Pointer, "type {} is not a kind of pointer", type);
 

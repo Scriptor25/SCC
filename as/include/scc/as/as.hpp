@@ -2,6 +2,8 @@
 
 #include <cstdint>
 #include <memory>
+#include <unordered_map>
+#include <vector>
 
 namespace scc::as
 {
@@ -16,11 +18,14 @@ namespace scc::as
     class Fragment;
 
     class Instruction;
+    using InstructionPtr = std::unique_ptr<Instruction>;
+
     class Data;
     class Align;
     class Fill;
 
     class Operand;
+    using OperandPtr = std::unique_ptr<Operand>;
 
     class ImmediateOperand;
     class StringOperand;
@@ -30,5 +35,13 @@ namespace scc::as
 
     class Symbol;
 
-    using OperandPtr = std::unique_ptr<Operand>;
+    struct FixupTableEntry
+    {
+        size_t Offset;
+        size_t Size;
+        size_t Subtract;
+    };
+
+    using SymbolTable = std::unordered_map<const Symbol *, size_t>;
+    using FixupTable = std::unordered_map<const Symbol *, std::vector<FixupTableEntry>>;
 }

@@ -16,8 +16,19 @@ int main(int argc, const char **argv)
     if (!in)
         return 1;
 
-    auto triple = scc::platform::ParseTriple("x86_64-none-elf");
-    auto platform = triple.GetPlatform({});
+    scc::platform::TargetTriple triple;
+    if (auto res = scc::platform::ParseTriple("x86_64-linux-elf") >> triple; !res)
+    {
+        std::cerr << res.error() << std::endl;
+        return 1;
+    }
+
+    scc::Platform platform;
+    if (auto res = triple.GetPlatform() >> platform; !res)
+    {
+        std::cerr << res.error() << std::endl;
+        return 1;
+    }
 
     scc::ir::Context context(platform);
 

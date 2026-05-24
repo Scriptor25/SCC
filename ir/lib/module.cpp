@@ -1,8 +1,9 @@
 #include <scc/ir/function.hpp>
 #include <scc/ir/module.hpp>
+#include <scc/ir/type.hpp>
 #include <scc/ir/variable.hpp>
 
-#include <scc/error.hpp>
+#include <scc/assert.hpp>
 
 #include <ostream>
 #include <ranges>
@@ -41,22 +42,24 @@ std::string scc::ir::Module::GetName()
     return m_Name;
 }
 
-bool scc::ir::Module::HasSymbol(const std::string &name) const
-{
-    for (auto &symbol : m_Symbols)
-        if (symbol->GetName() == name)
-            return true;
-
-    return false;
-}
-
 scc::ir::Global *scc::ir::Module::GetSymbol(const std::string &name) const
 {
     for (auto &symbol : m_Symbols)
         if (symbol->GetName() == name)
             return symbol.get();
 
-    Error("symbol {} does not exist", name);
+    return {};
+}
+
+scc::ir::Global *scc::ir::Module::GetOrCreateSymbol(Type *type, std::string name)
+{
+    if (auto *symbol = GetSymbol(name))
+        return symbol;
+
+    if (auto *fn_type = dynamic_cast<FunctionType *>(type))
+        return CreateFunction(fn_type, std::move(name));
+
+    return CreateVariable(type, std::move(name), {});
 }
 
 scc::ir::Variable *scc::ir::Module::CreateVariable(
@@ -65,8 +68,7 @@ scc::ir::Variable *scc::ir::Module::CreateVariable(
     Constant *initializer)
 {
     for (const auto &symbol : m_Symbols)
-        if (symbol->GetName() == name)
-            Error("variable {} does already exist", name);
+        Assert(symbol->GetName() != name, "variable {} does already exist", name);
 
     auto variable = std::make_unique<Variable>(type, std::move(name), initializer);
     auto *ptr = variable.get();
@@ -79,8 +81,7 @@ scc::ir::Variable *scc::ir::Module::CreateVariable(
 scc::ir::Function *scc::ir::Module::CreateFunction(FunctionType *type, std::string name)
 {
     for (const auto &symbol : m_Symbols)
-        if (symbol->GetName() == name)
-            Error("function {} does already exist", name);
+        Assert(symbol->GetName() != name, "function {} does already exist", name);
 
     auto function = std::make_unique<Function>(type, std::move(name));
     auto *ptr = function.get();

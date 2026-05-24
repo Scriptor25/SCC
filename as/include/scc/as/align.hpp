@@ -13,6 +13,7 @@ namespace scc::as
         [[nodiscard]] uint8_t GetAlignment() const;
 
         std::ostream &Print(std::ostream &stream) const override;
+        void Encode(std::vector<uint8_t> &buffer, SymbolTable &symbol_table, FixupTable &fixup_table) const override;
 
     private:
         uint8_t m_Alignment;

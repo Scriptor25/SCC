@@ -46,15 +46,15 @@ namespace scc::as
         explicit Section(Module *module, std::string name = {});
 
         void SetName(std::string name);
+
         Fragment *Insert(std::unique_ptr<Fragment> fragment);
         Fragment *Insert(Instruction instruction);
 
         [[nodiscard]] const std::string &GetName() const;
 
-        [[nodiscard]] size_t GetFragmentCount() const;
+        [[nodiscard]] size_t size() const;
 
         Fragment &operator[](size_t index);
-
         [[nodiscard]] const Fragment &operator[](size_t index) const;
 
         iterator<false> begin();

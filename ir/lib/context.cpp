@@ -1,9 +1,8 @@
 #include <scc/ir/context.hpp>
 #include <scc/ir/type.hpp>
 
-#include <scc/platform.hpp>
-
 #include <scc/assert.hpp>
+#include <scc/platform.hpp>
 
 scc::ir::Context::Context(const Platform &platform)
     : m_Platform(&platform)

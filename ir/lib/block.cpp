@@ -4,7 +4,6 @@
 #include <scc/ir/instruction.hpp>
 
 #include <scc/assert.hpp>
-#include <scc/error.hpp>
 
 #include <ostream>
 
@@ -75,7 +74,7 @@ size_t scc::ir::Block::GetInstructionCount() const
 
 scc::ir::Instruction *scc::ir::Block::GetInstruction(const size_t index) const
 {
-    AssertIndexInBounds(index, m_Instructions.size());
+    AssertInBounds(index, m_Instructions.size());
 
     return m_Instructions[index].get();
 }
@@ -90,7 +89,7 @@ scc::ir::Instruction *scc::ir::Block::Insert(std::unique_ptr<Instruction> instru
         if (auto *value = m_Function->FindValue(name))
         {
             auto *empty = dynamic_cast<EmptyValue *>(value);
-            Assert(!!empty, "value %{} does already exist and is not empty", name);
+            Assert(empty, "value %{} does already exist and is not empty", name);
 
             empty->ReplaceWith(ptr);
         }
@@ -102,7 +101,7 @@ scc::ir::Instruction *scc::ir::Block::Insert(std::unique_ptr<Instruction> instru
 
 void scc::ir::Block::Erase(const Instruction *instruction)
 {
-    Assert(!!instruction, "instruction must not be null");
+    Assert(instruction, "instruction must not be null");
 
     for (auto it = m_Instructions.begin(); it != m_Instructions.end(); ++it)
         if (it->get() == instruction)

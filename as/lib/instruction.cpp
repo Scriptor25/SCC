@@ -1,6 +1,9 @@
 #include <scc/as/instruction.hpp>
 
 #include <scc/platform.hpp>
+#include <scc/platform/x86.hpp>
+
+#include <iostream>
 
 scc::as::Instruction::Instruction(
     const Platform &platform,
@@ -60,9 +63,9 @@ scc::as::Instruction::iterator<true> scc::as::Instruction::end() const
 std::ostream &scc::as::Instruction::Print(std::ostream &stream) const
 {
     if (m_Operands.empty())
-        return stream << m_Platform.ISA.Mnemonics.at(m_Mnemonic).Name;
+        return stream << m_Platform.ISA.Mnemonics.at(m_Mnemonic).CanonicalName();
 
-    stream << m_Platform.ISA.Mnemonics.at(m_Mnemonic).Name << ' ';
+    stream << m_Platform.ISA.Mnemonics.at(m_Mnemonic).CanonicalName() << ' ';
 
     for (auto it = m_Operands.begin(); it != m_Operands.end(); ++it)
     {
@@ -73,4 +76,12 @@ std::ostream &scc::as::Instruction::Print(std::ostream &stream) const
     }
 
     return stream;
+}
+
+void scc::as::Instruction::Encode(
+    std::vector<uint8_t> &buffer,
+    SymbolTable &symbol_table,
+    FixupTable &fixup_table) const
+{
+    Print(std::cerr << "TODO: ") << std::endl;
 }

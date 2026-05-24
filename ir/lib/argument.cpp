@@ -24,7 +24,7 @@ std::ostream &scc::ir::Argument::Print(std::ostream &stream) const
     return m_Type->Print(stream) << " %" << m_Name;
 }
 
-std::ostream &scc::ir::Argument::PrintOperand(std::ostream &stream, bool print_type) const
+std::ostream &scc::ir::Argument::PrintOperand(std::ostream &stream, const bool print_type) const
 {
     Assert(!m_Name.empty(), "cannot use nameless value");
 

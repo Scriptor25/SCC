@@ -3,6 +3,8 @@
 
 #include <scc/assert.hpp>
 
+#include <iomanip>
+
 scc::ir::ConstantArray::ConstantArray(ArrayType *type, std::vector<Constant *> elements)
     : Constant(type),
       m_Elements(std::move(elements))
@@ -55,7 +57,7 @@ std::ostream &scc::ir::ConstantArray::PrintOperand(std::ostream &stream, const b
             if (const auto c = dynamic_cast<ConstantInt *>(element)->GetValue(); c >= 0x20)
                 stream << static_cast<char>(c);
             else
-                stream << std::format("\\x{:02X}", c);
+                stream << "\\x" << std::hex << std::setfill('0') << std::setw(2) << c;
 
         return stream << '"';
     }
@@ -100,7 +102,7 @@ size_t scc::ir::ConstantArray::GetElementCount() const
 
 scc::ir::Constant *scc::ir::ConstantArray::GetElement(const size_t index) const
 {
-    AssertIndexInBounds(index, m_Elements.size());
+    AssertInBounds(index, m_Elements.size());
 
     return m_Elements[index];
 }

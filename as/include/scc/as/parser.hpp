@@ -4,6 +4,9 @@
 
 #include <scc/common.hpp>
 
+#include <toolkit/result.hxx>
+
+#include <format>
 #include <iosfwd>
 #include <memory>
 #include <string>
@@ -33,14 +36,14 @@ namespace scc::as
 
     struct EvaluationContext
     {
-        const Platform &MPlatform;
-        Section *MSection;
+        const Platform &Platform;
+        Section *Section;
     };
 
     class Parser
     {
     public:
-        explicit Parser(std::istream &stream, const Platform &platform, Module &module);
+        explicit Parser(std::istream &stream, Module &module);
 
         Token Get();
 
@@ -50,18 +53,20 @@ namespace scc::as
         [[nodiscard]] bool At(TokenType type, const std::string &value = {}) const;
 
         bool Skip(TokenType type, const std::string &value = {});
-        Token Expect(TokenType type, const std::string &value = {});
+        [[nodiscard]] toolkit::result<Token> Expect(TokenType type, const std::string &value = {});
 
         void Parse();
-        void ParseLine();
+        toolkit::result<> ParseLine();
 
-        OperandPtr ParseDirectiveOperand();
+        toolkit::result<OperandPtr> ParseDirectiveOperand();
 
-        Instruction ParseInstruction();
-        std::vector<OperandPtr> ParseOperands();
-        OperandPtr ParseOperand();
+        toolkit::result<InstructionPtr> ParseInstruction();
+        toolkit::result<std::vector<OperandPtr>> ParseOperands();
+        toolkit::result<OperandPtr> ParseOperand();
 
-        OperandPtr Evaluate(const std::string &directive, const std::vector<OperandPtr> &operands);
+        [[nodiscard]] toolkit::result<OperandPtr> Evaluate(
+            const std::string &directive,
+            const std::vector<OperandPtr> &operands) const;
 
     private:
         std::istream &m_Stream;
@@ -76,3 +81,34 @@ namespace scc::as
         Symbol *m_Primary;
     };
 }
+
+template<>
+struct std::formatter<scc::as::TokenType>
+{
+    template<typename C>
+    static constexpr auto parse(C &&ctx)
+    {
+        return ctx.begin();
+    }
+
+    template<typename C>
+    auto format(const scc::as::TokenType value, C &&ctx) const
+    {
+        static const std::unordered_map<scc::as::TokenType, const char *> map
+        {
+            { scc::as::TokenType::EndOfFile, "EndOfFile" },
+            { scc::as::TokenType::EndOfLine, "EndOfLine" },
+            { scc::as::TokenType::Label, "Label" },
+            { scc::as::TokenType::Symbol, "Symbol" },
+            { scc::as::TokenType::String, "String" },
+            { scc::as::TokenType::Register, "Register" },
+            { scc::as::TokenType::Immediate, "Immediate" },
+            { scc::as::TokenType::Other, "Other" },
+        };
+
+        if (const auto it = map.find(value); it != map.end())
+            return std::format_to(ctx.out(), "{}", it->second);
+
+        return ctx.out();
+    }
+};

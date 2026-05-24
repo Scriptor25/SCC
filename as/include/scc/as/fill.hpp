@@ -14,6 +14,7 @@ namespace scc::as
         [[nodiscard]] uint8_t GetValue() const;
 
         std::ostream &Print(std::ostream &stream) const override;
+        void Encode(std::vector<uint8_t> &buffer, SymbolTable &symbol_table, FixupTable &fixup_table) const override;
 
     private:
         uint64_t m_Count;

@@ -53,7 +53,7 @@ size_t scc::ir::VectorType::GetElementCount() const
 
 scc::ir::Type *scc::ir::VectorType::GetElement(const size_t index) const
 {
-    AssertIndexInBounds(index, m_ElementCount);
+    AssertInBounds(index, m_ElementCount);
 
     return m_Element;
 }

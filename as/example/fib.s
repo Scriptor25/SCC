@@ -121,7 +121,7 @@ itoa:
 
 .loop:
     cmp %rcx, $0x00
-    jlt .done       # if c < 0, goto .done
+    jl .done        # if c < 0, goto .done
 
     xor %rdx, %rdx  # d = 0
     mov %rbx, $0x0A # b = 10

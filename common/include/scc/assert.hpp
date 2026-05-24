@@ -1,19 +1,29 @@
 #pragma once
 
 #include <format>
-#include <stdexcept>
 
 namespace scc
 {
-    template<typename... Args>
-    void Assert(const bool condition, std::format_string<Args...> format, Args &&... args)
+    template<typename... A>
+    [[noreturn]] void Error(std::format_string<A...> fmt, A &&... args)
     {
-        if (condition)
-            return;
-
-        auto message = std::format(std::move(format), std::forward<Args>(args)...);
-        throw std::runtime_error(message);
+        throw std::runtime_error(std::format(std::move(fmt), std::forward<A>(args)...));
     }
 
-    void AssertIndexInBounds(size_t index, size_t count);
+    template<typename C, typename... A>
+    void Assert(C condition, std::format_string<A...> fmt, A &&... args)
+    {
+        if (!condition)
+            throw std::runtime_error(std::format(std::move(fmt), std::forward<A>(args)...));
+    }
+
+    [[noreturn]] inline void ErrorOutOfBounds(size_t index, size_t count)
+    {
+        Error("index {} out of bounds [{};{})", index, 0, count);
+    }
+
+    inline void AssertInBounds(size_t index, size_t count)
+    {
+        Assert(index < count, "index {} out of bounds [{};{})", index, 0, count);
+    }
 }

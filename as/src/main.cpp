@@ -1,6 +1,7 @@
 #include <scc/as/module.hpp>
 #include <scc/as/parser.hpp>
 
+#include <scc/binary.hpp>
 #include <scc/platform.hpp>
 
 #include <fstream>
@@ -15,17 +16,31 @@ int main(const int argc, const char **argv)
     if (!in)
         return 1;
 
-    auto triple = scc::platform::ParseTriple("x86_64-none-elf");
-    auto platform = triple.GetPlatform({});
+    scc::platform::TargetTriple triple;
+    if (auto res = scc::platform::ParseTriple("x86_64-linux-elf") >> triple; !res)
+    {
+        std::cerr << res.error() << std::endl;
+        return 1;
+    }
 
-    scc::as::Module module;
-    scc::as::Parser parser(in, platform, module);
+    scc::Platform platform;
+    if (auto res = triple.GetPlatform() >> platform; !res)
+    {
+        std::cerr << res.error() << std::endl;
+        return 1;
+    }
+
+    scc::as::Module module(platform);
+    scc::as::Parser parser(in, module);
 
     parser.Parse();
 
-    module.Print(std::cout);
+    module.Print(std::cerr);
 
-    // TODO: print binary
+    std::vector<uint8_t> buffer;
+    module.Encode(buffer);
+
+    scc::PrintBinary(std::cout, buffer);
 
     return 0;
 }

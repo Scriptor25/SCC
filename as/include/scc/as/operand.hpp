@@ -15,6 +15,8 @@ namespace scc::as
         explicit Operand(const Platform &platform);
         virtual ~Operand() = default;
 
+        [[nodiscard]] const Platform &GetPlatform() const;
+
         [[nodiscard]] virtual Immediate GetImmediate() const;
 
         virtual std::ostream &Print(std::ostream &stream) const = 0;
@@ -79,41 +81,39 @@ namespace scc::as
         Register m_Register;
     };
 
-    class DirectOperand : public Operand
-    {
-    public:
-        explicit DirectOperand(const Platform &platform, Immediate address);
-
-        std::ostream &Print(std::ostream &stream) const override;
-
-        [[nodiscard]] Immediate GetAddress() const;
-
-    private:
-        Immediate m_Address;
-    };
-
     class ReferenceOperand : public Operand
     {
     public:
+        ReferenceOperand(const Platform &platform, int64_t displacement);
+
         ReferenceOperand(
             const Platform &platform,
-            Immediate displacement,
+            int64_t displacement,
+            bool has_base_register,
             Register base_register,
+            bool has_index_register,
             Register index_register,
-            Immediate scale);
+            uint8_t scale);
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] Immediate GetDisplacement() const;
+        [[nodiscard]] int64_t GetDisplacement() const;
+        [[nodiscard]] bool HasBaseRegister() const;
         [[nodiscard]] Register GetBaseRegister() const;
+        [[nodiscard]] bool HasIndexRegister() const;
         [[nodiscard]] Register GetIndexRegister() const;
-        [[nodiscard]] Immediate GetScale() const;
+        [[nodiscard]] uint8_t GetScale() const;
 
     private:
-        Immediate m_Displacement;
+        int64_t m_Displacement;
+
+        bool m_HasBaseRegister;
         Register m_BaseRegister;
+
+        bool m_HasIndexRegister;
         Register m_IndexRegister;
-        Immediate m_Scale;
+
+        uint8_t m_Scale;
     };
 
     class SymbolOperand : public Operand

@@ -12,7 +12,7 @@ std::ostream &scc::ir::ConstantInt::PrintOperand(std::ostream &stream, const boo
     if (print_type)
         m_Type->Print(stream) << ' ';
 
-    return stream << std::format("0x{:X}", m_Value);
+    return stream << "0x" << std::hex << m_Value;
 }
 
 bool scc::ir::ConstantInt::Compare(Constant *value) const
