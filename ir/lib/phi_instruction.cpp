@@ -2,7 +2,9 @@
 #include <scc/ir/instruction.hpp>
 #include <scc/ir/type.hpp>
 
-scc::ir::SelectInstruction::SelectInstruction(
+#include <scc/assert.hpp>
+
+scc::ir::PhiInstruction::PhiInstruction(
     Type *type,
     Block *block,
     std::string name,
@@ -17,12 +19,12 @@ scc::ir::SelectInstruction::SelectInstruction(
     }
 }
 
-scc::ir::SelectInstruction::~SelectInstruction()
+scc::ir::PhiInstruction::~PhiInstruction()
 {
     DropAll();
 }
 
-void scc::ir::SelectInstruction::DropAll()
+void scc::ir::PhiInstruction::DropAll()
 {
     for (auto &[key, value] : m_Nodes)
     {
@@ -42,7 +44,7 @@ void scc::ir::SelectInstruction::DropAll()
     m_Nodes.clear();
 }
 
-void scc::ir::SelectInstruction::Replace(Value *value, Value *with)
+void scc::ir::PhiInstruction::Replace(Value *value, Value *with)
 {
     for (auto &[key, val] : m_Nodes)
     {
@@ -66,12 +68,12 @@ void scc::ir::SelectInstruction::Replace(Value *value, Value *with)
     }
 }
 
-std::ostream &scc::ir::SelectInstruction::Print(std::ostream &stream) const
+std::ostream &scc::ir::PhiInstruction::Print(std::ostream &stream) const
 {
     if (IsUsed())
         stream << '%' << m_Name << " = ";
 
-    m_Type->Print(stream << "select ") << ' ';
+    m_Type->Print(stream << "phi ") << ' ';
 
     for (auto i = m_Nodes.begin(); i != m_Nodes.end(); ++i)
     {
@@ -84,17 +86,22 @@ std::ostream &scc::ir::SelectInstruction::Print(std::ostream &stream) const
     return stream;
 }
 
-size_t scc::ir::SelectInstruction::GetNodeCount() const
+std::ostream &scc::ir::PhiInstruction::PrintAssembly(std::ostream &stream, LoweringContext &context) const
+{
+    Error("TODO");
+}
+
+size_t scc::ir::PhiInstruction::GetNodeCount() const
 {
     return m_Nodes.size();
 }
 
-std::pair<scc::ir::Block *, scc::ir::Value *> &scc::ir::SelectInstruction::GetNode(const size_t index)
+std::pair<scc::ir::Block *, scc::ir::Value *> &scc::ir::PhiInstruction::GetNode(const size_t index)
 {
     return m_Nodes[index];
 }
 
-const std::pair<scc::ir::Block *, scc::ir::Value *> &scc::ir::SelectInstruction::GetNode(const size_t index) const
+const std::pair<scc::ir::Block *, scc::ir::Value *> &scc::ir::PhiInstruction::GetNode(const size_t index) const
 {
     return m_Nodes[index];
 }

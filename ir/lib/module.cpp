@@ -1,4 +1,5 @@
 #include <scc/ir/function.hpp>
+#include <scc/ir/lowering.hpp>
 #include <scc/ir/module.hpp>
 #include <scc/ir/type.hpp>
 #include <scc/ir/variable.hpp>
@@ -95,6 +96,19 @@ std::ostream &scc::ir::Module::Print(std::ostream &stream) const
 {
     for (auto &symbol : m_Symbols)
         symbol->Print(stream) << std::endl;
+
+    return stream;
+}
+
+std::ostream &scc::ir::Module::PrintAssembly(std::ostream &stream, const Platform &platform) const
+{
+    LoweringContext context
+    {
+        .TargetPlatform = platform,
+    };
+
+    for (auto &symbol : m_Symbols)
+        symbol->PrintAssembly(stream, context) << std::endl;
 
     return stream;
 }

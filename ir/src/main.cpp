@@ -39,7 +39,7 @@ int main(int argc, const char **argv)
 
     module.Print(std::cout);
 
-    // TODO: print assembly
+    module.PrintAssembly(std::cout, platform);
 
     return 0;
 }

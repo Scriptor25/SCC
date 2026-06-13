@@ -5,10 +5,77 @@
 
 #include <iosfwd>
 #include <string>
+#include <string_view>
+#include <unordered_map>
 #include <vector>
 
 namespace scc::ir
 {
+    enum class IOperator
+    {
+        ADD,
+        SUB,
+        MUL,
+        SDIV,
+        UDIV,
+        SREM,
+        UREM,
+        AND,
+        OR,
+        XOR,
+    };
+
+    extern const std::unordered_map<IOperator, std::string_view> IOperatorToString;
+    extern const std::unordered_map<std::string_view, IOperator> StringToIOperator;
+
+    enum class FOperator
+    {
+        ADD,
+        SUB,
+        MUL,
+        DIV,
+        REM,
+    };
+
+    extern const std::unordered_map<FOperator, std::string_view> FOperatorToString;
+    extern const std::unordered_map<std::string_view, FOperator> StringToFOperator;
+
+    enum class ICompare
+    {
+        SLT,
+        ULT,
+        SGT,
+        UGT,
+        SLE,
+        ULE,
+        SGE,
+        UGE,
+        EQU,
+        NEQ,
+    };
+
+    extern const std::unordered_map<ICompare, std::string_view> ICompareToString;
+    extern const std::unordered_map<std::string_view, ICompare> StringToICompare;
+
+    enum class FCompare
+    {
+        OLT,
+        ULT,
+        OGT,
+        UGT,
+        OLE,
+        ULE,
+        OGE,
+        UGE,
+        OEQ,
+        UEQ,
+        ONE,
+        UNE,
+    };
+
+    extern const std::unordered_map<FCompare, std::string_view> FCompareToString;
+    extern const std::unordered_map<std::string_view, FCompare> StringToFCompare;
+
     class Instruction : public User
     {
     public:
@@ -31,82 +98,113 @@ namespace scc::ir
         std::string m_Name;
     };
 
-    enum class Operator
-    {
-        Add,
-        Sub,
-        Mul,
-        SDiv,
-        UDiv,
-        SRem,
-        URem,
-        And,
-        Or,
-        Xor,
-    };
-
-    class OperatorInstruction : public Instruction
+    class IOperatorInstruction : public Instruction
     {
     public:
-        explicit OperatorInstruction(
+        explicit IOperatorInstruction(
             Type *type,
             Block *block,
             std::string name,
-            Operator operator_,
+            IOperator operator_,
             std::vector<Value *> operands);
-        ~OperatorInstruction() override;
+        ~IOperatorInstruction() override;
 
         void DropAll() override;
         void Replace(Value *value, Value *with) override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] Operator GetOperator() const;
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
+
+        [[nodiscard]] IOperator GetOperator() const;
         [[nodiscard]] unsigned GetOperandCount() const;
         [[nodiscard]] Value *GetOperand(unsigned index) const;
 
     private:
-        Operator m_Operator;
+        IOperator m_Operator;
         std::vector<Value *> m_Operands;
     };
 
-    enum class Comparator
-    {
-        SLT,
-        ULT,
-        SGT,
-        UGT,
-        SLE,
-        ULE,
-        SGE,
-        UGE,
-        EQU,
-        NEQ,
-    };
-
-    class ComparatorInstruction : public Instruction
+    class FOperatorInstruction : public Instruction
     {
     public:
-        explicit ComparatorInstruction(
+        explicit FOperatorInstruction(
             Type *type,
             Block *block,
             std::string name,
-            Comparator comparator,
-            Value *lhs,
-            Value *rhs);
-        ~ComparatorInstruction() override;
+            FOperator operator_,
+            std::vector<Value *> operands);
+        ~FOperatorInstruction() override;
 
         void DropAll() override;
         void Replace(Value *value, Value *with) override;
 
         std::ostream &Print(std::ostream &stream) const override;
 
-        [[nodiscard]] Comparator GetComparator() const;
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
+
+        [[nodiscard]] FOperator GetOperator() const;
+        [[nodiscard]] unsigned GetOperandCount() const;
+        [[nodiscard]] Value *GetOperand(unsigned index) const;
+
+    private:
+        FOperator m_Operator;
+        std::vector<Value *> m_Operands;
+    };
+
+    class ICompareInstruction : public Instruction
+    {
+    public:
+        explicit ICompareInstruction(
+            Type *type,
+            Block *block,
+            std::string name,
+            ICompare compare,
+            Value *lhs,
+            Value *rhs);
+        ~ICompareInstruction() override;
+
+        void DropAll() override;
+        void Replace(Value *value, Value *with) override;
+
+        std::ostream &Print(std::ostream &stream) const override;
+
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
+
+        [[nodiscard]] ICompare GetCompare() const;
         [[nodiscard]] Value *GetLHS() const;
         [[nodiscard]] Value *GetRHS() const;
 
     private:
-        Comparator m_Comparator;
+        ICompare m_Compare;
+        Value *m_LHS, *m_RHS;
+    };
+
+    class FCompareInstruction : public Instruction
+    {
+    public:
+        explicit FCompareInstruction(
+            Type *type,
+            Block *block,
+            std::string name,
+            FCompare compare,
+            Value *lhs,
+            Value *rhs);
+        ~FCompareInstruction() override;
+
+        void DropAll() override;
+        void Replace(Value *value, Value *with) override;
+
+        std::ostream &Print(std::ostream &stream) const override;
+
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
+
+        [[nodiscard]] FCompare GetCompare() const;
+        [[nodiscard]] Value *GetLHS() const;
+        [[nodiscard]] Value *GetRHS() const;
+
+    private:
+        FCompare m_Compare;
         Value *m_LHS, *m_RHS;
     };
 
@@ -123,6 +221,8 @@ namespace scc::ir
         void Replace(Value *value, Value *with) override;
 
         std::ostream &Print(std::ostream &stream) const override;
+
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
 
         bool IsTerminator() const override;
         size_t GetSuccessorCount() const override;
@@ -149,6 +249,8 @@ namespace scc::ir
         void Replace(Value *value, Value *with) override;
 
         std::ostream &Print(std::ostream &stream) const override;
+
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
 
         bool IsTerminator() const override;
         size_t GetSuccessorCount() const override;
@@ -180,6 +282,8 @@ namespace scc::ir
 
         std::ostream &Print(std::ostream &stream) const override;
 
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
+
         bool IsTerminator() const override;
 
         [[nodiscard]] Value *GetValue() const;
@@ -188,20 +292,22 @@ namespace scc::ir
         Value *m_Value;
     };
 
-    class SelectInstruction : public Instruction
+    class PhiInstruction : public Instruction
     {
     public:
-        explicit SelectInstruction(
+        explicit PhiInstruction(
             Type *type,
             Block *block,
             std::string name,
             std::vector<std::pair<Block *, Value *>> nodes);
-        ~SelectInstruction() override;
+        ~PhiInstruction() override;
 
         void DropAll() override;
         void Replace(Value *value, Value *with) override;
 
         std::ostream &Print(std::ostream &stream) const override;
+
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
 
         [[nodiscard]] size_t GetNodeCount() const;
         std::pair<Block *, Value *> &GetNode(size_t index);
@@ -221,6 +327,8 @@ namespace scc::ir
             uint64_t count);
 
         std::ostream &Print(std::ostream &stream) const override;
+
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
 
         [[nodiscard]] uint64_t GetCount() const;
 
@@ -243,6 +351,8 @@ namespace scc::ir
 
         std::ostream &Print(std::ostream &stream) const override;
 
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
+
         [[nodiscard]] Value *GetPointer() const;
 
     private:
@@ -263,6 +373,8 @@ namespace scc::ir
         void Replace(Value *value, Value *with) override;
 
         std::ostream &Print(std::ostream &stream) const override;
+
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
 
         [[nodiscard]] Value *GetPointer() const;
         [[nodiscard]] Value *GetValue() const;
@@ -287,6 +399,8 @@ namespace scc::ir
         void Replace(Value *value, Value *with) override;
 
         std::ostream &Print(std::ostream &stream) const override;
+
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
 
         [[nodiscard]] Value *GetBase() const;
         [[nodiscard]] size_t GetIndexCount() const;
@@ -313,6 +427,8 @@ namespace scc::ir
 
         std::ostream &Print(std::ostream &stream) const override;
 
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
+
         [[nodiscard]] Value *GetCallee() const;
         [[nodiscard]] unsigned GetArgumentCount() const;
         [[nodiscard]] Value *GetArgument(unsigned index) const;
@@ -336,6 +452,8 @@ namespace scc::ir
         void Replace(Value *value, Value *with) override;
 
         std::ostream &Print(std::ostream &stream) const override;
+
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
 
         [[nodiscard]] Value *GetValue() const;
 

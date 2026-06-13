@@ -34,6 +34,19 @@ std::ostream &scc::ir::Argument::PrintOperand(std::ostream &stream, const bool p
     return stream << '%' << m_Name;
 }
 
+std::ostream &scc::ir::Argument::PrintAssembly(std::ostream &stream, LoweringContext &context) const
+{
+    Error("TODO");
+}
+
+std::ostream &scc::ir::Argument::PrintOperandAssembly(
+    std::ostream &stream,
+    LoweringContext &context,
+    bool address) const
+{
+    Error("TODO");
+}
+
 void scc::ir::Argument::SetName(std::string name)
 {
     m_Name = std::move(name);

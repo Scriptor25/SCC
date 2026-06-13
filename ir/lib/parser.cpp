@@ -7,6 +7,7 @@
 #include <iostream>
 #include <istream>
 #include <map>
+#include <ranges>
 #include <unordered_map>
 
 scc::ir::Parser::Parser(std::istream &stream, Context &context, Module &module)
@@ -150,6 +151,7 @@ scc::ir::Token &scc::ir::Parser::Next()
         None,
         Comment,
         Integer,
+        FloatingPoint,
         Identifier,
         String,
     };
@@ -254,9 +256,36 @@ scc::ir::Token &scc::ir::Parser::Next()
                 Get();
                 break;
             }
+            if (m_Buffer == '.')
+            {
+                value += static_cast<char>(m_Buffer);
+                Get();
+                state = State::FloatingPoint;
+                break;
+            }
             {
                 const auto int_value = std::stoull(value, {}, static_cast<int>(base));
-                return m_Token = { .Type = TokenType::Integer, .Value = std::move(value), .IntValue = int_value };
+                return m_Token = {
+                           .Type = TokenType::Integer,
+                           .Value = std::move(value),
+                           .IntValue = int_value
+                       };
+            }
+
+        case State::FloatingPoint:
+            if (isdigit(10, m_Buffer))
+            {
+                value += static_cast<char>(m_Buffer);
+                Get();
+                break;
+            }
+            {
+                const auto float_value = std::stold(value, {});
+                return m_Token = {
+                           .Type = TokenType::FloatingPoint,
+                           .Value = std::move(value),
+                           .FloatValue = static_cast<float64_t>(float_value)
+                       };
             }
 
         case State::Identifier:
@@ -346,18 +375,6 @@ bool scc::ir::Parser::At(const TokenType type, const std::string_view value) con
     return m_Token.Type == type && m_Token.Value == value;
 }
 
-bool scc::ir::Parser::At(const TokenType type, const std::vector<std::string_view> &values) const
-{
-    if (m_Token.Type != type)
-        return false;
-
-    for (auto &value : values)
-        if (m_Token.Value == value)
-            return true;
-
-    return false;
-}
-
 bool scc::ir::Parser::Skip(const TokenType type)
 {
     if (m_Token.Type == type)
@@ -404,17 +421,6 @@ scc::ir::Token scc::ir::Parser::Expect(const TokenType type, const std::string_v
 {
     Assert(m_Token.Type == type && m_Token.Value == value, "unexpected token");
     return Skip();
-}
-
-scc::ir::Token scc::ir::Parser::Expect(const TokenType type, const std::vector<std::string_view> &values)
-{
-    Assert(m_Token.Type == type, "unexpected token");
-
-    for (const auto &value : values)
-        if (m_Token.Value == value)
-            return Skip();
-
-    Error("unexpected token");
 }
 
 scc::ir::Type *scc::ir::Parser::ParseType()
@@ -546,9 +552,36 @@ scc::ir::Constant *scc::ir::Parser::ParseConstant(Type *type)
         case Kind::Int:
             return m_Builder.GetContext().GetInt(dynamic_cast<IntType *>(type), value);
         case Kind::Float:
-            return m_Builder.GetContext().GetFloat(
-                dynamic_cast<FloatType *>(type),
-                reinterpret_cast<const float64_t &>(value));
+        {
+            switch (auto *float_type = dynamic_cast<FloatType *>(type); float_type->GetBitWidth())
+            {
+            case 32:
+            {
+                const auto int_value = static_cast<uint32_t>(value);
+                return m_Builder.GetContext().GetFloat(float_type, reinterpret_cast<const float32_t &>(int_value));
+            }
+
+            case 64:
+                return m_Builder.GetContext().GetFloat(float_type, reinterpret_cast<const float64_t &>(value));
+
+            default:
+                Error("invalid bit width for float type {}", float_type);
+            }
+        }
+
+        default:
+            Error("invalid value for type {}", type);
+        }
+    }
+
+    if (At(TokenType::FloatingPoint))
+    {
+        const auto value = Skip().FloatValue;
+
+        switch (type->GetKind())
+        {
+        case Kind::Float:
+            return m_Builder.GetContext().GetFloat(dynamic_cast<FloatType *>(type), value);
 
         default:
             Error("invalid value for type {}", type);
@@ -607,8 +640,8 @@ scc::ir::Instruction *scc::ir::Parser::ParseInstruction()
     if (At(TokenType::Identifier, "element"))
         return ParseElementInstruction(std::move(name));
 
-    if (At(TokenType::Identifier, "select"))
-        return ParseSelectInstruction(std::move(name));
+    if (At(TokenType::Identifier, "phi"))
+        return ParsePhiInstruction(std::move(name));
 
     if (At(TokenType::Identifier, "alloc"))
         return ParseAllocInstruction(std::move(name));
@@ -616,33 +649,17 @@ scc::ir::Instruction *scc::ir::Parser::ParseInstruction()
     if (At(TokenType::Identifier, "cast"))
         return ParseCastInstruction(std::move(name));
 
-    if (At(
-        TokenType::Identifier,
-        "slt",
-        "ult",
-        "sgt",
-        "ugt",
-        "sle",
-        "ule",
-        "sge",
-        "uge",
-        "equ",
-        "neq"))
-        return ParseComparatorInstruction(std::move(name));
+    if (At(TokenType::Identifier, StringToICompare | std::views::keys))
+        return ParseICompareInstruction(std::move(name));
 
-    if (At(
-        TokenType::Identifier,
-        "add",
-        "sub",
-        "mul",
-        "sdiv",
-        "udiv",
-        "srem",
-        "urem",
-        "and",
-        "or",
-        "xor"))
-        return ParseOperatorInstruction(std::move(name));
+    if (At(TokenType::Identifier, StringToIOperator | std::views::keys))
+        return ParseIOperatorInstruction(std::move(name));
+
+    if (At(TokenType::Identifier, StringToFCompare | std::views::keys))
+        return ParseFCompareInstruction(std::move(name));
+
+    if (At(TokenType::Identifier, StringToFOperator | std::views::keys))
+        return ParseFOperatorInstruction(std::move(name));
 
     Error("unexpected token");
 }
@@ -685,11 +702,11 @@ scc::ir::Instruction *scc::ir::Parser::ParseReturnInstruction()
     Expect(TokenType::Identifier, "ret");
 
     if (At(TokenType::EndOfLine))
-        return m_Builder.CreateRet();
+        return m_Builder.CreateReturn();
 
     auto *value = ParseValue(m_Builder.GetInsertFunctionResult());
 
-    return m_Builder.CreateRet(value);
+    return m_Builder.CreateReturn(value);
 }
 
 scc::ir::Instruction *scc::ir::Parser::ParseStoreInstruction()
@@ -715,35 +732,9 @@ scc::ir::Instruction *scc::ir::Parser::ParseLoadInstruction(std::string name)
     return m_Builder.CreateLoad(pointer, std::move(name));
 }
 
-scc::ir::Instruction *scc::ir::Parser::ParseComparatorInstruction(std::string name)
+scc::ir::Instruction *scc::ir::Parser::ParseICompareInstruction(std::string name)
 {
-    static const std::unordered_map<std::string_view, Comparator> map
-    {
-        { "slt", Comparator::SLT },
-        { "ult", Comparator::ULT },
-        { "sgt", Comparator::SGT },
-        { "ugt", Comparator::UGT },
-        { "sle", Comparator::SLE },
-        { "ule", Comparator::ULE },
-        { "sge", Comparator::SGE },
-        { "uge", Comparator::UGE },
-        { "equ", Comparator::EQU },
-        { "neq", Comparator::NEQ },
-    };
-
-    const auto comparator = Expect(
-        TokenType::Identifier,
-        "slt",
-        "ult",
-        "sgt",
-        "ugt",
-        "sle",
-        "ule",
-        "sge",
-        "uge",
-        "equ",
-        "neq"
-    ).Value;
+    auto comparator = Expect(TokenType::Identifier, StringToICompare | std::views::keys).Value;
 
     auto *type = ParseType();
 
@@ -753,42 +744,16 @@ scc::ir::Instruction *scc::ir::Parser::ParseComparatorInstruction(std::string na
 
     auto *rhs = ParseValue(type);
 
-    const auto it = map.find(comparator);
+    const auto it = StringToICompare.find(comparator);
 
-    Assert(it != map.end(), "undefined comparator '{}'", comparator);
+    Assert(it != StringToICompare.end(), "undefined comparator '{}'", comparator);
 
-    return m_Builder.CreateComparator(it->second, type, lhs, rhs, std::move(name));
+    return m_Builder.CreateICompare(it->second, type, lhs, rhs, std::move(name));
 }
 
-scc::ir::Instruction *scc::ir::Parser::ParseOperatorInstruction(std::string name)
+scc::ir::Instruction *scc::ir::Parser::ParseIOperatorInstruction(std::string name)
 {
-    static const std::unordered_map<std::string_view, Operator> map
-    {
-        { "add", Operator::Add },
-        { "sub", Operator::Sub },
-        { "mul", Operator::Mul },
-        { "sdiv", Operator::SDiv },
-        { "udiv", Operator::UDiv },
-        { "srem", Operator::SRem },
-        { "urem", Operator::URem },
-        { "and", Operator::And },
-        { "or", Operator::Or },
-        { "xor", Operator::Xor },
-    };
-
-    auto operator_ = Expect(
-        TokenType::Identifier,
-        "add",
-        "sub",
-        "mul",
-        "sdiv",
-        "udiv",
-        "srem",
-        "urem",
-        "and",
-        "or",
-        "xor"
-    ).Value;
+    auto operator_ = Expect(TokenType::Identifier, StringToIOperator | std::views::keys).Value;
 
     auto *type = ParseType();
 
@@ -802,11 +767,53 @@ scc::ir::Instruction *scc::ir::Parser::ParseOperatorInstruction(std::string name
             Expect(TokenType::Other, ",");
     }
 
-    const auto it = map.find(operator_);
+    const auto it = StringToIOperator.find(operator_);
 
-    Assert(it != map.end(), "undefined operator '{}'", operator_);
+    Assert(it != StringToIOperator.end(), "undefined operator '{}'", operator_);
 
-    return m_Builder.CreateOperator(it->second, type, std::move(operands), std::move(name));
+    return m_Builder.CreateIOperator(it->second, type, std::move(operands), std::move(name));
+}
+
+scc::ir::Instruction *scc::ir::Parser::ParseFCompareInstruction(std::string name)
+{
+    auto comparator = Expect(TokenType::Identifier, StringToFCompare | std::views::keys).Value;
+
+    auto *type = ParseType();
+
+    auto *lhs = ParseValue(type);
+
+    Expect(TokenType::Other, ",");
+
+    auto *rhs = ParseValue(type);
+
+    const auto it = StringToFCompare.find(comparator);
+
+    Assert(it != StringToFCompare.end(), "undefined comparator '{}'", comparator);
+
+    return m_Builder.CreateFCompare(it->second, type, lhs, rhs, std::move(name));
+}
+
+scc::ir::Instruction *scc::ir::Parser::ParseFOperatorInstruction(std::string name)
+{
+    auto operator_ = Expect(TokenType::Identifier, StringToFOperator | std::views::keys).Value;
+
+    auto *type = ParseType();
+
+    std::vector<Value *> operands;
+
+    while (!At(TokenType::EndOfLine))
+    {
+        operands.push_back(ParseValue(type));
+
+        if (!At(TokenType::EndOfLine))
+            Expect(TokenType::Other, ",");
+    }
+
+    const auto it = StringToFOperator.find(operator_);
+
+    Assert(it != StringToFOperator.end(), "undefined operator '{}'", operator_);
+
+    return m_Builder.CreateFOperator(it->second, type, std::move(operands), std::move(name));
 }
 
 scc::ir::Instruction *scc::ir::Parser::ParseCallInstruction(std::string name)
@@ -863,9 +870,9 @@ scc::ir::Instruction *scc::ir::Parser::ParseElementInstruction(std::string name)
     return m_Builder.CreateElementPointer(pointer, std::move(indices), std::move(name));
 }
 
-scc::ir::Instruction *scc::ir::Parser::ParseSelectInstruction(std::string name)
+scc::ir::Instruction *scc::ir::Parser::ParsePhiInstruction(std::string name)
 {
-    Expect(TokenType::Identifier, "select");
+    Expect(TokenType::Identifier, "phi");
 
     auto *type = ParseType();
 
@@ -892,7 +899,7 @@ scc::ir::Instruction *scc::ir::Parser::ParseSelectInstruction(std::string name)
             Expect(TokenType::Other, ",");
     }
 
-    return m_Builder.CreateSelect(type, std::move(nodes), std::move(name));
+    return m_Builder.CreatePhi(type, std::move(nodes), std::move(name));
 }
 
 scc::ir::Instruction *scc::ir::Parser::ParseAllocInstruction(std::string name)

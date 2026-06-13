@@ -68,6 +68,11 @@ std::ostream &scc::ir::Function::Print(std::ostream &stream) const
     return stream << '}';
 }
 
+std::ostream &scc::ir::Function::PrintAssembly(std::ostream &stream, LoweringContext &context) const
+{
+    Error("TODO");
+}
+
 void scc::ir::Function::InsertBlock(std::unique_ptr<Block> block)
 {
     Assert(!!block, "block must not be null");

@@ -31,6 +31,7 @@ namespace scc::ir
         Function *CreateFunction(FunctionType *type, std::string name);
 
         std::ostream &Print(std::ostream &stream) const;
+        std::ostream &PrintAssembly(std::ostream &stream, const Platform &platform) const;
 
     private:
         std::string m_Name;

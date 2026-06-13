@@ -75,6 +75,19 @@ std::ostream &scc::ir::ConstantArray::PrintOperand(std::ostream &stream, const b
     return stream << ']';
 }
 
+std::ostream &scc::ir::ConstantArray::PrintAssembly(std::ostream &stream, LoweringContext &context) const
+{
+    Error("TODO");
+}
+
+std::ostream &scc::ir::ConstantArray::PrintOperandAssembly(
+    std::ostream &stream,
+    LoweringContext &context,
+    bool address) const
+{
+    Error("TODO");
+}
+
 bool scc::ir::ConstantArray::Compare(Constant *value) const
 {
     if (const auto *array_value = dynamic_cast<ConstantArray *>(value))

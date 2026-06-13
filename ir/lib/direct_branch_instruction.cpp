@@ -44,6 +44,11 @@ std::ostream &scc::ir::DirectBranchInstruction::Print(std::ostream &stream) cons
     return m_Destination->PrintOperand(stream << "br ", false);
 }
 
+std::ostream &scc::ir::DirectBranchInstruction::PrintAssembly(std::ostream &stream, LoweringContext &context) const
+{
+    Error("TODO");
+}
+
 bool scc::ir::DirectBranchInstruction::IsTerminator() const
 {
     return true;

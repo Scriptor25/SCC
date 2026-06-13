@@ -13,6 +13,9 @@ namespace scc::ir
         std::ostream &Print(std::ostream &stream) const override;
         std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
 
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
+        std::ostream &PrintOperandAssembly(std::ostream &stream, LoweringContext &context, bool address) const override;
+
         void SetName(std::string name);
         const std::string &GetName() const;
 

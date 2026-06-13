@@ -5,18 +5,27 @@
 
 #include <cstdint>
 #include <iosfwd>
+#include <ranges>
 #include <string>
 #include <string_view>
 #include <vector>
 
 namespace scc::ir
 {
+    template<typename T>
+    concept range = requires(T t)
+    {
+        { t.begin() };
+        { t.end() };
+    };
+
     enum class TokenType
     {
         EndOfFile,
         EndOfLine,
         Identifier,
         Integer,
+        FloatingPoint,
         String,
         Other,
     };
@@ -26,6 +35,7 @@ namespace scc::ir
         TokenType Type{};
         std::string Value;
         uint64_t IntValue{};
+        float64_t FloatValue{};
     };
 
     class Parser
@@ -43,16 +53,34 @@ namespace scc::ir
         [[nodiscard]] bool At(const std::vector<TokenType> &types) const;
 
         template<std::same_as<TokenType>... Types>
-        bool At(Types &&... types) const
+        [[nodiscard]] bool At(Types... types) const
         {
             return At(std::vector<TokenType>{ types... });
         }
 
         [[nodiscard]] bool At(TokenType type, std::string_view value) const;
-        [[nodiscard]] bool At(TokenType type, const std::vector<std::string_view> &values) const;
 
-        template<std::convertible_to<std::string_view>... Values>
-        bool At(TokenType type, Values &&... values) const
+        template<typename I>
+        [[nodiscard]] bool At(TokenType type, const I &begin, const I &end) const
+        {
+            if (m_Token.Type != type)
+                return false;
+
+            for (auto it = begin; it != end; ++it)
+                if (m_Token.Value == *it)
+                    return true;
+
+            return false;
+        }
+
+        template<range R>
+        [[nodiscard]] bool At(TokenType type, const R &range) const
+        {
+            return At(type, range.begin(), range.end());
+        }
+
+        template<std::convertible_to<std::string_view>... V>
+        [[nodiscard]] bool At(TokenType type, const V &... values) const
         {
             return At(type, std::vector<std::string_view>{ values... });
         }
@@ -72,10 +100,27 @@ namespace scc::ir
         }
 
         Token Expect(TokenType type, std::string_view value);
-        Token Expect(TokenType type, const std::vector<std::string_view> &values);
 
-        template<std::convertible_to<std::string_view>... Values>
-        Token Expect(TokenType type, Values &&... values)
+        template<typename I>
+        Token Expect(TokenType type, const I &begin, const I &end)
+        {
+            Assert(m_Token.Type == type, "unexpected token");
+
+            for (auto it = begin; it != end; ++it)
+                if (m_Token.Value == *it)
+                    return Skip();
+
+            Error("unexpected token");
+        }
+
+        template<range R>
+        Token Expect(TokenType type, const R &range)
+        {
+            return Expect(type, range.begin(), range.end());
+        }
+
+        template<std::convertible_to<std::string_view>... V>
+        Token Expect(TokenType type, const V &... values)
         {
             return Expect(type, std::vector<std::string_view>{ values... });
         }
@@ -90,11 +135,13 @@ namespace scc::ir
         Instruction *ParseStoreInstruction();
 
         Instruction *ParseLoadInstruction(std::string name);
-        Instruction *ParseComparatorInstruction(std::string name);
-        Instruction *ParseOperatorInstruction(std::string name);
+        Instruction *ParseICompareInstruction(std::string name);
+        Instruction *ParseIOperatorInstruction(std::string name);
+        Instruction *ParseFCompareInstruction(std::string name);
+        Instruction *ParseFOperatorInstruction(std::string name);
         Instruction *ParseCallInstruction(std::string name);
         Instruction *ParseElementInstruction(std::string name);
-        Instruction *ParseSelectInstruction(std::string name);
+        Instruction *ParsePhiInstruction(std::string name);
         Instruction *ParseAllocInstruction(std::string name);
         Instruction *ParseCastInstruction(std::string name);
 

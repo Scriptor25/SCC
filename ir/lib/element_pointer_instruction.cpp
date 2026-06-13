@@ -1,6 +1,8 @@
 #include <scc/ir/instruction.hpp>
 #include <scc/ir/type.hpp>
 
+#include <scc/assert.hpp>
+
 #include <ostream>
 
 scc::ir::ElementPointerInstruction::ElementPointerInstruction(
@@ -75,6 +77,11 @@ std::ostream &scc::ir::ElementPointerInstruction::Print(std::ostream &stream) co
         index->PrintOperand(stream << ", ", true);
 
     return stream;
+}
+
+std::ostream &scc::ir::ElementPointerInstruction::PrintAssembly(std::ostream &stream, LoweringContext &context) const
+{
+    Error("TODO");
 }
 
 scc::ir::Value *scc::ir::ElementPointerInstruction::GetBase() const

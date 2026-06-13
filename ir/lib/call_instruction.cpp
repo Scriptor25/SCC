@@ -1,7 +1,9 @@
 #include <scc/ir/instruction.hpp>
+#include <scc/ir/type.hpp>
+
+#include <scc/assert.hpp>
 
 #include <ostream>
-#include <scc/ir/type.hpp>
 
 scc::ir::CallInstruction::CallInstruction(
     Type *type,
@@ -78,6 +80,11 @@ std::ostream &scc::ir::CallInstruction::Print(std::ostream &stream) const
         argument->PrintOperand(stream << ", ", true);
 
     return stream;
+}
+
+std::ostream &scc::ir::CallInstruction::PrintAssembly(std::ostream &stream, LoweringContext &context) const
+{
+    Error("TODO");
 }
 
 scc::ir::Value *scc::ir::CallInstruction::GetCallee() const

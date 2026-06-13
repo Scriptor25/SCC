@@ -1,5 +1,7 @@
 #include <scc/ir/instruction.hpp>
 
+#include <scc/assert.hpp>
+
 #include <ostream>
 
 scc::ir::LoadInstruction::LoadInstruction(
@@ -45,6 +47,11 @@ std::ostream &scc::ir::LoadInstruction::Print(std::ostream &stream) const
         stream << '%' << m_Name << " = ";
 
     return m_Pointer->PrintOperand(stream << "load ", true);
+}
+
+std::ostream &scc::ir::LoadInstruction::PrintAssembly(std::ostream &stream, LoweringContext &context) const
+{
+    Error("TODO");
 }
 
 scc::ir::Value *scc::ir::LoadInstruction::GetPointer() const

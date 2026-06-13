@@ -1,5 +1,9 @@
+#include <scc/ir/lowering.hpp>
 #include <scc/ir/user.hpp>
 #include <scc/ir/value.hpp>
+
+#include <scc/assert.hpp>
+#include <scc/platform.hpp>
 
 scc::ir::Value::Value(Type *type)
     : m_Type(type)
@@ -9,6 +13,32 @@ scc::ir::Value::Value(Type *type)
 scc::ir::Value::~Value()
 {
     ReplaceWith({});
+}
+
+std::ostream &scc::ir::Value::PrintOperandAssembly(
+    std::ostream &stream,
+    LoweringContext &context,
+    const bool address) const
+{
+    if (const auto it = context.RegisterAssignment.find(this); it != context.RegisterAssignment.end())
+    {
+        auto *view = context.TargetPlatform.ISA.FindRegisterView(it->second);
+
+        Assert(view, "view must not be null");
+
+        return stream << '%' << view->CanonicalName();
+    }
+
+    if (const auto it = context.StackOffset.find(this); it != context.StackOffset.end())
+    {
+        // TODO: get frame base pointer register for target platform
+        // TODO: build memory operand: `-<offset>(%<base pointer register>)`
+        // TODO: print memory operand
+
+        Error("TODO");
+    }
+
+    Error("value not instantiated");
 }
 
 void scc::ir::Value::Use(User *user)

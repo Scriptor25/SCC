@@ -14,6 +14,8 @@ namespace scc::ir
 
         std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
 
+        std::ostream &PrintOperandAssembly(std::ostream &stream, LoweringContext &context, bool address) const override;
+
         [[nodiscard]] bool Compare(Constant *value) const override;
 
         void SetName(std::string name);

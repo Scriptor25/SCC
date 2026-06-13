@@ -27,6 +27,19 @@ std::ostream &scc::ir::EmptyValue::PrintOperand(std::ostream &stream, const bool
     return stream << '%' << m_Name;
 }
 
+std::ostream &scc::ir::EmptyValue::PrintAssembly(std::ostream &stream, LoweringContext &context) const
+{
+    Error("cannot print empty value assembly");
+}
+
+std::ostream &scc::ir::EmptyValue::PrintOperandAssembly(
+    std::ostream &stream,
+    LoweringContext &context,
+    bool address) const
+{
+    Error("cannot print empty value operand assembly");
+}
+
 void scc::ir::EmptyValue::SetName(std::string name)
 {
     m_Name = std::move(name);

@@ -25,6 +25,10 @@ namespace scc::ir
         explicit ConstantInt(IntType *type, uint64_t value);
 
         std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
+
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
+        std::ostream &PrintOperandAssembly(std::ostream &stream, LoweringContext &context, bool address) const override;
+
         [[nodiscard]] bool Compare(Constant *value) const override;
 
         [[nodiscard]] uint64_t GetValue() const;
@@ -39,6 +43,10 @@ namespace scc::ir
         explicit ConstantFloat(FloatType *type, float64_t value);
 
         std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
+
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
+        std::ostream &PrintOperandAssembly(std::ostream &stream, LoweringContext &context, bool address) const override;
+
         [[nodiscard]] bool Compare(Constant *value) const override;
 
         [[nodiscard]] float64_t GetValue() const;
@@ -57,6 +65,10 @@ namespace scc::ir
         void Replace(Value *value, Value *with) override;
 
         std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
+
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
+        std::ostream &PrintOperandAssembly(std::ostream &stream, LoweringContext &context, bool address) const override;
+
         [[nodiscard]] bool Compare(Constant *value) const override;
 
         [[nodiscard]] size_t GetElementCount() const;
@@ -76,6 +88,10 @@ namespace scc::ir
         void Replace(Value *value, Value *with) override;
 
         std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
+
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
+        std::ostream &PrintOperandAssembly(std::ostream &stream, LoweringContext &context, bool address) const override;
+
         [[nodiscard]] bool Compare(Constant *value) const override;
 
         [[nodiscard]] size_t GetElementCount() const;
@@ -95,6 +111,10 @@ namespace scc::ir
         void Replace(Value *value, Value *with) override;
 
         std::ostream &PrintOperand(std::ostream &stream, bool print_type) const override;
+
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
+        std::ostream &PrintOperandAssembly(std::ostream &stream, LoweringContext &context, bool address) const override;
+
         [[nodiscard]] bool Compare(Constant *value) const override;
 
         [[nodiscard]] size_t GetElementCount() const;

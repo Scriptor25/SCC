@@ -93,19 +93,21 @@ scc::ir::Value *scc::ir::Builder::CreateEmpty(Type *type, std::string name) cons
     return m_InsertBlock->CreateEmpty(type, std::move(name));
 }
 
-scc::ir::OperatorInstruction *scc::ir::Builder::CreateOperator(
-    Operator operator_,
+scc::ir::IOperatorInstruction *scc::ir::Builder::CreateIOperator(
+    IOperator operator_,
     Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
     Assert(type, "type must not be null");
-    Assert(!operands.empty(), "operands must not be empty");
+    Assert(operands.size() >= 2, "at least 2 operands are required");
+
+    Assert(type->GetKind() == Kind::Int, "type {} is not a kind of integer", type);
 
     for (const auto *operand : operands)
         assert_type_match(operand->GetType(), type);
 
-    return Create<OperatorInstruction>(
+    return Create<IOperatorInstruction>(
         type,
         m_InsertBlock,
         std::move(name),
@@ -113,88 +115,150 @@ scc::ir::OperatorInstruction *scc::ir::Builder::CreateOperator(
         std::move(operands));
 }
 
-scc::ir::OperatorInstruction *scc::ir::Builder::CreateAdd(
+scc::ir::IOperatorInstruction *scc::ir::Builder::CreateIOperatorADD(
     Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::Add, type, std::move(operands), std::move(name));
+    return CreateIOperator(IOperator::ADD, type, std::move(operands), std::move(name));
 }
 
-scc::ir::OperatorInstruction *scc::ir::Builder::CreateSub(
+scc::ir::IOperatorInstruction *scc::ir::Builder::CreateIOperatorSUB(
     Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::Sub, type, std::move(operands), std::move(name));
+    return CreateIOperator(IOperator::SUB, type, std::move(operands), std::move(name));
 }
 
-scc::ir::OperatorInstruction *scc::ir::Builder::CreateMul(
+scc::ir::IOperatorInstruction *scc::ir::Builder::CreateIOperatorMUL(
     Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::Mul, type, std::move(operands), std::move(name));
+    return CreateIOperator(IOperator::MUL, type, std::move(operands), std::move(name));
 }
 
-scc::ir::OperatorInstruction *scc::ir::Builder::CreateSDiv(
+scc::ir::IOperatorInstruction *scc::ir::Builder::CreateIOperatorSDIV(
     Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::SDiv, type, std::move(operands), std::move(name));
+    return CreateIOperator(IOperator::SDIV, type, std::move(operands), std::move(name));
 }
 
-scc::ir::OperatorInstruction *scc::ir::Builder::CreateUDiv(
+scc::ir::IOperatorInstruction *scc::ir::Builder::CreateIOperatorUDIV(
     Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::UDiv, type, std::move(operands), std::move(name));
+    return CreateIOperator(IOperator::UDIV, type, std::move(operands), std::move(name));
 }
 
-scc::ir::OperatorInstruction *scc::ir::Builder::CreateSRem(
+scc::ir::IOperatorInstruction *scc::ir::Builder::CreateIOperatorSREM(
     Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::SRem, type, std::move(operands), std::move(name));
+    return CreateIOperator(IOperator::SREM, type, std::move(operands), std::move(name));
 }
 
-scc::ir::OperatorInstruction *scc::ir::Builder::CreateURem(
+scc::ir::IOperatorInstruction *scc::ir::Builder::CreateIOperatorUREM(
     Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::URem, type, std::move(operands), std::move(name));
+    return CreateIOperator(IOperator::UREM, type, std::move(operands), std::move(name));
 }
 
-scc::ir::OperatorInstruction *scc::ir::Builder::CreateAnd(
+scc::ir::IOperatorInstruction *scc::ir::Builder::CreateIOperatorAND(
     Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::And, type, std::move(operands), std::move(name));
+    return CreateIOperator(IOperator::AND, type, std::move(operands), std::move(name));
 }
 
-scc::ir::OperatorInstruction *scc::ir::Builder::CreateOr(
+scc::ir::IOperatorInstruction *scc::ir::Builder::CreateIOperatorOR(
     Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::Or, type, std::move(operands), std::move(name));
+    return CreateIOperator(IOperator::OR, type, std::move(operands), std::move(name));
 }
 
-scc::ir::OperatorInstruction *scc::ir::Builder::CreateXor(
+scc::ir::IOperatorInstruction *scc::ir::Builder::CreateIOperatorXOR(
     Type *type,
     std::vector<Value *> operands,
     std::string name)
 {
-    return CreateOperator(Operator::Xor, type, std::move(operands), std::move(name));
+    return CreateIOperator(IOperator::XOR, type, std::move(operands), std::move(name));
 }
 
-scc::ir::ComparatorInstruction *scc::ir::Builder::CreateComparator(
-    Comparator comparator,
+scc::ir::FOperatorInstruction *scc::ir::Builder::CreateFOperator(
+    FOperator operator_,
+    Type *type,
+    std::vector<Value *> operands,
+    std::string name)
+{
+    Assert(type, "type must not be null");
+    Assert(operands.size() >= 2, "at least 2 operands are required");
+
+    Assert(type->GetKind() == Kind::Float, "type {} is not a kind of floating point", type);
+
+    for (const auto *operand : operands)
+        assert_type_match(operand->GetType(), type);
+
+    return Create<FOperatorInstruction>(
+        type,
+        m_InsertBlock,
+        std::move(name),
+        operator_,
+        std::move(operands));
+}
+
+scc::ir::FOperatorInstruction *scc::ir::Builder::CreateFOperatorADD(
+    Type *type,
+    std::vector<Value *> operands,
+    std::string name)
+{
+    return CreateFOperator(FOperator::ADD, type, std::move(operands), std::move(name));
+}
+
+scc::ir::FOperatorInstruction *scc::ir::Builder::CreateFOperatorSUB(
+    Type *type,
+    std::vector<Value *> operands,
+    std::string name)
+{
+    return CreateFOperator(FOperator::SUB, type, std::move(operands), std::move(name));
+}
+
+scc::ir::FOperatorInstruction *scc::ir::Builder::CreateFOperatorMUL(
+    Type *type,
+    std::vector<Value *> operands,
+    std::string name)
+{
+    return CreateFOperator(FOperator::MUL, type, std::move(operands), std::move(name));
+}
+
+scc::ir::FOperatorInstruction *scc::ir::Builder::CreateFOperatorDIV(
+    Type *type,
+    std::vector<Value *> operands,
+    std::string name)
+{
+    return CreateFOperator(FOperator::DIV, type, std::move(operands), std::move(name));
+}
+
+scc::ir::FOperatorInstruction *scc::ir::Builder::CreateFOperatorREM(
+    Type *type,
+    std::vector<Value *> operands,
+    std::string name)
+{
+    return CreateFOperator(FOperator::REM, type, std::move(operands), std::move(name));
+}
+
+scc::ir::ICompareInstruction *scc::ir::Builder::CreateICompare(
+    ICompare comparator,
     Type *type,
     Value *lhs,
     Value *rhs,
@@ -204,10 +268,12 @@ scc::ir::ComparatorInstruction *scc::ir::Builder::CreateComparator(
     Assert(lhs, "lhs must not be null");
     Assert(rhs, "rhs must not be null");
 
+    Assert(type->GetKind() == Kind::Int, "type {} is not a kind of integer", type);
+
     assert_type_match(lhs->GetType(), type);
     assert_type_match(rhs->GetType(), type);
 
-    return Create<ComparatorInstruction>(
+    return Create<ICompareInstruction>(
         m_Context.GetInt1Type(),
         m_InsertBlock,
         std::move(name),
@@ -216,94 +282,179 @@ scc::ir::ComparatorInstruction *scc::ir::Builder::CreateComparator(
         rhs);
 }
 
-scc::ir::ComparatorInstruction *scc::ir::Builder::CreateSLT(
+scc::ir::ICompareInstruction *scc::ir::Builder::CreateICompareSLT(
     Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::SLT, type, lhs, rhs, std::move(name));
+    return CreateICompare(ICompare::SLT, type, lhs, rhs, std::move(name));
 }
 
-scc::ir::ComparatorInstruction *scc::ir::Builder::CreateULT(
+scc::ir::ICompareInstruction *scc::ir::Builder::CreateICompareULT(
     Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::ULT, type, lhs, rhs, std::move(name));
+    return CreateICompare(ICompare::ULT, type, lhs, rhs, std::move(name));
 }
 
-scc::ir::ComparatorInstruction *scc::ir::Builder::CreateSGT(
+scc::ir::ICompareInstruction *scc::ir::Builder::CreateICompareSGT(
     Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::SGT, type, lhs, rhs, std::move(name));
+    return CreateICompare(ICompare::SGT, type, lhs, rhs, std::move(name));
 }
 
-scc::ir::ComparatorInstruction *scc::ir::Builder::CreateUGT(
+scc::ir::ICompareInstruction *scc::ir::Builder::CreateICompareUGT(
     Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::UGT, type, lhs, rhs, std::move(name));
+    return CreateICompare(ICompare::UGT, type, lhs, rhs, std::move(name));
 }
 
-scc::ir::ComparatorInstruction *scc::ir::Builder::CreateSLE(
+scc::ir::ICompareInstruction *scc::ir::Builder::CreateICompareSLE(
     Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::SLE, type, lhs, rhs, std::move(name));
+    return CreateICompare(ICompare::SLE, type, lhs, rhs, std::move(name));
 }
 
-scc::ir::ComparatorInstruction *scc::ir::Builder::CreateULE(
+scc::ir::ICompareInstruction *scc::ir::Builder::CreateICompareULE(
     Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::ULE, type, lhs, rhs, std::move(name));
+    return CreateICompare(ICompare::ULE, type, lhs, rhs, std::move(name));
 }
 
-scc::ir::ComparatorInstruction *scc::ir::Builder::CreateSGE(
+scc::ir::ICompareInstruction *scc::ir::Builder::CreateICompareSGE(
     Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::SGE, type, lhs, rhs, std::move(name));
+    return CreateICompare(ICompare::SGE, type, lhs, rhs, std::move(name));
 }
 
-scc::ir::ComparatorInstruction *scc::ir::Builder::CreateUGE(
+scc::ir::ICompareInstruction *scc::ir::Builder::CreateICompareUGE(
     Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::UGE, type, lhs, rhs, std::move(name));
+    return CreateICompare(ICompare::UGE, type, lhs, rhs, std::move(name));
 }
 
-scc::ir::ComparatorInstruction *scc::ir::Builder::CreateEQ(
+scc::ir::ICompareInstruction *scc::ir::Builder::CreateICompareEQU(
     Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::EQU, type, lhs, rhs, std::move(name));
+    return CreateICompare(ICompare::EQU, type, lhs, rhs, std::move(name));
 }
 
-scc::ir::ComparatorInstruction *scc::ir::Builder::CreateNE(
+scc::ir::ICompareInstruction *scc::ir::Builder::CreateICompareNEQ(
     Type *type,
     Value *lhs,
     Value *rhs,
     std::string name)
 {
-    return CreateComparator(Comparator::NEQ, type, lhs, rhs, std::move(name));
+    return CreateICompare(ICompare::NEQ, type, lhs, rhs, std::move(name));
+}
+
+scc::ir::FCompareInstruction *scc::ir::Builder::CreateFCompare(
+    FCompare comparator,
+    Type *type,
+    Value *lhs,
+    Value *rhs,
+    std::string name)
+{
+    Assert(type, "type must not be null");
+    Assert(lhs, "lhs must not be null");
+    Assert(rhs, "rhs must not be null");
+
+    Assert(type->GetKind() == Kind::Float, "type {} is not a kind of floating point", type);
+
+    assert_type_match(lhs->GetType(), type);
+    assert_type_match(rhs->GetType(), type);
+
+    return Create<FCompareInstruction>(
+        m_Context.GetInt1Type(),
+        m_InsertBlock,
+        std::move(name),
+        comparator,
+        lhs,
+        rhs);
+}
+
+scc::ir::FCompareInstruction *scc::ir::Builder::CreateFCompareOLT(Type *type, Value *lhs, Value *rhs, std::string name)
+{
+    return CreateFCompare(FCompare::OLT, type, lhs, rhs, std::move(name));
+}
+
+scc::ir::FCompareInstruction *scc::ir::Builder::CreateFCompareULT(Type *type, Value *lhs, Value *rhs, std::string name)
+{
+    return CreateFCompare(FCompare::ULT, type, lhs, rhs, std::move(name));
+}
+
+scc::ir::FCompareInstruction *scc::ir::Builder::CreateFCompareOGT(Type *type, Value *lhs, Value *rhs, std::string name)
+{
+    return CreateFCompare(FCompare::OGT, type, lhs, rhs, std::move(name));
+}
+
+scc::ir::FCompareInstruction *scc::ir::Builder::CreateFCompareUGT(Type *type, Value *lhs, Value *rhs, std::string name)
+{
+    return CreateFCompare(FCompare::UGT, type, lhs, rhs, std::move(name));
+}
+
+scc::ir::FCompareInstruction *scc::ir::Builder::CreateFCompareOLE(Type *type, Value *lhs, Value *rhs, std::string name)
+{
+    return CreateFCompare(FCompare::OLE, type, lhs, rhs, std::move(name));
+}
+
+scc::ir::FCompareInstruction *scc::ir::Builder::CreateFCompareULE(Type *type, Value *lhs, Value *rhs, std::string name)
+{
+    return CreateFCompare(FCompare::ULE, type, lhs, rhs, std::move(name));
+}
+
+scc::ir::FCompareInstruction *scc::ir::Builder::CreateFCompareOGE(Type *type, Value *lhs, Value *rhs, std::string name)
+{
+    return CreateFCompare(FCompare::OGE, type, lhs, rhs, std::move(name));
+}
+
+scc::ir::FCompareInstruction *scc::ir::Builder::CreateFCompareUGE(Type *type, Value *lhs, Value *rhs, std::string name)
+{
+    return CreateFCompare(FCompare::UGE, type, lhs, rhs, std::move(name));
+}
+
+scc::ir::FCompareInstruction *scc::ir::Builder::CreateFCompareOEQ(Type *type, Value *lhs, Value *rhs, std::string name)
+{
+    return CreateFCompare(FCompare::OEQ, type, lhs, rhs, std::move(name));
+}
+
+scc::ir::FCompareInstruction *scc::ir::Builder::CreateFCompareUEQ(Type *type, Value *lhs, Value *rhs, std::string name)
+{
+    return CreateFCompare(FCompare::UEQ, type, lhs, rhs, std::move(name));
+}
+
+scc::ir::FCompareInstruction *scc::ir::Builder::CreateFCompareONE(Type *type, Value *lhs, Value *rhs, std::string name)
+{
+    return CreateFCompare(FCompare::ONE, type, lhs, rhs, std::move(name));
+}
+
+scc::ir::FCompareInstruction *scc::ir::Builder::CreateFCompareUNE(Type *type, Value *lhs, Value *rhs, std::string name)
+{
+    return CreateFCompare(FCompare::UNE, type, lhs, rhs, std::move(name));
 }
 
 scc::ir::DirectBranchInstruction *scc::ir::Builder::CreateBranch(Block *destination)
@@ -335,12 +486,12 @@ scc::ir::BranchInstruction *scc::ir::Builder::CreateBranch(
         else_);
 }
 
-scc::ir::ReturnInstruction *scc::ir::Builder::CreateRet()
+scc::ir::ReturnInstruction *scc::ir::Builder::CreateReturn()
 {
     return Create<ReturnInstruction>(m_Context.GetVoidType(), m_InsertBlock);
 }
 
-scc::ir::ReturnInstruction *scc::ir::Builder::CreateRet(Value *value)
+scc::ir::ReturnInstruction *scc::ir::Builder::CreateReturn(Value *value)
 {
     Assert(value, "value must not be null");
 
@@ -349,7 +500,7 @@ scc::ir::ReturnInstruction *scc::ir::Builder::CreateRet(Value *value)
     return Create<ReturnInstruction>(m_Context.GetVoidType(), m_InsertBlock, value);
 }
 
-scc::ir::SelectInstruction *scc::ir::Builder::CreateSelect(
+scc::ir::PhiInstruction *scc::ir::Builder::CreatePhi(
     Type *type,
     std::vector<std::pair<Block *, Value *>> nodes,
     std::string name)
@@ -360,7 +511,7 @@ scc::ir::SelectInstruction *scc::ir::Builder::CreateSelect(
     for (const auto *value : nodes | std::views::values)
         assert_type_match(value->GetType(), type);
 
-    return Create<SelectInstruction>(
+    return Create<PhiInstruction>(
         type,
         m_InsertBlock,
         std::move(name),

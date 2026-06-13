@@ -20,6 +20,8 @@ namespace scc::ir
 
         std::ostream &Print(std::ostream &stream) const override;
 
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
+
         void InsertBlock(std::unique_ptr<Block> block);
         Block *CreateBlock(std::string name);
 

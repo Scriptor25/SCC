@@ -1,6 +1,8 @@
 #include <scc/ir/instruction.hpp>
 #include <scc/ir/type.hpp>
 
+#include <scc/assert.hpp>
+
 #include <ostream>
 
 scc::ir::CastInstruction::CastInstruction(
@@ -46,6 +48,11 @@ std::ostream &scc::ir::CastInstruction::Print(std::ostream &stream) const
         stream << '%' << m_Name << " = ";
 
     return m_Value->PrintOperand(m_Type->Print(stream << "cast ") << ", ", true);
+}
+
+std::ostream &scc::ir::CastInstruction::PrintAssembly(std::ostream &stream, LoweringContext &context) const
+{
+    Error("TODO");
 }
 
 scc::ir::Value *scc::ir::CastInstruction::GetValue() const

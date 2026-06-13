@@ -62,6 +62,19 @@ std::ostream &scc::ir::Block::PrintOperand(std::ostream &stream, bool print_type
     return stream << '.' << m_Name;
 }
 
+std::ostream &scc::ir::Block::PrintAssembly(std::ostream &stream, LoweringContext &context) const
+{
+    Error("TODO");
+}
+
+std::ostream &scc::ir::Block::PrintOperandAssembly(
+    std::ostream &stream,
+    LoweringContext &context,
+    const bool address) const
+{
+    Error("TODO");
+}
+
 scc::ir::Function *scc::ir::Block::GetFunction() const
 {
     return m_Function;

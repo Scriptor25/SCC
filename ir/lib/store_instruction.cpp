@@ -1,5 +1,7 @@
 #include <scc/ir/instruction.hpp>
 
+#include <scc/assert.hpp>
+
 #include <ostream>
 
 scc::ir::StoreInstruction::StoreInstruction(
@@ -58,6 +60,11 @@ void scc::ir::StoreInstruction::Replace(Value *value, Value *with)
 std::ostream &scc::ir::StoreInstruction::Print(std::ostream &stream) const
 {
     return m_Value->PrintOperand(m_Pointer->PrintOperand(stream << "store ", true) << ", ", false);
+}
+
+std::ostream &scc::ir::StoreInstruction::PrintAssembly(std::ostream &stream, LoweringContext &context) const
+{
+    Error("TODO");
 }
 
 scc::ir::Value *scc::ir::StoreInstruction::GetPointer() const

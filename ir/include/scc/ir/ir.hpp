@@ -48,6 +48,8 @@ namespace scc::ir
 
     class User;
 
+    struct LoweringContext;
+
     unsigned AlignTo(unsigned value, unsigned align);
 
     std::ostream &operator<<(std::ostream &stream, const Type *type);

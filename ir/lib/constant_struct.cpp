@@ -59,6 +59,19 @@ std::ostream &scc::ir::ConstantStruct::PrintOperand(std::ostream &stream, const 
     return stream << '}';
 }
 
+std::ostream &scc::ir::ConstantStruct::PrintAssembly(std::ostream &stream, LoweringContext &context) const
+{
+    Error("TODO");
+}
+
+std::ostream &scc::ir::ConstantStruct::PrintOperandAssembly(
+    std::ostream &stream,
+    LoweringContext &context,
+    bool address) const
+{
+    Error("TODO");
+}
+
 bool scc::ir::ConstantStruct::Compare(Constant *value) const
 {
     if (const auto *struct_value = dynamic_cast<const ConstantStruct *>(value))

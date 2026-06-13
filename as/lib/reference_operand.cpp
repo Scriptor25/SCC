@@ -36,7 +36,7 @@ scc::as::ReferenceOperand::ReferenceOperand(
 std::ostream &scc::as::ReferenceOperand::Print(std::ostream &stream) const
 {
     if (!m_HasBaseRegister || m_Displacement)
-        stream << "0x" << std::hex << m_Displacement;
+        stream << std::dec << m_Displacement;
 
     if (!m_HasBaseRegister)
         return stream;
@@ -48,7 +48,7 @@ std::ostream &scc::as::ReferenceOperand::Print(std::ostream &stream) const
         stream << ", %" << m_Platform.ISA.FindRegisterView(m_IndexRegister)->CanonicalName();
 
         if (m_Scale)
-            stream << ", 0x" << std::hex << m_Scale;
+            stream << ", " << std::dec << m_Scale;
     }
 
     return stream << ')';

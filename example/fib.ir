@@ -7,9 +7,9 @@ function i32 @fib(i32 %n) {
 .entry:
     br .head
 .head:
-    %a = select i32 [ .entry, 0x0 ], [ .loop, %b ]
-    %b = select i32 [ .entry, 0x1 ], [ .loop, %c ]
-    %i = select i32 [ .entry, 0x0 ], [ .loop, %x ]
+    %a = phi i32 [ .entry, 0x0 ], [ .loop, %b ]
+    %b = phi i32 [ .entry, 0x1 ], [ .loop, %c ]
+    %i = phi i32 [ .entry, 0x0 ], [ .loop, %x ]
     %lt = ult i32 %i, %n
     br %lt, .loop, .end
 .loop:
@@ -33,5 +33,5 @@ function i32 @main(i32 %argc, [[i8]] %argv) {
 
 function f32 @pi() {
 .entry:
-    ret 0x40490FDB
+    ret 3.1415926535
 }

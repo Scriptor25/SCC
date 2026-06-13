@@ -1,6 +1,8 @@
 #include <scc/ir/context.hpp>
 #include <scc/ir/global.hpp>
 
+#include <scc/assert.hpp>
+
 scc::ir::Global::Global(Type *type, std::string name)
     : Constant(type->GetContext().GetPointerType(type)),
       m_Name(std::move(name))
@@ -13,6 +15,17 @@ std::ostream &scc::ir::Global::PrintOperand(std::ostream &stream, const bool pri
         m_Type->Print(stream) << ' ';
 
     return stream << '@' << m_Name;
+}
+
+std::ostream &scc::ir::Global::PrintOperandAssembly(
+    std::ostream &stream,
+    LoweringContext &context,
+    const bool address) const
+{
+    if (address)
+        return stream << '$' << m_Name;
+
+    return stream << m_Name;
 }
 
 bool scc::ir::Global::Compare(Constant *value) const

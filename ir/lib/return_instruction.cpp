@@ -1,5 +1,7 @@
 #include <scc/ir/instruction.hpp>
 
+#include <scc/assert.hpp>
+
 #include <ostream>
 
 scc::ir::ReturnInstruction::ReturnInstruction(Type *type, Block *block)
@@ -50,6 +52,11 @@ std::ostream &scc::ir::ReturnInstruction::Print(std::ostream &stream) const
         return m_Value->PrintOperand(stream << "ret ", false);
 
     return stream << "ret";
+}
+
+std::ostream &scc::ir::ReturnInstruction::PrintAssembly(std::ostream &stream, LoweringContext &context) const
+{
+    Error("TODO");
 }
 
 bool scc::ir::ReturnInstruction::IsTerminator() const

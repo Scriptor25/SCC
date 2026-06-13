@@ -1,6 +1,8 @@
 #include <scc/ir/constant.hpp>
 #include <scc/ir/type.hpp>
 
+#include <scc/assert.hpp>
+
 scc::ir::ConstantInt::ConstantInt(IntType *type, const uint64_t value)
     : Constant(type),
       m_Value(value)
@@ -13,6 +15,19 @@ std::ostream &scc::ir::ConstantInt::PrintOperand(std::ostream &stream, const boo
         m_Type->Print(stream) << ' ';
 
     return stream << "0x" << std::hex << m_Value;
+}
+
+std::ostream &scc::ir::ConstantInt::PrintAssembly(std::ostream &stream, LoweringContext &context) const
+{
+    Error("TODO");
+}
+
+std::ostream &scc::ir::ConstantInt::PrintOperandAssembly(
+    std::ostream &stream,
+    LoweringContext &context,
+    bool address) const
+{
+    Error("TODO");
 }
 
 bool scc::ir::ConstantInt::Compare(Constant *value) const

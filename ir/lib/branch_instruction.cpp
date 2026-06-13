@@ -86,6 +86,11 @@ std::ostream &scc::ir::BranchInstruction::Print(std::ostream &stream) const
         false);
 }
 
+std::ostream &scc::ir::BranchInstruction::PrintAssembly(std::ostream &stream, LoweringContext &context) const
+{
+    Error("TODO");
+}
+
 bool scc::ir::BranchInstruction::IsTerminator() const
 {
     return true;

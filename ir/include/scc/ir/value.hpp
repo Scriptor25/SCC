@@ -18,6 +18,9 @@ namespace scc::ir
         virtual std::ostream &Print(std::ostream &stream) const = 0;
         virtual std::ostream &PrintOperand(std::ostream &stream, bool print_type) const = 0;
 
+        virtual std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const = 0;
+        virtual std::ostream &PrintOperandAssembly(std::ostream &stream, LoweringContext &context, bool address) const;
+
         void Use(User *user);
         void Drop(User *user);
         void ReplaceWith(Value *with);

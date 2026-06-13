@@ -14,6 +14,8 @@ namespace scc::ir
 
         std::ostream &Print(std::ostream &stream) const override;
 
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
+
     private:
         Constant *m_Initializer;
     };

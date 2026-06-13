@@ -38,40 +38,72 @@ namespace scc::ir
 
         Value *CreateEmpty(Type *type, std::string name = {}) const;
 
-        OperatorInstruction *CreateOperator(
-            Operator operator_,
+        IOperatorInstruction *CreateIOperator(
+            IOperator operator_,
             Type *type,
             std::vector<Value *> operands,
             std::string name = {});
 
-        OperatorInstruction *CreateAdd(Type *type, std::vector<Value *> operands, std::string name = {});
-        OperatorInstruction *CreateSub(Type *type, std::vector<Value *> operands, std::string name = {});
-        OperatorInstruction *CreateMul(Type *type, std::vector<Value *> operands, std::string name = {});
-        OperatorInstruction *CreateSDiv(Type *type, std::vector<Value *> operands, std::string name = {});
-        OperatorInstruction *CreateUDiv(Type *type, std::vector<Value *> operands, std::string name = {});
-        OperatorInstruction *CreateSRem(Type *type, std::vector<Value *> operands, std::string name = {});
-        OperatorInstruction *CreateURem(Type *type, std::vector<Value *> operands, std::string name = {});
-        OperatorInstruction *CreateAnd(Type *type, std::vector<Value *> operands, std::string name = {});
-        OperatorInstruction *CreateOr(Type *type, std::vector<Value *> operands, std::string name = {});
-        OperatorInstruction *CreateXor(Type *type, std::vector<Value *> operands, std::string name = {});
+        IOperatorInstruction *CreateIOperatorADD(Type *type, std::vector<Value *> operands, std::string name = {});
+        IOperatorInstruction *CreateIOperatorSUB(Type *type, std::vector<Value *> operands, std::string name = {});
+        IOperatorInstruction *CreateIOperatorMUL(Type *type, std::vector<Value *> operands, std::string name = {});
+        IOperatorInstruction *CreateIOperatorSDIV(Type *type, std::vector<Value *> operands, std::string name = {});
+        IOperatorInstruction *CreateIOperatorUDIV(Type *type, std::vector<Value *> operands, std::string name = {});
+        IOperatorInstruction *CreateIOperatorSREM(Type *type, std::vector<Value *> operands, std::string name = {});
+        IOperatorInstruction *CreateIOperatorUREM(Type *type, std::vector<Value *> operands, std::string name = {});
+        IOperatorInstruction *CreateIOperatorAND(Type *type, std::vector<Value *> operands, std::string name = {});
+        IOperatorInstruction *CreateIOperatorOR(Type *type, std::vector<Value *> operands, std::string name = {});
+        IOperatorInstruction *CreateIOperatorXOR(Type *type, std::vector<Value *> operands, std::string name = {});
 
-        ComparatorInstruction *CreateComparator(
-            Comparator comparator,
+        FOperatorInstruction *CreateFOperator(
+            FOperator operator_,
+            Type *type,
+            std::vector<Value *> operands,
+            std::string name = {});
+
+        FOperatorInstruction *CreateFOperatorADD(Type *type, std::vector<Value *> operands, std::string name = {});
+        FOperatorInstruction *CreateFOperatorSUB(Type *type, std::vector<Value *> operands, std::string name = {});
+        FOperatorInstruction *CreateFOperatorMUL(Type *type, std::vector<Value *> operands, std::string name = {});
+        FOperatorInstruction *CreateFOperatorDIV(Type *type, std::vector<Value *> operands, std::string name = {});
+        FOperatorInstruction *CreateFOperatorREM(Type *type, std::vector<Value *> operands, std::string name = {});
+
+        ICompareInstruction *CreateICompare(
+            ICompare comparator,
             Type *type,
             Value *lhs,
             Value *rhs,
             std::string name = {});
 
-        ComparatorInstruction *CreateSLT(Type *type, Value *lhs, Value *rhs, std::string name = {});
-        ComparatorInstruction *CreateULT(Type *type, Value *lhs, Value *rhs, std::string name = {});
-        ComparatorInstruction *CreateSGT(Type *type, Value *lhs, Value *rhs, std::string name = {});
-        ComparatorInstruction *CreateUGT(Type *type, Value *lhs, Value *rhs, std::string name = {});
-        ComparatorInstruction *CreateSLE(Type *type, Value *lhs, Value *rhs, std::string name = {});
-        ComparatorInstruction *CreateULE(Type *type, Value *lhs, Value *rhs, std::string name = {});
-        ComparatorInstruction *CreateSGE(Type *type, Value *lhs, Value *rhs, std::string name = {});
-        ComparatorInstruction *CreateUGE(Type *type, Value *lhs, Value *rhs, std::string name = {});
-        ComparatorInstruction *CreateEQ(Type *type, Value *lhs, Value *rhs, std::string name = {});
-        ComparatorInstruction *CreateNE(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ICompareInstruction *CreateICompareSLT(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ICompareInstruction *CreateICompareULT(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ICompareInstruction *CreateICompareSGT(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ICompareInstruction *CreateICompareUGT(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ICompareInstruction *CreateICompareSLE(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ICompareInstruction *CreateICompareULE(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ICompareInstruction *CreateICompareSGE(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ICompareInstruction *CreateICompareUGE(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ICompareInstruction *CreateICompareEQU(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        ICompareInstruction *CreateICompareNEQ(Type *type, Value *lhs, Value *rhs, std::string name = {});
+
+        FCompareInstruction *CreateFCompare(
+            FCompare comparator,
+            Type *type,
+            Value *lhs,
+            Value *rhs,
+            std::string name = {});
+
+        FCompareInstruction *CreateFCompareOLT(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        FCompareInstruction *CreateFCompareULT(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        FCompareInstruction *CreateFCompareOGT(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        FCompareInstruction *CreateFCompareUGT(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        FCompareInstruction *CreateFCompareOLE(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        FCompareInstruction *CreateFCompareULE(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        FCompareInstruction *CreateFCompareOGE(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        FCompareInstruction *CreateFCompareUGE(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        FCompareInstruction *CreateFCompareOEQ(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        FCompareInstruction *CreateFCompareUEQ(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        FCompareInstruction *CreateFCompareONE(Type *type, Value *lhs, Value *rhs, std::string name = {});
+        FCompareInstruction *CreateFCompareUNE(Type *type, Value *lhs, Value *rhs, std::string name = {});
 
         DirectBranchInstruction *CreateBranch(Block *destination);
         BranchInstruction *CreateBranch(
@@ -79,10 +111,10 @@ namespace scc::ir
             Block *then,
             Block *else_);
 
-        ReturnInstruction *CreateRet();
-        ReturnInstruction *CreateRet(Value *value);
+        ReturnInstruction *CreateReturn();
+        ReturnInstruction *CreateReturn(Value *value);
 
-        SelectInstruction *CreateSelect(
+        PhiInstruction *CreatePhi(
             Type *type,
             std::vector<std::pair<Block *, Value *>> nodes,
             std::string name = {});
