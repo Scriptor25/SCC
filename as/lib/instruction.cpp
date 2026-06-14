@@ -1,7 +1,8 @@
 #include <scc/as/instruction.hpp>
 
 #include <scc/platform.hpp>
-#include <scc/platform/x86.hpp>
+
+#include <scc/assert.hpp>
 
 #include <iostream>
 
@@ -62,10 +63,14 @@ scc::as::Instruction::iterator<true> scc::as::Instruction::end() const
 
 std::ostream &scc::as::Instruction::Print(std::ostream &stream) const
 {
-    if (m_Operands.empty())
-        return stream << m_Platform.ISA.Mnemonics.at(m_Mnemonic).CanonicalName();
+    auto *mnemonic = m_Platform.ISA.FindMnemonic(m_Mnemonic);
 
-    stream << m_Platform.ISA.Mnemonics.at(m_Mnemonic).CanonicalName() << ' ';
+    Assert(mnemonic, "mnemonic must not be null");
+
+    if (m_Operands.empty())
+        return stream << mnemonic->CanonicalName();
+
+    stream << mnemonic->CanonicalName() << ' ';
 
     for (auto it = m_Operands.begin(); it != m_Operands.end(); ++it)
     {
@@ -83,5 +88,16 @@ void scc::as::Instruction::Encode(
     SymbolTable &symbol_table,
     FixupTable &fixup_table) const
 {
+    auto *mnemonic = m_Platform.ISA.FindMnemonic(m_Mnemonic);
+
+    Assert(mnemonic, "mnemonic must not be null");
+
+    for (auto i = mnemonic->FormBegin; i < mnemonic->FormEnd; ++i)
+    {
+        auto &form = m_Platform.ISA.Forms[i];
+
+
+    }
+
     Print(std::cerr << "TODO: ") << std::endl;
 }

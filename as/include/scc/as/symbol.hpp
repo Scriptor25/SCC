@@ -27,11 +27,16 @@ namespace scc::as
 
         [[nodiscard]] Immediate GetAddress() const;
 
+        [[nodiscard]] bool IsExtern() const;
+        void SetExtern(bool extern_);
+
     private:
         std::string m_Name;
 
         bool m_Resolved;
         Section *m_Section;
         size_t m_Index;
+
+        bool m_Extern;
     };
 }

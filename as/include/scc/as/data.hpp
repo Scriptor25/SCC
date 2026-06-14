@@ -11,6 +11,7 @@ namespace scc::as
     {
     public:
         explicit Data(std::vector<uint8_t> data);
+        explicit Data(std::span<const uint8_t> data);
 
         [[nodiscard]] std::span<const uint8_t> GetData() const;
         [[nodiscard]] size_t GetDataSize() const;

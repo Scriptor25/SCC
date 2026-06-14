@@ -12,7 +12,7 @@ uint8_t scc::as::Align::GetAlignment() const
 
 std::ostream &scc::as::Align::Print(std::ostream &stream) const
 {
-    return stream << ".align " << std::dec << m_Alignment;
+    return stream << ".align " << std::dec << static_cast<unsigned>(m_Alignment);
 }
 
 void scc::as::Align::Encode(std::vector<uint8_t> &buffer, SymbolTable &, FixupTable &) const

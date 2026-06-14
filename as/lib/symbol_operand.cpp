@@ -10,7 +10,7 @@ scc::as::SymbolOperand::SymbolOperand(const Platform &platform, Symbol *symbol)
 
 std::ostream &scc::as::SymbolOperand::Print(std::ostream &stream) const
 {
-    return stream << m_Symbol->GetName();
+    return PrintSelector(stream) << m_Symbol->GetName();
 }
 
 scc::as::Symbol *scc::as::SymbolOperand::GetSymbol() const

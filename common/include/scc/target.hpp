@@ -169,6 +169,7 @@ namespace scc::platform
         FloatingPoint,
         Vector,
         Special,
+        Segment,
     };
 
     struct RegisterDescriptor
@@ -192,39 +193,26 @@ namespace scc::platform
 
     enum class OperandKind
     {
-        None,
-
         Register,
         Immediate,
         Memory,
         Relative,
-    };
-
-    enum class OperandClass
-    {
-        None,
-
-        GeneralPurpose,
-        FloatingPoint,
-        Vector,
-        Special,
+        Selector,
     };
 
     struct OperandConstraint
     {
         OperandKind Kind{};
-        OperandClass Class{};
+        RegisterClass Class{};
 
         uint16_t MinBitWidth{};
         uint16_t MaxBitWidth{};
 
-        bool Optional{};
+        Register Name{};
     };
 
     enum class EncodingKind
     {
-        Invalid,
-
         X86_ModRM,
         X86_OpcodePlusRegister,
         X86_Group,
@@ -241,12 +229,12 @@ namespace scc::platform
 
     struct InstructionForm
     {
-        Mnemonic Name{};
+        Mnemonic Name;
 
-        std::span<const OperandConstraint> Operands;
+        std::vector<OperandConstraint> Operands;
 
-        EncodingKind Encoding{};
-        uint32_t EncodingOffset{};
+        EncodingKind Encoding;
+        uint32_t EncodingIndex;
 
         TargetFeatures RequiredFeatures;
     };

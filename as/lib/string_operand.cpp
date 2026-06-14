@@ -10,7 +10,7 @@ scc::as::StringOperand::StringOperand(const Platform &platform, std::string valu
 
 std::ostream &scc::as::StringOperand::Print(std::ostream &stream) const
 {
-    return stream << '"' << m_Value << '"';
+    return PrintSelector(stream) << '"' << m_Value << '"';
 }
 
 const std::string &scc::as::StringOperand::GetValue() const

@@ -1,6 +1,3 @@
-#include <scc/as/align.hpp>
-#include <scc/as/data.hpp>
-#include <scc/as/fill.hpp>
 #include <scc/as/instruction.hpp>
 #include <scc/as/module.hpp>
 #include <scc/as/operand.hpp>
@@ -311,10 +308,13 @@ toolkit::result<scc::as::Token> scc::as::Parser::Expect(const TokenType type, co
     return Skip();
 }
 
-void scc::as::Parser::Parse()
+toolkit::result<> scc::as::Parser::Parse()
 {
     while (m_Token.Type != TokenType::EndOfFile)
-        ParseLine();
+        if (auto res = ParseLine(); !res)
+            return res;
+
+    return {};
 }
 
 toolkit::result<> scc::as::Parser::ParseLine()
@@ -328,7 +328,7 @@ toolkit::result<> scc::as::Parser::ParseLine()
         if (is_local)
         {
             if (!m_Primary)
-                return toolkit::make_error("local label '{}' in global space", label);
+                return toolkit::make_error("invalid local label '{}'", label);
 
             label = m_Primary->GetName() + label;
         }
@@ -365,32 +365,16 @@ toolkit::result<> scc::as::Parser::ParseLine()
 
     if (At(TokenType::Symbol) && m_Token.Value.front() == '.')
     {
-        const auto directive = Skip().Value;
-        std::vector<OperandPtr> operands;
-
-        while (!At(TokenType::EndOfLine))
-        {
-            OperandPtr operand;
-            if (auto res = ParseDirectiveOperand() >> operand; !res)
-                return res;
-
-            operands.push_back(std::move(operand));
-
-            if (!At(TokenType::EndOfLine))
-                if (auto res = Expect(TokenType::Other, ","); !res)
-                    return res;
-        }
-
-        (void) Evaluate(directive, operands);
-    }
-    else
-    {
-        InstructionPtr instruction;
-        if (auto res = ParseInstruction() >> instruction; !res)
+        if (auto res = ParseAndEvaluateDirective(TokenType::EndOfLine); !res)
             return res;
-
-        m_Section->Insert(std::move(instruction));
+        return {};
     }
+
+    InstructionPtr instruction;
+    if (auto res = ParseInstruction() >> instruction; !res)
+        return res;
+
+    m_Section->Insert(std::move(instruction));
 
     if (auto res = Expect(TokenType::EndOfLine); !res)
         return res;
@@ -398,43 +382,48 @@ toolkit::result<> scc::as::Parser::ParseLine()
     return {};
 }
 
+toolkit::result<scc::as::OperandPtr> scc::as::Parser::ParseAndEvaluateDirective(
+    TokenType end_type,
+    const std::string &end_value)
+{
+    std::string directive;
+    auto set_directive = [&directive](Token &&token) -> toolkit::result<>
+    {
+        directive = std::move(token.Value);
+        return {};
+    };
+
+    if (auto res = Expect(TokenType::Symbol) & set_directive; !res)
+        return res;
+
+    std::vector<OperandPtr> operands;
+
+    if (directive.front() != '.')
+        return toolkit::make_error("symbol '{}' is not a directive", directive);
+
+    while (!At(end_type, end_value))
+    {
+        OperandPtr operand;
+        if (auto res = ParseDirectiveOperand() >> operand; !res)
+            return res;
+
+        operands.push_back(std::move(operand));
+
+        if (!At(end_type, end_value))
+            if (auto res = Expect(TokenType::Other, ","); !res)
+                return res;
+    }
+
+    if (auto res = Expect(end_type, end_value); !res)
+        return res;
+
+    return Evaluate(directive, operands);
+}
+
 toolkit::result<scc::as::OperandPtr> scc::as::Parser::ParseDirectiveOperand()
 {
     if (Skip(TokenType::Other, "("))
-    {
-        std::string directive;
-        auto set_directive = [&directive](Token &&token) -> toolkit::result<>
-        {
-            directive = std::move(token.Value);
-            return {};
-        };
-
-        if (auto res = Expect(TokenType::Symbol) & set_directive; !res)
-            return res;
-
-        std::vector<OperandPtr> operands;
-
-        if (directive.front() != '.')
-            return toolkit::make_error("symbol '{}' is not a directive", directive);
-
-        while (!At(TokenType::Other, ")"))
-        {
-            OperandPtr operand;
-            if (auto res = ParseDirectiveOperand() >> operand; !res)
-                return res;
-
-            operands.push_back(std::move(operand));
-
-            if (!At(TokenType::Other, ")"))
-                if (auto res = Expect(TokenType::Other, ","); !res)
-                    return res;
-        }
-
-        if (auto res = Expect(TokenType::Other, ")"); !res)
-            return res;
-
-        return Evaluate(directive, operands);
-    }
+        return ParseAndEvaluateDirective(TokenType::Other, ")");
 
     if (At(TokenType::Symbol))
     {
@@ -497,7 +486,7 @@ toolkit::result<std::vector<scc::as::OperandPtr>> scc::as::Parser::ParseOperands
     do
     {
         OperandPtr operand;
-        if (auto res = ParseOperand() >> operand; !res)
+        if (auto res = ParseOperand(true) >> operand; !res)
             return res;
 
         operands.push_back(std::move(operand));
@@ -507,297 +496,201 @@ toolkit::result<std::vector<scc::as::OperandPtr>> scc::as::Parser::ParseOperands
     return operands;
 }
 
-toolkit::result<scc::as::OperandPtr> scc::as::Parser::ParseOperand()
+toolkit::result<scc::as::OperandPtr> scc::as::Parser::ParseOperand(bool selector)
 {
-    if (Skip(TokenType::Other, "$"))
-    {
-        if (At(TokenType::Symbol))
-        {
-            auto label = Skip().Value;
+    if (At(TokenType::Other, "$"))
+        return ParseAddressOperand();
 
-            if (label.front() == '.')
-            {
-                if (!m_Primary)
-                    return toolkit::make_error("local label '{}' in global space", label);
-
-                label = m_Primary->GetName() + label;
-            }
-
-            return { std::make_unique<SymbolAddressOperand>(m_Platform, m_Module.GetOrCreateSymbol(label)) };
-        }
-
-        if (At(TokenType::Immediate))
-        {
-            auto value = Skip().Immediate;
-
-            if (!At(TokenType::Other, "("))
-                return { std::make_unique<ImmediateOperand>(m_Platform, value) };
-        }
-
-        return toolkit::make_error(
-            "unhandled immediate operand token type {}, raw value '{}'",
-            m_Token.Type,
-            m_Token.Raw);
-    }
+    if (At(TokenType::Symbol))
+        return ParseSymbolOperand();
 
     if (At(TokenType::Register))
-    {
-        const auto name = Skip().Value;
+        return ParseRegisterOperand(selector);
 
-        if (const auto reg = m_Platform.ISA.FindRegisterName(name))
-            return { std::make_unique<RegisterOperand>(m_Platform, *reg) };
+    return ParseMemoryOperand(selector);
+}
 
-        return toolkit::make_error("undefined register '{}'", name);
-    }
+toolkit::result<scc::as::OperandPtr> scc::as::Parser::ParseAddressOperand()
+{
+    if (auto res = Expect(TokenType::Other, "$"); !res)
+        return res;
 
     if (At(TokenType::Symbol))
     {
-        auto label = Skip().Value;
+        Symbol *symbol;
+        if (auto res = ParseSymbol() >> symbol; !res)
+            return res;
 
-        if (label.front() == '.')
-        {
-            if (!m_Primary)
-                return toolkit::make_error("local label '{}' in global space", label);
-
-            label = m_Primary->GetName() + label;
-        }
-
-        return { std::make_unique<SymbolOperand>(m_Platform, m_Module.GetOrCreateSymbol(label)) };
+        return { std::make_unique<SymbolAddressOperand>(m_Platform, symbol) };
     }
 
-    Immediate immediate{};
     if (At(TokenType::Immediate))
     {
-        immediate = Skip().Immediate;
+        auto value = Skip().Immediate;
 
-        if (!At(TokenType::Other, "("))
-            return { std::make_unique<ReferenceOperand>(m_Platform, immediate) };
-    }
-
-    if (Skip(TokenType::Other, "("))
-    {
-        std::string base_name;
-        auto set_base_name = [&base_name](Token &&token) -> toolkit::result<>
-        {
-            base_name = std::move(token.Value);
-            return {};
-        };
-
-        if (auto res = Expect(TokenType::Register) & set_base_name; !res)
-            return res;
-
-        std::string index_name;
-        auto set_index_name = [&index_name](Token &&token) -> toolkit::result<>
-        {
-            index_name = std::move(token.Value);
-            return {};
-        };
-
-        Immediate scale = 0;
-        auto set_scale = [&scale](Token &&token) -> toolkit::result<>
-        {
-            scale = token.Immediate;
-            return {};
-        };
-
-        if (Skip(TokenType::Other, ","))
-        {
-            if (auto res = Expect(TokenType::Register) & set_index_name; !res)
-                return res;
-
-            if (Skip(TokenType::Other, ","))
-                if (auto res = Expect(TokenType::Immediate) & set_scale; !res)
-                    return res;
-        }
-
-        if (auto res = Expect(TokenType::Other, ")"); !res)
-            return res;
-
-        auto has_base_register = !base_name.empty();
-        Register base_register{};
-
-        if (has_base_register)
-        {
-            const auto reg = m_Platform.ISA.FindRegisterName(base_name);
-
-            if (!reg)
-                return toolkit::make_error("undefined register '{}'", base_name);
-
-            base_register = *reg;
-        }
-
-        auto has_index_register = !index_name.empty();
-        Register index_register{};
-
-        if (has_index_register)
-        {
-            const auto reg = m_Platform.ISA.FindRegisterName(index_name);
-
-            if (!reg)
-                return toolkit::make_error("undefined register '{}'", index_name);
-
-            index_register = *reg;
-        }
-
-        return {
-            std::make_unique<ReferenceOperand>(
-                m_Platform,
-                immediate,
-                has_base_register,
-                base_register,
-                has_index_register,
-                index_register,
-                scale)
-        };
+        return { std::make_unique<ImmediateOperand>(m_Platform, value) };
     }
 
     return toolkit::make_error(
-        "unhandled operand token type {}, raw value '{}'",
+        "unhandled immediate operand token type {}, raw value '{}'",
         m_Token.Type,
         m_Token.Raw);
 }
 
-static toolkit::result<scc::as::OperandPtr> directive_set(
-    const scc::as::EvaluationContext &,
-    const std::vector<scc::as::OperandPtr> &operands)
+toolkit::result<scc::as::OperandPtr> scc::as::Parser::ParseSymbolOperand()
 {
-    if (operands.size() != 2)
-        return toolkit::make_error(".set requires 2 operands, got {}", operands.size());
+    Symbol *symbol;
+    if (auto res = ParseSymbol() >> symbol; !res)
+        return res;
 
-    const auto *dst = dynamic_cast<scc::as::SymbolAddressOperand *>(operands[0].get());
-
-    if (!dst)
-        return toolkit::make_error("1st operand for .set must be symbol");
-
-    auto *symbol = dst->GetSymbol();
-    const auto value = operands[1]->GetImmediate();
-
-    symbol->SetAddress(value);
-
-    return {};
+    return { std::make_unique<SymbolOperand>(m_Platform, symbol) };
 }
 
-static toolkit::result<scc::as::OperandPtr> directive_add(
-    const scc::as::EvaluationContext &context,
-    const std::vector<scc::as::OperandPtr> &operands)
+toolkit::result<scc::as::OperandPtr> scc::as::Parser::ParseRegisterOperand(bool selector)
 {
-    if (operands.size() != 2)
-        return toolkit::make_error(".add requires 2 operands, got {}", operands.size());
-
-    const auto lhs = operands[0]->GetImmediate();
-    const auto rhs = operands[1]->GetImmediate();
-
-    return { std::make_unique<scc::as::ImmediateOperand>(context.Platform, lhs + rhs) };
-}
-
-static toolkit::result<scc::as::OperandPtr> directive_sub(
-    const scc::as::EvaluationContext &context,
-    const std::vector<scc::as::OperandPtr> &operands)
-{
-    if (operands.size() != 2)
-        return toolkit::make_error(".sub requires 2 operands, got {}", operands.size());
-
-    const auto lhs = operands[0]->GetImmediate();
-    const auto rhs = operands[1]->GetImmediate();
-
-    return { std::make_unique<scc::as::ImmediateOperand>(context.Platform, lhs - rhs) };
-}
-
-static toolkit::result<scc::as::OperandPtr> directive_length(
-    const scc::as::EvaluationContext &context,
-    const std::vector<scc::as::OperandPtr> &operands)
-{
-    if (operands.size() != 1)
-        return toolkit::make_error(".length requires 1 operand, got {}", operands.size());
-
-    const auto *src = dynamic_cast<scc::as::SymbolAddressOperand *>(operands[0].get());
-
-    if (!src)
-        return toolkit::make_error("1st operand for .length must be symbol");
-
-    const auto *symbol = src->GetSymbol();
-    const auto *fragment = dynamic_cast<scc::as::Data *>(symbol->GetFragment());
-
-    auto value = fragment->GetDataSize();
-
-    return { std::make_unique<scc::as::ImmediateOperand>(context.Platform, value) };
-}
-
-static toolkit::result<scc::as::OperandPtr> directive_fill(
-    const scc::as::EvaluationContext &context,
-    const std::vector<scc::as::OperandPtr> &operands)
-{
-    if (operands.size() != 2)
-        return toolkit::make_error(".fill requires 2 operands, got {}", operands.size());
-
-    auto count = operands[0]->GetImmediate();
-    auto value = operands[1]->GetImmediate();
-
-    context.Section->Insert(std::make_unique<scc::as::Fill>(count, value));
-
-    return {};
-}
-
-static toolkit::result<scc::as::OperandPtr> directive_align(
-    const scc::as::EvaluationContext &context,
-    const std::vector<scc::as::OperandPtr> &operands)
-{
-    if (operands.size() != 1)
-        return toolkit::make_error(".align requires 1 operand, got {}", operands.size());
-
-    auto alignment = operands[0]->GetImmediate();
-
-    context.Section->Insert(std::make_unique<scc::as::Align>(alignment));
-
-    return {};
-}
-
-static toolkit::result<scc::as::OperandPtr> directive_string(
-    const scc::as::EvaluationContext &context,
-    const std::vector<scc::as::OperandPtr> &operands)
-{
-    if (operands.size() != 1)
-        return toolkit::make_error(".string requires 1 operand, got {}", operands.size());
-
-    const auto *operand = dynamic_cast<scc::as::StringOperand *>(operands[0].get());
-
-    auto &value = operand->GetValue();
-
-    std::vector<uint8_t> data(value.size() + 1);
-    for (size_t i = 0; i < value.size(); ++i)
-        data[i] = value[i];
-    data[value.size()] = 0;
-
-    context.Section->Insert(std::make_unique<scc::as::Data>(std::move(data)));
-
-    return {};
-}
-
-toolkit::result<scc::as::OperandPtr> scc::as::Parser::Evaluate(
-    const std::string &directive,
-    const std::vector<OperandPtr> &operands) const
-{
-    static const std::unordered_map<std::string, toolkit::result<OperandPtr>(*)(
-        const EvaluationContext &,
-        const std::vector<OperandPtr> &)> map
+    std::string name;
+    auto set_name = [&name](Token &&token) -> toolkit::result<>
     {
-        { ".set", directive_set },
-        { ".add", directive_add },
-        { ".sub", directive_sub },
-        { ".length", directive_length },
-        { ".fill", directive_fill },
-        { ".align", directive_align },
-        { ".string", directive_string },
+        name = std::move(token.Value);
+        return {};
     };
 
-    const auto it = map.find(directive);
-    if (it == map.end())
-        return toolkit::make_error("undefined directive '{}'", directive);
+    if (auto res = Expect(TokenType::Register) & set_name; !res)
+        return res;
 
-    return it->second(
+    auto reg = m_Platform.ISA.FindRegisterName(name);
+    if (!reg)
+        return toolkit::make_error("undefined register '{}'", name);
+
+    if (!selector || !Skip(TokenType::Other, ":"))
+        return { std::make_unique<RegisterOperand>(m_Platform, *reg) };
+
+    auto *view = m_Platform.ISA.FindRegisterView(*reg);
+    if (!view)
+        return toolkit::make_error("view must not be null");
+
+    auto &desc = m_Platform.ISA.Registers.at(view->Code);
+    if (desc.Class != platform::RegisterClass::Segment)
+        return toolkit::make_error("expected segment register");
+
+    OperandPtr operand;
+    if (auto res = ParseOperand(false) >> operand; !res)
+        return res;
+
+    operand->SetSegmentRegister(*reg);
+
+    return operand;
+}
+
+toolkit::result<scc::as::OperandPtr> scc::as::Parser::ParseMemoryOperand(bool selector)
+{
+    Immediate displacement{};
+    if (At(TokenType::Immediate))
+    {
+        displacement = Skip().Immediate;
+
+        if (selector && Skip(TokenType::Other, ":"))
         {
-            .Platform = m_Platform,
-            .Section = m_Section,
-        },
-        operands);
+            if (displacement < 0x00 || displacement >= 0xFF)
+                return toolkit::make_error("invalid segment selector '{}'", displacement);
+
+            OperandPtr operand;
+            if (auto res = ParseOperand(false) >> operand; !res)
+                return res;
+
+            operand->SetSegmentSelector(displacement);
+
+            return operand;
+        }
+
+        if (!At(TokenType::Other, "("))
+            return { std::make_unique<MemoryOperand>(m_Platform, displacement) };
+    }
+
+    if (auto res = Expect(TokenType::Other, "("); !res)
+        return res;
+
+    std::string base_name;
+    auto set_base_name = [&base_name](Token &&token) -> toolkit::result<>
+    {
+        base_name = std::move(token.Value);
+        return {};
+    };
+
+    if (auto res = Expect(TokenType::Register) & set_base_name; !res)
+        return res;
+
+    std::string index_name;
+    auto set_index_name = [&index_name](Token &&token) -> toolkit::result<>
+    {
+        index_name = std::move(token.Value);
+        return {};
+    };
+
+    Immediate scale{};
+    auto set_scale = [&scale](Token &&token) -> toolkit::result<>
+    {
+        scale = token.Immediate;
+        return {};
+    };
+
+    if (Skip(TokenType::Other, ","))
+    {
+        if (auto res = Expect(TokenType::Register) & set_index_name; !res)
+            return res;
+
+        if (Skip(TokenType::Other, ","))
+            if (auto res = Expect(TokenType::Immediate) & set_scale; !res)
+                return res;
+    }
+
+    if (auto res = Expect(TokenType::Other, ")"); !res)
+        return res;
+
+    std::optional<Register> base_register;
+    if (!base_name.empty())
+    {
+        const auto reg = m_Platform.ISA.FindRegisterName(base_name);
+
+        if (!reg)
+            return toolkit::make_error("undefined register '{}'", base_name);
+
+        base_register = *reg;
+    }
+
+    std::optional<Register> index_register;
+    if (!index_name.empty())
+    {
+        const auto reg = m_Platform.ISA.FindRegisterName(index_name);
+
+        if (!reg)
+            return toolkit::make_error("undefined register '{}'", index_name);
+
+        index_register = *reg;
+    }
+
+    return { std::make_unique<MemoryOperand>(m_Platform, displacement, base_register, index_register, scale) };
+}
+
+toolkit::result<scc::as::Symbol *> scc::as::Parser::ParseSymbol()
+{
+    std::string label;
+    auto set_label = [&label](Token &&token) -> toolkit::result<>
+    {
+        label = std::move(token.Value);
+        return {};
+    };
+
+    if (auto res = Expect(TokenType::Symbol) & set_label; !res)
+        return res;
+
+    if (label.front() == '.')
+    {
+        if (!m_Primary)
+            return toolkit::make_error("invalid local label '{}'", label);
+
+        label = m_Primary->GetName() + label;
+    }
+
+    return m_Module.GetOrCreateSymbol(label);
 }

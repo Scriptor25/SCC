@@ -216,7 +216,7 @@ namespace scc::ir
 }
 
 template<std::derived_from<scc::ir::Type> T>
-struct std::formatter<T *>
+struct std::formatter<const T *>
 {
     template<typename C>
     static constexpr auto parse(C &&ctx)
@@ -225,7 +225,7 @@ struct std::formatter<T *>
     }
 
     template<typename C>
-    static auto format(T *value, C &&ctx)
+    static auto format(const T *value, C &&ctx)
     {
         std::ostringstream stream;
         value->Print(stream);

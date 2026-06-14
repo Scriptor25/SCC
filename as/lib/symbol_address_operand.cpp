@@ -15,7 +15,7 @@ scc::as::Immediate scc::as::SymbolAddressOperand::GetImmediate() const
 
 std::ostream &scc::as::SymbolAddressOperand::Print(std::ostream &stream) const
 {
-    return stream << '$' << m_Symbol->GetName();
+    return PrintSelector(stream) << '$' << m_Symbol->GetName();
 }
 
 scc::as::Symbol *scc::as::SymbolAddressOperand::GetSymbol() const

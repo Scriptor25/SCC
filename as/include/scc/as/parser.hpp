@@ -55,14 +55,24 @@ namespace scc::as
         bool Skip(TokenType type, const std::string &value = {});
         [[nodiscard]] toolkit::result<Token> Expect(TokenType type, const std::string &value = {});
 
-        void Parse();
-        toolkit::result<> ParseLine();
+        [[nodiscard]] toolkit::result<> Parse();
+        [[nodiscard]] toolkit::result<> ParseLine();
 
-        toolkit::result<OperandPtr> ParseDirectiveOperand();
+        [[nodiscard]] toolkit::result<OperandPtr> ParseAndEvaluateDirective(
+            TokenType end_type,
+            const std::string &end_value = {});
+        [[nodiscard]] toolkit::result<OperandPtr> ParseDirectiveOperand();
 
-        toolkit::result<InstructionPtr> ParseInstruction();
-        toolkit::result<std::vector<OperandPtr>> ParseOperands();
-        toolkit::result<OperandPtr> ParseOperand();
+        [[nodiscard]] toolkit::result<InstructionPtr> ParseInstruction();
+        [[nodiscard]] toolkit::result<std::vector<OperandPtr>> ParseOperands();
+
+        [[nodiscard]] toolkit::result<OperandPtr> ParseOperand(bool selector);
+        [[nodiscard]] toolkit::result<OperandPtr> ParseAddressOperand();
+        [[nodiscard]] toolkit::result<OperandPtr> ParseSymbolOperand();
+        [[nodiscard]] toolkit::result<OperandPtr> ParseRegisterOperand(bool selector);
+        [[nodiscard]] toolkit::result<OperandPtr> ParseMemoryOperand(bool selector);
+
+        [[nodiscard]] toolkit::result<Symbol *> ParseSymbol();
 
         [[nodiscard]] toolkit::result<OperandPtr> Evaluate(
             const std::string &directive,

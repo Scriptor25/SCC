@@ -117,7 +117,7 @@ void scc::as::Module::Encode(std::vector<uint8_t> &buffer) const
 
                     for (size_t x = 0; x < size; ++x)
                     {
-                        const auto shift = little ? x * 8 : (size - x - 1) * 8;
+                        const auto shift = (little ? x : size - x - 1) * 8;
                         buffer[offset + x] = value >> shift & 0xFF;
                     }
                 }

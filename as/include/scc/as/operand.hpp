@@ -4,7 +4,10 @@
 
 #include <scc/common.hpp>
 
+#include <format>
 #include <iosfwd>
+#include <optional>
+#include <sstream>
 #include <string>
 
 namespace scc::as
@@ -21,8 +24,20 @@ namespace scc::as
 
         virtual std::ostream &Print(std::ostream &stream) const = 0;
 
+        std::ostream &PrintSelector(std::ostream &stream) const;
+
+        [[nodiscard]] uint8_t GetSegmentSelector() const;
+        [[nodiscard]] bool HasSegmentRegister() const;
+        [[nodiscard]] Register GetSegmentRegister() const;
+
+        void SetSegmentSelector(uint8_t sel);
+        void SetSegmentRegister(Register reg);
+
     protected:
         const Platform &m_Platform;
+
+        uint8_t m_SegmentSelector;
+        std::optional<Register> m_SegmentRegister;
     };
 
     class ImmediateOperand : public Operand
@@ -81,18 +96,18 @@ namespace scc::as
         Register m_Register;
     };
 
-    class ReferenceOperand : public Operand
+    class MemoryOperand : public Operand
     {
     public:
-        ReferenceOperand(const Platform &platform, int64_t displacement);
+        MemoryOperand(
+            const Platform &platform,
+            int64_t displacement);
 
-        ReferenceOperand(
+        MemoryOperand(
             const Platform &platform,
             int64_t displacement,
-            bool has_base_register,
-            Register base_register,
-            bool has_index_register,
-            Register index_register,
+            std::optional<Register> base_register,
+            std::optional<Register> index_register,
             uint8_t scale);
 
         std::ostream &Print(std::ostream &stream) const override;
@@ -107,11 +122,9 @@ namespace scc::as
     private:
         int64_t m_Displacement;
 
-        bool m_HasBaseRegister;
-        Register m_BaseRegister;
+        std::optional<Register> m_BaseRegister;
 
-        bool m_HasIndexRegister;
-        Register m_IndexRegister;
+        std::optional<Register> m_IndexRegister;
 
         uint8_t m_Scale;
     };
@@ -129,3 +142,25 @@ namespace scc::as
         Symbol *m_Symbol;
     };
 }
+
+template<std::derived_from<scc::as::Operand> T>
+struct std::formatter<const T *>
+{
+    template<typename C>
+    static constexpr auto parse(C &&ctx)
+    {
+        return ctx.begin();
+    }
+
+    template<typename C>
+    static auto format(const T *value, C &&ctx)
+    {
+        std::ostringstream stream;
+        value->Print(stream);
+
+        for (auto c : stream.view())
+            *ctx.out()++ = c;
+
+        return ctx.out();
+    }
+};

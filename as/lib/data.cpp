@@ -7,6 +7,11 @@ scc::as::Data::Data(std::vector<uint8_t> data)
 {
 }
 
+scc::as::Data::Data(std::span<const uint8_t> data)
+    : m_Data(data.begin(), data.end())
+{
+}
+
 std::span<const uint8_t> scc::as::Data::GetData() const
 {
     return m_Data;
@@ -24,7 +29,7 @@ std::ostream &scc::as::Data::Print(std::ostream &stream) const
     {
         if (it != m_Data.begin())
             stream << ", ";
-        stream << "0x" << std::hex << std::setfill('0') << std::setw(2) << *it;
+        stream << "0x" << std::hex << std::setfill('0') << std::setw(2) << static_cast<unsigned>(*it);
     }
     return stream;
 }

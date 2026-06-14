@@ -84,10 +84,10 @@ namespace scc
         X86_LODSW,
 
         X86_LOOP,
-        X86_LOOPE,
-        X86_LOOPNE,
-        X86_LOOPNZ,
         X86_LOOPZ,
+        X86_LOOPNZ,
+        X86_LOOPE  = X86_LOOPZ,
+        X86_LOOPNE = X86_LOOPNZ,
 
         X86_MOV,
         X86_MOVSB,
@@ -105,13 +105,12 @@ namespace scc
         X86_RCL,
         X86_RCR,
 
-        X86_REP,
-        X86_REPE,
-        X86_REPNE,
-        X86_REPNZ,
         X86_REPZ,
+        X86_REPNZ,
+        X86_REP   = X86_REPZ,
+        X86_REPE  = X86_REPZ,
+        X86_REPNE = X86_REPNZ,
 
-        X86_RET,
         X86_RETN,
         X86_RETF,
         X86_ROL,

@@ -30,7 +30,7 @@ namespace scc::as
     class ImmediateOperand;
     class StringOperand;
     class RegisterOperand;
-    class ReferenceOperand;
+    class MemoryOperand;
     class SymbolOperand;
 
     class Symbol;

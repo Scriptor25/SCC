@@ -7,7 +7,8 @@ scc::as::Symbol::Symbol(std::string name)
     : m_Name(std::move(name)),
       m_Resolved(),
       m_Section(),
-      m_Index()
+      m_Index(),
+      m_Extern()
 {
 }
 
@@ -15,7 +16,8 @@ scc::as::Symbol::Symbol(Section &section, const size_t index, std::string name)
     : m_Name(std::move(name)),
       m_Resolved(true),
       m_Section(&section),
-      m_Index(index)
+      m_Index(index),
+      m_Extern()
 {
 }
 
@@ -72,4 +74,14 @@ scc::as::Immediate scc::as::Symbol::GetAddress() const
         return m_Index;
 
     Error("symbol is not a constant address");
+}
+
+bool scc::as::Symbol::IsExtern() const
+{
+    return m_Extern;
+}
+
+void scc::as::Symbol::SetExtern(const bool extern_)
+{
+    m_Extern = extern_;
 }

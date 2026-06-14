@@ -33,7 +33,11 @@ int main(const int argc, const char **argv)
     scc::as::Module module(platform);
     scc::as::Parser parser(in, module);
 
-    parser.Parse();
+    if (auto res = parser.Parse(); !res)
+    {
+        std::cerr << res.error() << std::endl;
+        return 1;
+    }
 
     module.Print(std::cerr);
 

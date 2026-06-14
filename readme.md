@@ -17,3 +17,8 @@ similar to toolkits like llvm or gcc.
 - `ld`:
     - parse `object`
     - write `object` and `binary`
+
+## Resources
+
+https://www.felixcloutier.com/x86/
+https://en.wikipedia.org/wiki/List_of_x86_instructions

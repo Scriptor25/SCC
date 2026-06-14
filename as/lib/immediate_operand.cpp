@@ -13,7 +13,7 @@ scc::as::Immediate scc::as::ImmediateOperand::GetImmediate() const
 
 std::ostream &scc::as::ImmediateOperand::Print(std::ostream &stream) const
 {
-    return stream << "$0x" << std::hex << m_Value;
+    return PrintSelector(stream) << "$0x" << std::hex << m_Value;
 }
 
 scc::as::Immediate scc::as::ImmediateOperand::GetValue() const

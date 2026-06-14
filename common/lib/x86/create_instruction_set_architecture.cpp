@@ -12,6 +12,7 @@ toolkit::result<scc::platform::InstructionSetArchitecture> scc::platform::x86::C
 
     std::unordered_map<uint32_t, RegisterDescriptor> registers;
     std::unordered_map<Register, RegisterView> register_views;
+    std::vector<InstructionForm> forms;
     std::unordered_map<Mnemonic, MnemonicDescriptor> mnemonics;
 
     if (options.BitWidth >= 16)
@@ -20,13 +21,13 @@ toolkit::result<scc::platform::InstructionSetArchitecture> scc::platform::x86::C
             registers,
             {
                 // CS
-                { 0b100000, { .Code = 0b100000, .Class = RegisterClass::Special } },
+                { 0b100000, { .Code = 0b100000, .Class = RegisterClass::Segment } },
                 // DS
-                { 0b100001, { .Code = 0b100001, .Class = RegisterClass::Special } },
+                { 0b100001, { .Code = 0b100001, .Class = RegisterClass::Segment } },
                 // SS
-                { 0b100010, { .Code = 0b100010, .Class = RegisterClass::Special } },
+                { 0b100010, { .Code = 0b100010, .Class = RegisterClass::Segment } },
                 // ES
-                { 0b100011, { .Code = 0b100011, .Class = RegisterClass::Special } },
+                { 0b100011, { .Code = 0b100011, .Class = RegisterClass::Segment } },
 
                 // IP
                 { 0b101000, { .Code = 0b101000, .Class = RegisterClass::Special } },
@@ -92,6 +93,797 @@ toolkit::result<scc::platform::InstructionSetArchitecture> scc::platform::x86::C
                 { Register::X86_DI, { .Code = 0b111, .Names = { "di" }, .BitWidth = 16 } },
             });
 
+        constexpr OperandConstraint REG
+        {
+            .Kind = OperandKind::Register,
+            .Class = RegisterClass::GeneralPurpose,
+            .MinBitWidth = 8,
+            .MaxBitWidth = 16,
+        };
+
+        constexpr OperandConstraint REG_AL
+        {
+            .Kind = OperandKind::Register,
+            .Class = RegisterClass::GeneralPurpose,
+            .Name = Register::X86_AL,
+        };
+
+        constexpr OperandConstraint REG_AX
+        {
+            .Kind = OperandKind::Register,
+            .Class = RegisterClass::GeneralPurpose,
+            .Name = Register::X86_AX,
+        };
+
+        constexpr OperandConstraint REG_CL
+        {
+            .Kind = OperandKind::Register,
+            .Class = RegisterClass::GeneralPurpose,
+            .Name = Register::X86_CL,
+        };
+
+        constexpr OperandConstraint REG_DX
+        {
+            .Kind = OperandKind::Register,
+            .Class = RegisterClass::GeneralPurpose,
+            .Name = Register::X86_DX,
+        };
+
+        // segment register
+        constexpr OperandConstraint SREG
+        {
+            .Kind = OperandKind::Register,
+            .Class = RegisterClass::Special,
+            .MinBitWidth = 16,
+            .MaxBitWidth = 16,
+        };
+
+        constexpr OperandConstraint MEM
+        {
+            .Kind = OperandKind::Memory,
+            .MinBitWidth = 8,
+            .MaxBitWidth = 16,
+        };
+
+        constexpr OperandConstraint IMM
+        {
+            .Kind = OperandKind::Immediate,
+            .MinBitWidth = 8,
+            .MaxBitWidth = 16,
+        };
+
+        constexpr OperandConstraint IMM8
+        {
+            .Kind = OperandKind::Immediate,
+            .MinBitWidth = 8,
+            .MaxBitWidth = 8,
+        };
+
+        constexpr OperandConstraint REL
+        {
+            .Kind = OperandKind::Relative,
+            .MinBitWidth = 8,
+            .MaxBitWidth = 16,
+        };
+
+        constexpr OperandConstraint REL8
+        {
+            .Kind = OperandKind::Relative,
+            .MinBitWidth = 8,
+            .MaxBitWidth = 8,
+        };
+
+        constexpr OperandConstraint SEL
+        {
+            .Kind = OperandKind::Selector,
+            .MinBitWidth = 8,
+            .MaxBitWidth = 16,
+        };
+
+        constexpr OperandConstraint SEL8
+        {
+            .Kind = OperandKind::Selector,
+            .MinBitWidth = 8,
+            .MaxBitWidth = 8,
+        };
+
+        constexpr OperandConstraint SEL16
+        {
+            .Kind = OperandKind::Selector,
+            .MinBitWidth = 16,
+            .MaxBitWidth = 16,
+        };
+
+        merge(
+            forms,
+            {
+                // AAA
+                {
+                    .Name = Mnemonic::X86_AAA,
+                },
+
+                // AAD
+                {
+                    .Name = Mnemonic::X86_AAD,
+                },
+
+                // AAM
+                {
+                    .Name = Mnemonic::X86_AAM,
+                },
+
+                // AAS
+                {
+                    .Name = Mnemonic::X86_AAS,
+                },
+
+                // ADC
+                {
+                    .Name = Mnemonic::X86_ADC,
+                    .Operands = { REG, REG },
+                },
+                {
+                    .Name = Mnemonic::X86_ADC,
+                    .Operands = { REG, MEM },
+                },
+                {
+                    .Name = Mnemonic::X86_ADC,
+                    .Operands = { REG, IMM },
+                },
+                {
+                    .Name = Mnemonic::X86_ADC,
+                    .Operands = { MEM, REG },
+                },
+                {
+                    .Name = Mnemonic::X86_ADC,
+                    .Operands = { MEM, IMM },
+                },
+
+                // ADD
+                {
+                    .Name = Mnemonic::X86_ADD,
+                    .Operands = { REG, REG },
+                },
+                {
+                    .Name = Mnemonic::X86_ADD,
+                    .Operands = { REG, MEM },
+                },
+                {
+                    .Name = Mnemonic::X86_ADD,
+                    .Operands = { REG, IMM },
+                },
+                {
+                    .Name = Mnemonic::X86_ADD,
+                    .Operands = { MEM, REG },
+                },
+                {
+                    .Name = Mnemonic::X86_ADD,
+                    .Operands = { MEM, IMM },
+                },
+
+                // AND
+                {
+                    .Name = Mnemonic::X86_AND,
+                    .Operands = { REG, REG },
+                },
+                {
+                    .Name = Mnemonic::X86_AND,
+                    .Operands = { REG, MEM },
+                },
+                {
+                    .Name = Mnemonic::X86_AND,
+                    .Operands = { REG, IMM },
+                },
+                {
+                    .Name = Mnemonic::X86_AND,
+                    .Operands = { MEM, REG },
+                },
+                {
+                    .Name = Mnemonic::X86_AND,
+                    .Operands = { MEM, IMM },
+                },
+
+                // CALL
+                {
+                    .Name = Mnemonic::X86_CALL,
+                    .Operands = { REL },
+                },
+                {
+                    .Name = Mnemonic::X86_CALL,
+                    .Operands = { REG },
+                },
+                {
+                    .Name = Mnemonic::X86_CALL,
+                    .Operands = { MEM },
+                },
+                {
+                    .Name = Mnemonic::X86_CALL,
+                    .Operands = { SEL },
+                },
+
+                // CBW
+                {
+                    .Name = Mnemonic::X86_CBW,
+                },
+
+                // CLC
+                {
+                    .Name = Mnemonic::X86_CLC,
+                },
+
+                // CLD
+                {
+                    .Name = Mnemonic::X86_CLD,
+                },
+
+                // CLI
+                {
+                    .Name = Mnemonic::X86_CLI,
+                },
+
+                // CMC
+                {
+                    .Name = Mnemonic::X86_CMC,
+                },
+
+                // CMP
+                {
+                    .Name = Mnemonic::X86_CMP,
+                    .Operands = { REG, REG },
+                },
+                {
+                    .Name = Mnemonic::X86_CMP,
+                    .Operands = { REG, MEM },
+                },
+                {
+                    .Name = Mnemonic::X86_CMP,
+                    .Operands = { REG, IMM },
+                },
+                {
+                    .Name = Mnemonic::X86_CMP,
+                    .Operands = { MEM, REG },
+                },
+                {
+                    .Name = Mnemonic::X86_CMP,
+                    .Operands = { MEM, IMM },
+                },
+
+                // CMPSB
+                {
+                    .Name = Mnemonic::X86_CMPSB,
+                },
+
+                // CMPSW
+                {
+                    .Name = Mnemonic::X86_CMPSW,
+                },
+
+                // CWD
+                {
+                    .Name = Mnemonic::X86_CWD,
+                },
+
+                // DAA
+                {
+                    .Name = Mnemonic::X86_DAA,
+                },
+
+                // DAS
+                {
+                    .Name = Mnemonic::X86_DAS,
+                },
+
+                // DEC
+                {
+                    .Name = Mnemonic::X86_DEC,
+                    .Operands = { REG },
+                },
+                {
+                    .Name = Mnemonic::X86_DEC,
+                    .Operands = { MEM },
+                },
+
+                // DIV
+                {
+                    .Name = Mnemonic::X86_DIV,
+                    .Operands = { REG },
+                },
+                {
+                    .Name = Mnemonic::X86_DIV,
+                    .Operands = { MEM },
+                },
+
+                // ESC
+                {
+                    .Name = Mnemonic::X86_ESC,
+                },
+
+                // HLT
+                {
+                    .Name = Mnemonic::X86_HLT,
+                },
+
+                // IDIV
+                {
+                    .Name = Mnemonic::X86_IDIV,
+                    .Operands = { REG },
+                },
+                {
+                    .Name = Mnemonic::X86_IDIV,
+                    .Operands = { MEM },
+                },
+
+                // IMUL
+                {
+                    .Name = Mnemonic::X86_IMUL,
+                    .Operands = { REG },
+                },
+                {
+                    .Name = Mnemonic::X86_IMUL,
+                    .Operands = { MEM },
+                },
+
+                // IN
+                {
+                    .Name = Mnemonic::X86_IN,
+                    .Operands = { REG_AL, IMM8 },
+                },
+                {
+                    .Name = Mnemonic::X86_IN,
+                    .Operands = { REG_AX, IMM8 },
+                },
+                {
+                    .Name = Mnemonic::X86_IN,
+                    .Operands = { REG_AL, REG_DX },
+                },
+                {
+                    .Name = Mnemonic::X86_IN,
+                    .Operands = { REG_AX, REG_DX },
+                },
+
+                // INC
+                {
+                    .Name = Mnemonic::X86_INC,
+                    .Operands = { REG },
+                },
+                {
+                    .Name = Mnemonic::X86_INC,
+                    .Operands = { MEM },
+                },
+
+                // INT
+                {
+                    .Name = Mnemonic::X86_INT,
+                    .Operands = { IMM8 },
+                },
+
+                // INTO
+                {
+                    .Name = Mnemonic::X86_INTO,
+                },
+
+                // IRET
+                {
+                    .Name = Mnemonic::X86_IRET,
+                },
+
+                // JO
+                {
+                    .Name = Mnemonic::X86_JO,
+                    .Operands = { REL },
+                },
+
+                // JNO
+                {
+                    .Name = Mnemonic::X86_JNO,
+                    .Operands = { REL },
+                },
+
+                // JC
+                {
+                    .Name = Mnemonic::X86_JC,
+                    .Operands = { REL },
+                },
+
+                // JNC
+                {
+                    .Name = Mnemonic::X86_JNC,
+                    .Operands = { REL },
+                },
+
+                // JZ
+                {
+                    .Name = Mnemonic::X86_JZ,
+                    .Operands = { REL },
+                },
+
+                // JNZ
+                {
+                    .Name = Mnemonic::X86_JNZ,
+                    .Operands = { REL },
+                },
+
+                // JNA
+                {
+                    .Name = Mnemonic::X86_JNA,
+                    .Operands = { REL },
+                },
+
+                // JA
+                {
+                    .Name = Mnemonic::X86_JA,
+                    .Operands = { REL },
+                },
+
+                // JS
+                {
+                    .Name = Mnemonic::X86_JS,
+                    .Operands = { REL },
+                },
+
+                // JNS
+                {
+                    .Name = Mnemonic::X86_JNS,
+                    .Operands = { REL },
+                },
+
+                // JP
+                {
+                    .Name = Mnemonic::X86_JP,
+                    .Operands = { REL },
+                },
+
+                // JNP
+                {
+                    .Name = Mnemonic::X86_JNP,
+                    .Operands = { REL },
+                },
+
+                // JL
+                {
+                    .Name = Mnemonic::X86_JL,
+                    .Operands = { REL },
+                },
+
+                // JNL
+                {
+                    .Name = Mnemonic::X86_JNL,
+                    .Operands = { REL },
+                },
+
+                // JLE
+                {
+                    .Name = Mnemonic::X86_JLE,
+                    .Operands = { REL },
+                },
+
+                // JNLE
+                {
+                    .Name = Mnemonic::X86_JNLE,
+                    .Operands = { REL },
+                },
+
+                // JCXZ
+                {
+                    .Name = Mnemonic::X86_JCXZ,
+                    .Operands = { REL },
+                },
+
+                // JMP
+                {
+                    .Name = Mnemonic::X86_JMP,
+                    .Operands = { REL },
+                },
+                {
+                    .Name = Mnemonic::X86_JMP,
+                    .Operands = { REG },
+                },
+                {
+                    .Name = Mnemonic::X86_JMP,
+                    .Operands = { MEM },
+                },
+                {
+                    .Name = Mnemonic::X86_JMP,
+                    .Operands = { SEL },
+                },
+
+                // LAHF
+                {
+                    .Name = Mnemonic::X86_LAHF,
+                },
+
+                // LDS
+                {
+                    .Name = Mnemonic::X86_LDS,
+                    .Operands = { REG, SEL },
+                },
+
+                // LEA
+                {
+                    .Name = Mnemonic::X86_LEA,
+                    .Operands = { REG, MEM },
+                },
+
+                // LES
+                {
+                    .Name = Mnemonic::X86_LES,
+                    .Operands = { REG, SEL },
+                },
+
+                // LOCK
+                {
+                    .Name = Mnemonic::X86_LOCK,
+                },
+
+                // LODSB
+                {
+                    .Name = Mnemonic::X86_LODSB,
+                },
+
+                // LODSW
+                {
+                    .Name = Mnemonic::X86_LODSW,
+                },
+
+                // LOOP
+                {
+                    .Name = Mnemonic::X86_LOOP,
+                    .Operands = { REL8 },
+                },
+
+                // LOOPZ
+                {
+                    .Name = Mnemonic::X86_LOOPZ,
+                    .Operands = { REL8 },
+                },
+
+                // LOOPNZ
+                {
+                    .Name = Mnemonic::X86_LOOPNZ,
+                    .Operands = { REL8 },
+                },
+
+                // MOV
+                {
+                    .Name = Mnemonic::X86_MOV,
+                    .Operands = { REG, REG },
+                },
+                {
+                    .Name = Mnemonic::X86_MOV,
+                    .Operands = { REG, MEM },
+                },
+                {
+                    .Name = Mnemonic::X86_MOV,
+                    .Operands = { REG, IMM },
+                },
+                {
+                    .Name = Mnemonic::X86_MOV,
+                    .Operands = { MEM, REG },
+                },
+                {
+                    .Name = Mnemonic::X86_MOV,
+                    .Operands = { MEM, IMM },
+                },
+                {
+                    .Name = Mnemonic::X86_MOV,
+                    .Operands = { REG, SREG },
+                },
+                {
+                    .Name = Mnemonic::X86_MOV,
+                    .Operands = { MEM, SREG },
+                },
+                {
+                    .Name = Mnemonic::X86_MOV,
+                    .Operands = { SREG, REG },
+                },
+                {
+                    .Name = Mnemonic::X86_MOV,
+                    .Operands = { SREG, MEM },
+                },
+                {
+                    .Name = Mnemonic::X86_MOV,
+                    .Operands = { REG_AL, SEL8 },
+                },
+                {
+                    .Name = Mnemonic::X86_MOV,
+                    .Operands = { REG_AX, SEL16 },
+                },
+                {
+                    .Name = Mnemonic::X86_MOV,
+                    .Operands = { SEL8, REG_AL },
+                },
+                {
+                    .Name = Mnemonic::X86_MOV,
+                    .Operands = { SEL16, REG_AX },
+                },
+
+                {
+                    .Name = Mnemonic::X86_MOVSB,
+                },
+                {
+                    .Name = Mnemonic::X86_MOVSW,
+                },
+
+                {
+                    .Name = Mnemonic::X86_MUL,
+                    .Operands = { REG },
+                },
+                {
+                    .Name = Mnemonic::X86_MUL,
+                    .Operands = { MEM },
+                },
+
+                // NEG
+                {
+                    .Name = Mnemonic::X86_NEG,
+                    .Operands = { REG },
+                },
+                {
+                    .Name = Mnemonic::X86_NEG,
+                    .Operands = { MEM },
+                },
+
+                // NOP
+                {
+                    .Name = Mnemonic::X86_NOP,
+                },
+
+                // NOT
+                {
+                    .Name = Mnemonic::X86_NOT,
+                    .Operands = { REG },
+                },
+                {
+                    .Name = Mnemonic::X86_NOT,
+                    .Operands = { MEM },
+                },
+
+                // OR
+                {
+                    .Name = Mnemonic::X86_OR,
+                    .Operands = { REG, REG },
+                },
+                {
+                    .Name = Mnemonic::X86_OR,
+                    .Operands = { REG, MEM },
+                },
+                {
+                    .Name = Mnemonic::X86_OR,
+                    .Operands = { REG, IMM },
+                },
+                {
+                    .Name = Mnemonic::X86_OR,
+                    .Operands = { MEM, REG },
+                },
+                {
+                    .Name = Mnemonic::X86_OR,
+                    .Operands = { MEM, IMM },
+                },
+
+                // OUT
+                {
+                    .Name = Mnemonic::X86_OUT,
+                    .Operands = { IMM8, REG_AL },
+                },
+                {
+                    .Name = Mnemonic::X86_OUT,
+                    .Operands = { IMM8, REG_AX },
+                },
+                {
+                    .Name = Mnemonic::X86_OUT,
+                    .Operands = { REG_DX, REG_AL },
+                },
+
+                {
+                    .Name = Mnemonic::X86_OUT,
+                    .Operands = { REG_DX, REG_AX },
+                },
+
+                {
+                    .Name = Mnemonic::X86_POP,
+                    .Operands = { REG },
+                },
+                {
+                    .Name = Mnemonic::X86_POP,
+                    .Operands = { MEM },
+                },
+                {
+                    .Name = Mnemonic::X86_POP,
+                    .Operands = { SREG },
+                },
+
+                {
+                    .Name = Mnemonic::X86_POPF,
+                },
+
+                {
+                    .Name = Mnemonic::X86_PUSH,
+                    .Operands = { REG },
+                },
+                {
+                    .Name = Mnemonic::X86_PUSH,
+                    .Operands = { MEM },
+                },
+                {
+                    .Name = Mnemonic::X86_PUSH,
+                    .Operands = { SREG },
+                },
+
+                {
+                    .Name = Mnemonic::X86_PUSHF,
+                },
+
+                {
+                    .Name = Mnemonic::X86_RCL,
+                    .Operands = { REG, IMM },
+                },
+                {
+                    .Name = Mnemonic::X86_RCR,
+                    .Operands = { REG, IMM },
+                },
+
+                {
+                    .Name = Mnemonic::X86_REPZ,
+                },
+                {
+                    .Name = Mnemonic::X86_REPNZ,
+                },
+
+                {
+                    .Name = Mnemonic::X86_RETN,
+                },
+                {
+                    .Name = Mnemonic::X86_RETF,
+                },
+
+                {
+                    .Name = Mnemonic::X86_ROL,
+                    .Operands = { REG, IMM },
+                },
+                {
+                    .Name = Mnemonic::X86_ROR,
+                    .Operands = { REG, IMM },
+                },
+
+                {
+                    .Name = Mnemonic::X86_SAHF,
+                },
+
+                {
+                    .Name = Mnemonic::X86_SAL,
+                    .Operands = { REG },
+                },
+                {
+                    .Name = Mnemonic::X86_SAL,
+                    .Operands = { MEM },
+                },
+                {
+                    .Name = Mnemonic::X86_SAL,
+                    .Operands = { REG, REG_CL },
+                },
+                {
+                    .Name = Mnemonic::X86_SAL,
+                    .Operands = { MEM, REG_CL },
+                },
+
+                {
+                    .Name = Mnemonic::X86_SAR,
+                    .Operands = { REG },
+                },
+                {
+                    .Name = Mnemonic::X86_SAR,
+                    .Operands = { MEM },
+                },
+                {
+                    .Name = Mnemonic::X86_SAR,
+                    .Operands = { REG, REG_CL },
+                },
+                {
+                    .Name = Mnemonic::X86_SAR,
+                    .Operands = { MEM, REG_CL },
+                },
+            });
+
         merge(
             mnemonics,
             {
@@ -154,10 +946,8 @@ toolkit::result<scc::platform::InstructionSetArchitecture> scc::platform::x86::C
                 { Mnemonic::X86_LODSB, { .Names = { "lodsb" } } },
                 { Mnemonic::X86_LODSW, { .Names = { "lodsw" } } },
                 { Mnemonic::X86_LOOP, { .Names = { "loop" } } },
-                { Mnemonic::X86_LOOPE, { .Names = { "loope" } } },
-                { Mnemonic::X86_LOOPNE, { .Names = { "loopne" } } },
-                { Mnemonic::X86_LOOPNZ, { .Names = { "loopnz" } } },
-                { Mnemonic::X86_LOOPZ, { .Names = { "loopz" } } },
+                { Mnemonic::X86_LOOPZ, { .Names = { "loopz", "loope" } } },
+                { Mnemonic::X86_LOOPNZ, { .Names = { "loopnz", "loopne" } } },
                 { Mnemonic::X86_MOV, { .Names = { "mov" } } },
                 { Mnemonic::X86_MOVSB, { .Names = { "movsb" } } },
                 { Mnemonic::X86_MOVSW, { .Names = { "movsw" } } },
@@ -174,13 +964,9 @@ toolkit::result<scc::platform::InstructionSetArchitecture> scc::platform::x86::C
                 { Mnemonic::X86_RCL, { .Names = { "rcl" } } },
                 { Mnemonic::X86_RCR, { .Names = { "rcr" } } },
 
-                { Mnemonic::X86_REP, { .Names = { "rep" } } },
-                { Mnemonic::X86_REPE, { .Names = { "repe" } } },
-                { Mnemonic::X86_REPNE, { .Names = { "repne" } } },
-                { Mnemonic::X86_REPNZ, { .Names = { "repnz" } } },
-                { Mnemonic::X86_REPZ, { .Names = { "repz" } } },
+                { Mnemonic::X86_REPZ, { .Names = { "repz", "rep", "repe" } } },
+                { Mnemonic::X86_REPNZ, { .Names = { "repnz", "repne" } } },
 
-                { Mnemonic::X86_RET, { .Names = { "ret" } } },
                 { Mnemonic::X86_RETN, { .Names = { "retn" } } },
                 { Mnemonic::X86_RETF, { .Names = { "retf" } } },
                 { Mnemonic::X86_ROL, { .Names = { "rol" } } },
@@ -243,9 +1029,9 @@ toolkit::result<scc::platform::InstructionSetArchitecture> scc::platform::x86::C
             registers,
             {
                 // FS
-                { 0b100100, { .Code = 0b100100, .Class = RegisterClass::Special } },
+                { 0b100100, { .Code = 0b100100, .Class = RegisterClass::Segment } },
                 // GS
-                { 0b100101, { .Code = 0b100101, .Class = RegisterClass::Special } },
+                { 0b100101, { .Code = 0b100101, .Class = RegisterClass::Segment } },
             });
 
         merge(
@@ -461,6 +1247,7 @@ toolkit::result<scc::platform::InstructionSetArchitecture> scc::platform::x86::C
         .BitWidth = options.BitWidth,
         .Registers = std::move(registers),
         .RegisterViews = std::move(register_views),
+        .Forms = std::move(forms),
         .Mnemonics = std::move(mnemonics),
     };
 }
