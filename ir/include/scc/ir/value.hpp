@@ -47,7 +47,29 @@ struct std::formatter<const T *>
     }
 
     template<typename C>
-    static auto format(const T *value, C &&ctx)
+    auto format(const T *value, C &&ctx) const
+    {
+        std::ostringstream stream;
+        value->PrintOperand(stream, true);
+
+        for (auto c : stream.view())
+            *ctx.out()++ = c;
+
+        return ctx.out();
+    }
+};
+
+template<std::derived_from<scc::ir::Value> T>
+struct std::formatter<T *>
+{
+    template<typename C>
+    static constexpr auto parse(C &&ctx)
+    {
+        return ctx.begin();
+    }
+
+    template<typename C>
+    auto format(T *value, C &&ctx) const
     {
         std::ostringstream stream;
         value->PrintOperand(stream, true);

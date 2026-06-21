@@ -4,6 +4,7 @@
 #include <scc/ir/function.hpp>
 #include <scc/ir/instruction.hpp>
 #include <scc/ir/module.hpp>
+#include <scc/ir/type.hpp>
 #include <scc/ir/value.hpp>
 
 #include <scc/assert.hpp>
