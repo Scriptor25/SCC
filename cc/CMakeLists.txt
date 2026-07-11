@@ -4,7 +4,7 @@ file(GLOB_RECURSE BIN_SOURCES src/*.cpp)
 add_library(lib_cc ${LIB_SOURCES})
 add_library(scc::cc ALIAS lib_cc)
 target_include_directories(lib_cc PUBLIC include)
-target_link_libraries(lib_cc PUBLIC scc::common)
+target_link_libraries(lib_cc PUBLIC scc::common scc::ir)
 set_target_properties(lib_cc PROPERTIES OUTPUT_NAME "scc")
 
 add_executable(bin_cc ${BIN_SOURCES})
