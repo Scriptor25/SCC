@@ -2,6 +2,8 @@
 
 #include <scc/cc/node.hpp>
 
+#include <toolkit/result.hxx>
+
 #include <iosfwd>
 
 namespace scc::cc
@@ -32,27 +34,38 @@ namespace scc::cc
 
         void Parse();
 
-        std::unique_ptr<Node> ParseNode();
+        [[nodiscard]] toolkit::result<NodePtr> ParseNode();
 
-        std::unique_ptr<FunctionNode> ParseFunctionNode(Type *result, std::string name);
-        std::unique_ptr<VariableNode> ParseVariableNode(Type *type, std::string name);
+        [[nodiscard]] toolkit::result<NodePtr> ParseFunctionNode(Type *result, std::string name);
+        [[nodiscard]] toolkit::result<NodePtr> ParseVariableNode(Type *type, std::string name);
 
-        std::unique_ptr<TypeDefNode> ParseTypeDefNode();
+        [[nodiscard]] toolkit::result<NodePtr> ParseTypeDefNode();
 
-        std::unique_ptr<StatementNode> ParseStatementNode();
-        std::unique_ptr<ExpressionNode> ParseExpressionNode();
+        [[nodiscard]] toolkit::result<StatementNodePtr> ParseStatementNode();
+        [[nodiscard]] toolkit::result<StatementNodePtr> ParseSequenceStatementNode();
+        [[nodiscard]] toolkit::result<StatementNodePtr> ParseVariableStatementNode();
 
-        Type *ParseType();
-        Type *ParseBaseType();
-        Type *ParseStructType();
-        Type *ParseUnionType();
-        Type *ParseEnumType();
+        [[nodiscard]] toolkit::result<ExpressionNodePtr> ParseExpressionNode();
+        [[nodiscard]] toolkit::result<ExpressionNodePtr> ParseBinaryExpressionNode();
+        [[nodiscard]] toolkit::result<ExpressionNodePtr> ParseBinaryExpressionNode(
+            ExpressionNodePtr left,
+            size_t min_precedence);
+        [[nodiscard]] toolkit::result<ExpressionNodePtr> ParseOperandExpressionNode();
+        [[nodiscard]] toolkit::result<ExpressionNodePtr> ParsePrimaryExpressionNode();
+
+        [[nodiscard]] toolkit::result<Type *> ParseType();
+        [[nodiscard]] toolkit::result<Type *> ParseBaseType();
+        [[nodiscard]] toolkit::result<Type *> ParseStructType();
+        [[nodiscard]] toolkit::result<Type *> ParseUnionType();
+        [[nodiscard]] toolkit::result<Type *> ParseEnumType();
+
+        [[nodiscard]] bool CouldBeType() const;
 
         [[nodiscard]] bool At(TokenType type) const;
         [[nodiscard]] bool At(TokenType type, std::string_view value) const;
 
-        Token Expect(TokenType type);
-        void Expect(TokenType type, std::string_view value);
+        [[nodiscard]] toolkit::result<Token> Expect(TokenType type);
+        [[nodiscard]] toolkit::result<> Expect(TokenType type, std::string_view value);
 
         bool Skip(TokenType type);
         bool Skip(TokenType type, std::string_view value);
@@ -70,3 +83,33 @@ namespace scc::cc
         Token m_Token;
     };
 }
+
+template<>
+struct std::formatter<scc::cc::TokenType>
+{
+    template<typename C>
+    static constexpr auto parse(C &&ctx)
+    {
+        return ctx.begin();
+    }
+
+    template<typename C>
+    auto format(const scc::cc::TokenType value, C &&ctx) const
+    {
+        static const std::unordered_map<scc::cc::TokenType, const char *> map
+        {
+            { scc::cc::TokenType::None, "None" },
+            { scc::cc::TokenType::Identifier, "Identifier" },
+            { scc::cc::TokenType::Integer, "Integer" },
+            { scc::cc::TokenType::FloatingPoint, "FloatingPoint" },
+            { scc::cc::TokenType::String, "String" },
+            { scc::cc::TokenType::Operator, "Operator" },
+            { scc::cc::TokenType::Other, "Other" },
+        };
+
+        if (const auto it = map.find(value); it != map.end())
+            return std::format_to(ctx.out(), "{}", it->second);
+
+        return ctx.out();
+    }
+};
