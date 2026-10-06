@@ -88,6 +88,92 @@ namespace scc::cc
         std::string Name;
     };
 
+    struct ExpressionStatementNode : StatementNode
+    {
+        explicit ExpressionStatementNode(ExpressionNodePtr value);
+
+        void Generate() const override;
+
+        ExpressionNodePtr Value;
+    };
+
+    struct IfStatementNode : StatementNode
+    {
+        explicit IfStatementNode(
+            ExpressionNodePtr condition,
+            StatementNodePtr then,
+            StatementNodePtr else_);
+
+        void Generate() const override;
+
+        ExpressionNodePtr Condition;
+        StatementNodePtr Then;
+        StatementNodePtr Else;
+    };
+
+    struct WhileStatementNode : StatementNode
+    {
+        explicit WhileStatementNode(
+            ExpressionNodePtr condition,
+            StatementNodePtr loop);
+
+        void Generate() const override;
+
+        ExpressionNodePtr Condition;
+        StatementNodePtr Loop;
+    };
+
+    struct DoWhileStatementNode : StatementNode
+    {
+        explicit DoWhileStatementNode(
+            StatementNodePtr loop,
+            ExpressionNodePtr condition);
+
+        void Generate() const override;
+
+        StatementNodePtr Loop;
+        ExpressionNodePtr Condition;
+    };
+
+    struct ForStatementNode : StatementNode
+    {
+        explicit ForStatementNode(
+            StatementNodePtr prefix,
+            ExpressionNodePtr condition,
+            StatementNodePtr suffix,
+            StatementNodePtr loop);
+
+        void Generate() const override;
+
+        StatementNodePtr Prefix;
+        ExpressionNodePtr Condition;
+        StatementNodePtr Suffix;
+        StatementNodePtr Loop;
+    };
+
+    struct ReturnStatementNode : StatementNode
+    {
+        explicit ReturnStatementNode(ExpressionNodePtr value);
+
+        void Generate() const override;
+
+        ExpressionNodePtr Value;
+    };
+
+    struct BreakStatementNode : StatementNode
+    {
+        explicit BreakStatementNode() = default;
+
+        void Generate() const override;
+    };
+
+    struct ContinueStatementNode : StatementNode
+    {
+        explicit ContinueStatementNode() = default;
+
+        void Generate() const override;
+    };
+
     struct SequenceStatementNode : StatementNode
     {
         explicit SequenceStatementNode(std::vector<StatementNodePtr> nodes);

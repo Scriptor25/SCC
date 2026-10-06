@@ -41,9 +41,16 @@ namespace scc::cc
 
         [[nodiscard]] toolkit::result<NodePtr> ParseTypeDefNode();
 
-        [[nodiscard]] toolkit::result<StatementNodePtr> ParseStatementNode();
+        [[nodiscard]] toolkit::result<StatementNodePtr> ParseStatementNode(bool ignore_end = false);
         [[nodiscard]] toolkit::result<StatementNodePtr> ParseSequenceStatementNode();
-        [[nodiscard]] toolkit::result<StatementNodePtr> ParseVariableStatementNode();
+        [[nodiscard]] toolkit::result<StatementNodePtr> ParseIfStatementNode();
+        [[nodiscard]] toolkit::result<StatementNodePtr> ParseWhileStatementNode();
+        [[nodiscard]] toolkit::result<StatementNodePtr> ParseDoWhileStatementNode();
+        [[nodiscard]] toolkit::result<StatementNodePtr> ParseForStatementNode();
+        [[nodiscard]] toolkit::result<StatementNodePtr> ParseReturnStatementNode();
+        [[nodiscard]] toolkit::result<StatementNodePtr> ParseBreakStatementNode();
+        [[nodiscard]] toolkit::result<StatementNodePtr> ParseContinueStatementNode();
+        [[nodiscard]] toolkit::result<StatementNodePtr> ParseVariableStatementNode(bool ignore_end);
 
         [[nodiscard]] toolkit::result<ExpressionNodePtr> ParseExpressionNode();
         [[nodiscard]] toolkit::result<ExpressionNodePtr> ParseBinaryExpressionNode();

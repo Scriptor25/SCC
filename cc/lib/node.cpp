@@ -55,6 +55,87 @@ void scc::cc::TypeDefNode::Generate() const
     Error("TODO");
 }
 
+scc::cc::ExpressionStatementNode::ExpressionStatementNode(ExpressionNodePtr value)
+    : Value(std::move(value))
+{
+}
+
+void scc::cc::ExpressionStatementNode::Generate() const
+{
+    Error("TODO");
+}
+
+scc::cc::IfStatementNode::IfStatementNode(ExpressionNodePtr condition, StatementNodePtr then, StatementNodePtr else_)
+    : Condition(std::move(condition)),
+      Then(std::move(then)),
+      Else(std::move(else_))
+{
+}
+
+void scc::cc::IfStatementNode::Generate() const
+{
+    Error("TODO");
+}
+
+scc::cc::WhileStatementNode::WhileStatementNode(ExpressionNodePtr condition, StatementNodePtr loop)
+    : Condition(std::move(condition)),
+      Loop(std::move(loop))
+{
+}
+
+void scc::cc::WhileStatementNode::Generate() const
+{
+    Error("TODO");
+}
+
+scc::cc::DoWhileStatementNode::DoWhileStatementNode(StatementNodePtr loop, ExpressionNodePtr condition)
+    : Loop(std::move(loop)),
+      Condition(std::move(condition))
+{
+}
+
+void scc::cc::DoWhileStatementNode::Generate() const
+{
+    Error("TODO");
+}
+
+scc::cc::ForStatementNode::ForStatementNode(
+    StatementNodePtr prefix,
+    ExpressionNodePtr condition,
+    StatementNodePtr suffix,
+    StatementNodePtr loop)
+    : Prefix(std::move(prefix)),
+      Condition(std::move(condition)),
+      Suffix(std::move(suffix)),
+      Loop(std::move(loop))
+{
+}
+
+void scc::cc::ForStatementNode::Generate() const
+{
+    Error("TODO");
+}
+
+scc::cc::ReturnStatementNode::ReturnStatementNode(ExpressionNodePtr value)
+    : Value(std::move(value))
+{
+}
+
+void scc::cc::ReturnStatementNode::Generate() const
+{
+    Error("TODO");
+}
+
+void scc::cc::BreakStatementNode::Generate() const
+{
+    Error("TODO");
+}
+
+void scc::cc::ContinueStatementNode::Generate() const
+{
+    Error("TODO");
+}
+
 scc::cc::SequenceStatementNode::SequenceStatementNode(std::vector<StatementNodePtr> nodes)
     : Nodes(std::move(nodes))
 {
@@ -212,6 +293,39 @@ void scc::cc::SubscriptExpressionNode::Generate() const
 }
 
 int64_t scc::cc::SubscriptExpressionNode::EvaluateConstantInteger() const
+{
+    Error("TODO");
+}
+
+scc::cc::MemberExpressionNode::MemberExpressionNode(ExpressionNodePtr value, std::string name, const bool indirect)
+    : Value(std::move(value)),
+      Name(std::move(name)),
+      Indirect(indirect)
+{
+}
+
+void scc::cc::MemberExpressionNode::Generate() const
+{
+    Error("TODO");
+}
+
+int64_t scc::cc::MemberExpressionNode::EvaluateConstantInteger() const
+{
+    Error("TODO");
+}
+
+scc::cc::UnaryExpressionNode::UnaryExpressionNode(const UnaryOperator operator_, ExpressionNodePtr operand)
+    : Operator(operator_),
+      Operand(std::move(operand))
+{
+}
+
+void scc::cc::UnaryExpressionNode::Generate() const
+{
+    Error("TODO");
+}
+
+int64_t scc::cc::UnaryExpressionNode::EvaluateConstantInteger() const
 {
     Error("TODO");
 }

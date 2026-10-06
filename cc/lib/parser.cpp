@@ -88,7 +88,7 @@ toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseFunctionNode(Type *resul
         return { std::make_unique<FunctionNode>(result, std::move(name), std::move(arguments)) };
 
     StatementNodePtr content;
-    if (auto res = ParseStatementNode() >> content; !res)
+    if (auto res = ParseSequenceStatementNode() >> content; !res)
         return res;
 
     return { std::make_unique<FunctionNode>(result, std::move(name), std::move(arguments), std::move(content)) };
@@ -128,22 +128,40 @@ toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseTypeDefNode()
     return { std::make_unique<TypeDefNode>(type, std::move(name)) };
 }
 
-toolkit::result<scc::cc::StatementNodePtr> scc::cc::Parser::ParseStatementNode()
+toolkit::result<scc::cc::StatementNodePtr> scc::cc::Parser::ParseStatementNode(const bool ignore_end)
 {
     if (At(TokenType::Other, "{"))
         return ParseSequenceStatementNode();
 
+    if (At(TokenType::Identifier, "if"))
+        return ParseIfStatementNode();
+
+    if (At(TokenType::Identifier, "while"))
+        return ParseWhileStatementNode();
+    if (At(TokenType::Identifier, "do"))
+        return ParseDoWhileStatementNode();
+    if (At(TokenType::Identifier, "for"))
+        return ParseForStatementNode();
+
+    if (At(TokenType::Identifier, "return"))
+        return ParseReturnStatementNode();
+    if (At(TokenType::Identifier, "break"))
+        return ParseBreakStatementNode();
+    if (At(TokenType::Identifier, "continue"))
+        return ParseContinueStatementNode();
+
     if (CouldBeType())
-        return ParseVariableStatementNode();
+        return ParseVariableStatementNode(ignore_end);
 
     ExpressionNodePtr node;
     if (auto res = ParseExpressionNode() >> node; !res)
         return res;
 
-    if (auto res = Expect(TokenType::Other, ";"); !res)
-        return res;
+    if (!ignore_end)
+        if (auto res = Expect(TokenType::Other, ";"); !res)
+            return res;
 
-    return toolkit::result<ExpressionNodePtr>(std::move(node));
+    return { std::make_unique<ExpressionStatementNode>(std::move(node)) };
 }
 
 toolkit::result<scc::cc::StatementNodePtr> scc::cc::Parser::ParseSequenceStatementNode()
@@ -168,7 +186,168 @@ toolkit::result<scc::cc::StatementNodePtr> scc::cc::Parser::ParseSequenceStateme
     return { std::make_unique<SequenceStatementNode>(std::move(nodes)) };
 }
 
-toolkit::result<scc::cc::StatementNodePtr> scc::cc::Parser::ParseVariableStatementNode()
+toolkit::result<scc::cc::StatementNodePtr> scc::cc::Parser::ParseIfStatementNode()
+{
+    if (auto res = Expect(TokenType::Identifier, "if"); !res)
+        return res;
+
+    if (auto res = Expect(TokenType::Other, "("); !res)
+        return res;
+
+    ExpressionNodePtr condition;
+    if (auto res = ParseExpressionNode() >> condition; !res)
+        return res;
+
+    if (auto res = Expect(TokenType::Other, ")"); !res)
+        return res;
+
+    StatementNodePtr then, else_;
+
+    if (auto res = ParseStatementNode() >> then; !res)
+        return res;
+
+    if (Skip(TokenType::Identifier, "else"))
+        if (auto res = ParseStatementNode() >> else_; !res)
+            return res;
+
+    return { std::make_unique<IfStatementNode>(std::move(condition), std::move(then), std::move(else_)) };
+}
+
+toolkit::result<scc::cc::StatementNodePtr> scc::cc::Parser::ParseWhileStatementNode()
+{
+    if (auto res = Expect(TokenType::Identifier, "while"); !res)
+        return res;
+
+    if (auto res = Expect(TokenType::Other, "("); !res)
+        return res;
+
+    ExpressionNodePtr condition;
+    if (auto res = ParseExpressionNode() >> condition; !res)
+        return res;
+
+    if (auto res = Expect(TokenType::Other, ")"); !res)
+        return res;
+
+    StatementNodePtr loop;
+
+    if (auto res = ParseStatementNode() >> loop; !res)
+        return res;
+
+    return { std::make_unique<WhileStatementNode>(std::move(condition), std::move(loop)) };
+}
+
+toolkit::result<scc::cc::StatementNodePtr> scc::cc::Parser::ParseDoWhileStatementNode()
+{
+    if (auto res = Expect(TokenType::Identifier, "do"); !res)
+        return res;
+
+    StatementNodePtr loop;
+    if (auto res = ParseStatementNode() >> loop; !res)
+        return res;
+
+    if (auto res = Expect(TokenType::Identifier, "while"); !res)
+        return res;
+
+    if (auto res = Expect(TokenType::Other, "("); !res)
+        return res;
+
+    ExpressionNodePtr condition;
+    if (auto res = ParseExpressionNode() >> condition; !res)
+        return res;
+
+    if (auto res = Expect(TokenType::Other, ")"); !res)
+        return res;
+
+    if (auto res = Expect(TokenType::Other, ";"); !res)
+        return res;
+
+    return { std::make_unique<DoWhileStatementNode>(std::move(loop), std::move(condition)) };
+}
+
+toolkit::result<scc::cc::StatementNodePtr> scc::cc::Parser::ParseForStatementNode()
+{
+    if (auto res = Expect(TokenType::Identifier, "for"); !res)
+        return res;
+
+    if (auto res = Expect(TokenType::Other, "("); !res)
+        return res;
+
+    StatementNodePtr prefix;
+    if (!At(TokenType::Other, ";"))
+        if (auto res = ParseStatementNode(true) >> prefix; !res)
+            return res;
+
+    if (auto res = Expect(TokenType::Other, ";"); !res)
+        return res;
+
+    ExpressionNodePtr condition;
+    if (!At(TokenType::Other, ";"))
+        if (auto res = ParseExpressionNode() >> condition; !res)
+            return res;
+
+    if (auto res = Expect(TokenType::Other, ";"); !res)
+        return res;
+
+    StatementNodePtr suffix;
+    if (!At(TokenType::Other, ")"))
+        if (auto res = ParseStatementNode(true) >> suffix; !res)
+            return res;
+
+    if (auto res = Expect(TokenType::Other, ")"); !res)
+        return res;
+
+    StatementNodePtr loop;
+    if (auto res = ParseStatementNode() >> loop; !res)
+        return res;
+
+    return {
+        std::make_unique<ForStatementNode>(
+            std::move(prefix),
+            std::move(condition),
+            std::move(suffix),
+            std::move(loop))
+    };
+}
+
+toolkit::result<scc::cc::StatementNodePtr> scc::cc::Parser::ParseReturnStatementNode()
+{
+    if (auto res = Expect(TokenType::Identifier, "return"); !res)
+        return res;
+
+    ExpressionNodePtr value;
+    if (!At(TokenType::Other, ";"))
+        if (auto res = ParseExpressionNode() >> value; !res)
+            return res;
+
+    if (auto res = Expect(TokenType::Other, ";"); !res)
+        return res;
+
+    return { std::make_unique<ReturnStatementNode>(std::move(value)) };
+}
+
+toolkit::result<scc::cc::StatementNodePtr> scc::cc::Parser::ParseBreakStatementNode()
+{
+    if (auto res = Expect(TokenType::Identifier, "break"); !res)
+        return res;
+
+    if (auto res = Expect(TokenType::Other, ";"); !res)
+        return res;
+
+    return { std::make_unique<BreakStatementNode>() };
+}
+
+toolkit::result<scc::cc::StatementNodePtr> scc::cc::Parser::ParseContinueStatementNode()
+{
+    if (auto res = Expect(TokenType::Identifier, "continue"); !res)
+        return res;
+
+    if (auto res = Expect(TokenType::Other, ";"); !res)
+        return res;
+
+    return { std::make_unique<ContinueStatementNode>() };
+}
+
+toolkit::result<scc::cc::StatementNodePtr> scc::cc::Parser::ParseVariableStatementNode(const bool ignore_end)
 {
     Type *type;
     if (auto res = ParseType() >> type; !res)
@@ -190,8 +369,9 @@ toolkit::result<scc::cc::StatementNodePtr> scc::cc::Parser::ParseVariableStateme
     }
     while (Skip(TokenType::Other, ","));
 
-    if (auto res = Expect(TokenType::Other, ";"); !res)
-        return res;
+    if (!ignore_end)
+        if (auto res = Expect(TokenType::Other, ";"); !res)
+            return res;
 
     return { std::make_unique<VariableStatementNode>(type, std::move(elements)) };
 }
@@ -204,7 +384,7 @@ toolkit::result<scc::cc::ExpressionNodePtr> scc::cc::Parser::ParseExpressionNode
 toolkit::result<scc::cc::ExpressionNodePtr> scc::cc::Parser::ParseBinaryExpressionNode()
 {
     ExpressionNodePtr operand;
-    if (auto res = ParseOperandExpressionNode(); !res)
+    if (auto res = ParseOperandExpressionNode() >> operand; !res)
         return res;
 
     return ParseBinaryExpressionNode(std::move(operand), 0);
@@ -223,37 +403,37 @@ toolkit::result<scc::cc::ExpressionNodePtr> scc::cc::Parser::ParseBinaryExpressi
 
     static const std::unordered_map<std::string_view, OperatorDefinition> precedence
     {
-        { "*", { false, 3, BinaryOperator::Multiply } },
-        { "/", { false, 3, BinaryOperator::Divide } },
-        { "%", { false, 3, BinaryOperator::Remainder } },
-        { "+", { false, 4, BinaryOperator::Add } },
-        { "-", { false, 4, BinaryOperator::Subtract } },
-        { "<<", { false, 5, BinaryOperator::ShiftLeft } },
-        { ">>", { false, 5, BinaryOperator::ShiftRight } },
-        { "<", { false, 6, BinaryOperator::CompareLessThan } },
-        { "<=", { false, 6, BinaryOperator::CompareLessThanEqual } },
-        { ">", { false, 6, BinaryOperator::CompareGreaterThen } },
-        { ">=", { false, 6, BinaryOperator::CompareGreaterThenEqual } },
-        { "==", { false, 7, BinaryOperator::CompareEqual } },
-        { "!=", { false, 7, BinaryOperator::CompareNotEqual } },
+        { "*", { false, 13, BinaryOperator::Multiply } },
+        { "/", { false, 13, BinaryOperator::Divide } },
+        { "%", { false, 13, BinaryOperator::Remainder } },
+        { "+", { false, 12, BinaryOperator::Add } },
+        { "-", { false, 12, BinaryOperator::Subtract } },
+        { "<<", { false, 11, BinaryOperator::ShiftLeft } },
+        { ">>", { false, 11, BinaryOperator::ShiftRight } },
+        { "<", { false, 10, BinaryOperator::CompareLessThan } },
+        { "<=", { false, 10, BinaryOperator::CompareLessThanEqual } },
+        { ">", { false, 10, BinaryOperator::CompareGreaterThen } },
+        { ">=", { false, 10, BinaryOperator::CompareGreaterThenEqual } },
+        { "==", { false, 9, BinaryOperator::CompareEqual } },
+        { "!=", { false, 9, BinaryOperator::CompareNotEqual } },
         { "&", { false, 8, BinaryOperator::And } },
-        { "^", { false, 9, BinaryOperator::XOr } },
-        { "|", { false, 10, BinaryOperator::Or } },
-        { "&&", { false, 11, BinaryOperator::LogicalAnd } },
-        { "||", { false, 12, BinaryOperator::LogicalOr } },
-        { "?", { true, 13 } },
-        { "=", { true, 14, BinaryOperator::Assign } },
-        { "+=", { true, 14, BinaryOperator::AddAssign } },
-        { "-=", { true, 14, BinaryOperator::SubtractAssign } },
-        { "*=", { true, 14, BinaryOperator::MultiplyAssign } },
-        { "/=", { true, 14, BinaryOperator::DivideAssign } },
-        { "%=", { true, 14, BinaryOperator::RemainderAssign } },
-        { "<<=", { true, 14, BinaryOperator::ShiftLeftAssign } },
-        { ">>=", { true, 14, BinaryOperator::ShiftRightAssign } },
-        { "&=", { true, 14, BinaryOperator::AndAssign } },
-        { "^=", { true, 14, BinaryOperator::XOrAssign } },
-        { "|=", { true, 14, BinaryOperator::OrAssign } },
-        { ",", { false, 15 } },
+        { "^", { false, 7, BinaryOperator::XOr } },
+        { "|", { false, 6, BinaryOperator::Or } },
+        { "&&", { false, 5, BinaryOperator::LogicalAnd } },
+        { "||", { false, 4, BinaryOperator::LogicalOr } },
+        { "?", { true, 3 } },
+        { "=", { true, 2, BinaryOperator::Assign } },
+        { "+=", { true, 2, BinaryOperator::AddAssign } },
+        { "-=", { true, 2, BinaryOperator::SubtractAssign } },
+        { "*=", { true, 2, BinaryOperator::MultiplyAssign } },
+        { "/=", { true, 2, BinaryOperator::DivideAssign } },
+        { "%=", { true, 2, BinaryOperator::RemainderAssign } },
+        { "<<=", { true, 2, BinaryOperator::ShiftLeftAssign } },
+        { ">>=", { true, 2, BinaryOperator::ShiftRightAssign } },
+        { "&=", { true, 2, BinaryOperator::AndAssign } },
+        { "^=", { true, 2, BinaryOperator::XOrAssign } },
+        { "|=", { true, 2, BinaryOperator::OrAssign } },
+        { ",", { false, 1 } },
     };
 
     while (true)
@@ -267,7 +447,7 @@ toolkit::result<scc::cc::ExpressionNodePtr> scc::cc::Parser::ParseBinaryExpressi
         auto o = Skip().Value;
 
         ExpressionNodePtr right;
-        if (auto res = ParseOperandExpressionNode(); !res)
+        if (auto res = ParseOperandExpressionNode() >> right; !res)
             return res;
 
         while (true)
