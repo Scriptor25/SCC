@@ -1,8 +1,8 @@
 #pragma once
 
-#include <cstdint>
 #include <scc/cc/cc.hpp>
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <string>
@@ -14,7 +14,7 @@ namespace scc::cc
     {
         virtual ~Node() = default;
 
-        virtual void Generate() const = 0;
+        virtual void Generate(Builder &builder) const = 0;
     };
 
     using NodePtr = std::unique_ptr<Node>;
@@ -27,6 +27,8 @@ namespace scc::cc
 
     struct ExpressionNode : Node
     {
+        [[nodiscard]] virtual Value *GenerateValue(Builder &builder) const = 0;
+
         [[nodiscard]] virtual int64_t EvaluateConstantInteger() const = 0;
     };
 
@@ -50,7 +52,7 @@ namespace scc::cc
             std::vector<FunctionArgument> arguments,
             std::unique_ptr<StatementNode> content);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
 
         // TODO: tags
         // TODO: attributes
@@ -67,7 +69,7 @@ namespace scc::cc
         explicit VariableNode(Type *type, std::string name);
         explicit VariableNode(Type *type, std::string name, ExpressionNodePtr value);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
 
         // TODO: tags
         // TODO: attributes
@@ -82,7 +84,7 @@ namespace scc::cc
     {
         explicit TypeDefNode(Type *type, std::string name);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
 
         Type *Ty;
         std::string Name;
@@ -92,7 +94,7 @@ namespace scc::cc
     {
         explicit ExpressionStatementNode(ExpressionNodePtr value);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
 
         ExpressionNodePtr Value;
     };
@@ -104,7 +106,7 @@ namespace scc::cc
             StatementNodePtr then,
             StatementNodePtr else_);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
 
         ExpressionNodePtr Condition;
         StatementNodePtr Then;
@@ -117,7 +119,7 @@ namespace scc::cc
             ExpressionNodePtr condition,
             StatementNodePtr loop);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
 
         ExpressionNodePtr Condition;
         StatementNodePtr Loop;
@@ -129,7 +131,7 @@ namespace scc::cc
             StatementNodePtr loop,
             ExpressionNodePtr condition);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
 
         StatementNodePtr Loop;
         ExpressionNodePtr Condition;
@@ -143,7 +145,7 @@ namespace scc::cc
             StatementNodePtr suffix,
             StatementNodePtr loop);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
 
         StatementNodePtr Prefix;
         ExpressionNodePtr Condition;
@@ -155,7 +157,7 @@ namespace scc::cc
     {
         explicit ReturnStatementNode(ExpressionNodePtr value);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
 
         ExpressionNodePtr Value;
     };
@@ -164,42 +166,51 @@ namespace scc::cc
     {
         explicit BreakStatementNode() = default;
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
     };
 
     struct ContinueStatementNode : StatementNode
     {
         explicit ContinueStatementNode() = default;
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
     };
 
     struct SequenceStatementNode : StatementNode
     {
         explicit SequenceStatementNode(std::vector<StatementNodePtr> nodes);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
 
         std::vector<StatementNodePtr> Nodes;
+    };
+
+    struct VariableElement
+    {
+        std::string Name;
+        uint64_t Count;
+        ExpressionNodePtr Value;
     };
 
     struct VariableStatementNode : StatementNode
     {
         explicit VariableStatementNode(
             Type *type,
-            std::vector<std::pair<std::string, ExpressionNodePtr>> elements);
+            std::vector<VariableElement> elements);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
 
         Type *Ty;
-        std::vector<std::pair<std::string, ExpressionNodePtr>> Elements;
+        std::vector<VariableElement> Elements;
     };
 
     struct SymbolExpressionNode : ExpressionNode
     {
         explicit SymbolExpressionNode(std::string name);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
+
+        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -210,7 +221,9 @@ namespace scc::cc
     {
         explicit IntegerExpressionNode(uint64_t value);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
+
+        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -221,7 +234,9 @@ namespace scc::cc
     {
         explicit FloatingPointExpressionNode(long double value);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
+
+        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -232,7 +247,9 @@ namespace scc::cc
     {
         explicit StringExpressionNode(std::string value);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
+
+        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -243,7 +260,9 @@ namespace scc::cc
     {
         explicit SizeOfTypeExpressionNode(Type *type);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
+
+        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -254,7 +273,9 @@ namespace scc::cc
     {
         explicit SizeOfValueExpressionNode(ExpressionNodePtr value);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
+
+        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -265,7 +286,9 @@ namespace scc::cc
     {
         explicit CastExpressionNode(Type *type, ExpressionNodePtr operand);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
+
+        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -277,7 +300,9 @@ namespace scc::cc
     {
         explicit CallExpressionNode(ExpressionNodePtr callee, std::vector<ExpressionNodePtr> arguments);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
+
+        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -289,7 +314,9 @@ namespace scc::cc
     {
         explicit SubscriptExpressionNode(ExpressionNodePtr value, ExpressionNodePtr index);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
+
+        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -301,7 +328,9 @@ namespace scc::cc
     {
         explicit MemberExpressionNode(ExpressionNodePtr value, std::string name, bool indirect);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
+
+        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -328,7 +357,9 @@ namespace scc::cc
     {
         explicit UnaryExpressionNode(UnaryOperator operator_, ExpressionNodePtr operand);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
+
+        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -380,7 +411,9 @@ namespace scc::cc
             ExpressionNodePtr left,
             ExpressionNodePtr right);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
+
+        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -396,7 +429,9 @@ namespace scc::cc
             ExpressionNodePtr then,
             ExpressionNodePtr else_);
 
-        void Generate() const override;
+        void Generate(Builder &builder) const override;
+
+        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 

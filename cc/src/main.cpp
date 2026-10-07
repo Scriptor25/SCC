@@ -1,5 +1,5 @@
+#include <scc/cc/builder.hpp>
 #include <scc/cc/context.hpp>
-#include <scc/cc/module.hpp>
 #include <scc/cc/parser.hpp>
 
 #include <scc/platform.hpp>
@@ -35,12 +35,13 @@ int main(int argc, const char **argv)
     }
 
     scc::ir::Context ir_context(platform);
-    scc::cc::Context context(ir_context);
-
     scc::ir::Module ir_module;
-    scc::cc::Module module(ir_module);
+    scc::ir::Builder ir_builder(ir_context);
 
-    scc::cc::Parser parser(in, context, module);
+    scc::cc::Context context;
+    scc::cc::Builder builder(ir_context, ir_module, ir_builder);
+
+    scc::cc::Parser parser(in, context, builder);
 
     parser.Parse();
 

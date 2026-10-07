@@ -11,10 +11,13 @@
 #include <unordered_map>
 #include <unordered_set>
 
-scc::cc::Parser::Parser(std::istream &stream, Context &context, Module &module)
+scc::cc::Parser::Parser(
+    std::istream &stream,
+    Context &context,
+    Builder &builder)
     : m_Stream(stream),
       m_Context(context),
-      m_Module(module)
+      m_Builder(builder)
 {
     m_Buffer = m_Stream.get();
     m_Token = Next();
@@ -31,7 +34,7 @@ void scc::cc::Parser::Parse()
             break;
         }
 
-        node->Generate();
+        node->Generate(m_Builder);
     }
 }
 
@@ -111,6 +114,10 @@ toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseVariableNode(Type *type,
 
 toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseTypeDefNode()
 {
+    // TODO: handle function and array types:
+    // TODO: typedef <result>(<name>)(<argument>...);
+    // TODO: typedef <element> <name>[<count>];
+
     if (auto res = Expect(TokenType::Identifier, "typedef"); !res)
         return res;
 
@@ -124,6 +131,8 @@ toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseTypeDefNode()
 
     if (auto res = Expect(TokenType::Other, ";"); !res)
         return res;
+
+    m_Context.SetNamedType(name, type);
 
     return { std::make_unique<TypeDefNode>(type, std::move(name)) };
 }

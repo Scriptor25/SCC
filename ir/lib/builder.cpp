@@ -42,6 +42,20 @@ scc::ir::Variable *scc::ir::Builder::CreateString(
     return module.CreateVariable(type, std::move(name), initializer);
 }
 
+scc::ir::Block *scc::ir::Builder::CreateBlock(Function *function, const std::string &name) const
+{
+    Assert(function, "function must not be null");
+    Assert(!name.empty(), "name must not be empty");
+
+    auto substitute = name;
+    auto index = 0;
+
+    while (function->FindBlock(substitute))
+        substitute = name + std::to_string(++index);
+
+    return function->CreateBlock(std::move(substitute));
+}
+
 scc::ir::Block *scc::ir::Builder::GetOrCreateBlock(Function *function, std::string name) const
 {
     Assert(function, "function must not be null");

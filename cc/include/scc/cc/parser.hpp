@@ -30,7 +30,10 @@ namespace scc::cc
     class Parser
     {
     public:
-        explicit Parser(std::istream &stream, Context &context, Module &module);
+        explicit Parser(
+            std::istream &stream,
+            Context &context,
+            Builder &builder);
 
         void Parse();
 
@@ -78,13 +81,12 @@ namespace scc::cc
         bool Skip(TokenType type, std::string_view value);
 
         Token Skip();
-
         Token Next();
 
     private:
         std::istream &m_Stream;
         Context &m_Context;
-        Module &m_Module;
+        Builder &m_Builder;
 
         int m_Buffer;
         Token m_Token;

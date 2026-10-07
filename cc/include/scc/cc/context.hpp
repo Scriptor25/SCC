@@ -13,9 +13,7 @@ namespace scc::cc
     class Context
     {
     public:
-        explicit Context(ir::Context &ir_context);
-
-        [[nodiscard]] ir::Context &GetIRContext() const;
+        explicit Context() = default;
 
         VoidType *GetVoidType();
         IntegerType *GetBooleanType();
@@ -33,11 +31,10 @@ namespace scc::cc
         ArrayType *GetArrayType(Type *element);
         ArrayType *GetArrayType(Type *element, size_t count);
 
+        void SetNamedType(const std::string &name, Type *type);
         [[nodiscard]] Type *GetNamedType(const std::string &name) const;
 
     private:
-        ir::Context &m_IRContext;
-
         std::unique_ptr<VoidType> m_VoidType;
 
         std::unordered_map<IntegerKind, std::unique_ptr<IntegerType>> m_IntegerTypes;

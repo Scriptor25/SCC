@@ -25,6 +25,9 @@ namespace scc::ir
             std::string name,
             std::string_view value) const;
 
+        [[nodiscard]] Block *CreateBlock(
+            Function *function,
+            const std::string &name) const;
         [[nodiscard]] Block *GetOrCreateBlock(
             Function *function,
             std::string name) const;

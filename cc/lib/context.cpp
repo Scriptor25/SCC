@@ -2,16 +2,6 @@
 
 #include <scc/assert.hpp>
 
-scc::cc::Context::Context(ir::Context &ir_context)
-    : m_IRContext(ir_context)
-{
-}
-
-scc::ir::Context &scc::cc::Context::GetIRContext() const
-{
-    return m_IRContext;
-}
-
 scc::cc::VoidType *scc::cc::Context::GetVoidType()
 {
     if (!m_VoidType)
@@ -118,6 +108,11 @@ scc::cc::ArrayType *scc::cc::Context::GetArrayType(Type *element, size_t count)
         ref = std::make_unique<ArrayType>(element, count);
 
     return ref.get();
+}
+
+void scc::cc::Context::SetNamedType(const std::string &name, Type *type)
+{
+    m_NamedTypes[name] = type;
 }
 
 scc::cc::Type *scc::cc::Context::GetNamedType(const std::string &name) const

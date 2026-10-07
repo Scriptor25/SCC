@@ -1,7 +1,5 @@
-#include <scc/cc/context.hpp>
+#include <scc/cc/builder.hpp>
 #include <scc/cc/type.hpp>
-
-#include <scc/ir/context.hpp>
 
 #include <unordered_map>
 
@@ -35,12 +33,12 @@ size_t scc::cc::VoidType::GetBits() const
     return 0;
 }
 
-scc::ir::Type *scc::cc::VoidType::Generate(Context &context) const
+scc::ir::Type *scc::cc::VoidType::Generate(Builder &builder) const
 {
-    return context.GetIRContext().GetVoidType();
+    return builder.GetContext().GetVoidType();
 }
 
-scc::cc::IntegerType::IntegerType(IntegerKind kind)
+scc::cc::IntegerType::IntegerType(const IntegerKind kind)
     : Kind(kind)
 {
 }
@@ -50,14 +48,14 @@ size_t scc::cc::IntegerType::GetBits() const
     return integer_kind_info.at(Kind).second;
 }
 
-scc::ir::Type *scc::cc::IntegerType::Generate(Context &context) const
+scc::ir::Type *scc::cc::IntegerType::Generate(Builder &builder) const
 {
     const auto bits = GetBits();
 
-    return context.GetIRContext().GetIntNType(bits);
+    return builder.GetContext().GetIntNType(bits);
 }
 
-scc::cc::FloatingPointType::FloatingPointType(FloatingPointKind kind)
+scc::cc::FloatingPointType::FloatingPointType(const FloatingPointKind kind)
     : Kind(kind)
 {
 }
@@ -67,11 +65,11 @@ size_t scc::cc::FloatingPointType::GetBits() const
     return floating_point_kind_info.at(Kind);
 }
 
-scc::ir::Type *scc::cc::FloatingPointType::Generate(Context &context) const
+scc::ir::Type *scc::cc::FloatingPointType::Generate(Builder &builder) const
 {
     const auto bits = GetBits();
 
-    return context.GetIRContext().GetFloatNType(bits);
+    return builder.GetContext().GetFloatNType(bits);
 }
 
 scc::cc::StructType::StructType(std::string name)
@@ -90,15 +88,15 @@ size_t scc::cc::StructType::GetBits() const
     return bits;
 }
 
-scc::ir::Type *scc::cc::StructType::Generate(Context &context) const
+scc::ir::Type *scc::cc::StructType::Generate(Builder &builder) const
 {
     std::vector<ir::Type *> elements(Elements.size());
     for (size_t i = 0; i < elements.size(); ++i)
-        elements[i] = Elements[i].Ty->Generate(context);
+        elements[i] = Elements[i].Ty->Generate(builder);
 
     // TODO: per-element alignment and size
 
-    return context.GetIRContext().GetStructType(std::move(elements));
+    return builder.GetContext().GetStructType(std::move(elements));
 }
 
 scc::cc::UnionType::UnionType(std::string name)
@@ -118,14 +116,14 @@ size_t scc::cc::UnionType::GetBits() const
     return bits;
 }
 
-scc::ir::Type *scc::cc::UnionType::Generate(Context &context) const
+scc::ir::Type *scc::cc::UnionType::Generate(Builder &builder) const
 {
     const auto bits = GetBits();
     const auto bytes = (bits + 0b111) & ~0b111;
 
-    auto *element = context.GetIRContext().GetInt8Type();
+    auto *element = builder.GetContext().GetInt8Type();
 
-    return context.GetIRContext().GetArrayType(element, bytes);
+    return builder.GetContext().GetArrayType(element, bytes);
 }
 
 scc::cc::EnumType::EnumType(std::string name)
@@ -140,11 +138,11 @@ size_t scc::cc::EnumType::GetBits() const
     return bits;
 }
 
-scc::ir::Type *scc::cc::EnumType::Generate(Context &context) const
+scc::ir::Type *scc::cc::EnumType::Generate(Builder &builder) const
 {
     auto [_, bits] = DetermineType();
 
-    return context.GetIRContext().GetIntNType(bits);
+    return builder.GetContext().GetIntNType(bits);
 }
 
 std::pair<bool, size_t> scc::cc::EnumType::DetermineType() const
@@ -206,15 +204,15 @@ size_t scc::cc::PointerType::GetBits() const
     return 64;
 }
 
-scc::ir::Type *scc::cc::PointerType::Generate(Context &context) const
+scc::ir::Type *scc::cc::PointerType::Generate(Builder &builder) const
 {
     ir::Type *element;
     if (Element)
-        element = Element->Generate(context);
+        element = Element->Generate(builder);
     else
-        element = context.GetIRContext().GetVoidType();
+        element = builder.GetContext().GetVoidType();
 
-    return context.GetIRContext().GetPointerType(element);
+    return builder.GetContext().GetPointerType(element);
 }
 
 scc::cc::ArrayType::ArrayType(Type *element, size_t count)
@@ -228,8 +226,8 @@ size_t scc::cc::ArrayType::GetBits() const
     return Element->GetBits() * Count;
 }
 
-scc::ir::Type *scc::cc::ArrayType::Generate(Context &context) const
+scc::ir::Type *scc::cc::ArrayType::Generate(Builder &builder) const
 {
-    auto *element = Element->Generate(context);
-    return context.GetIRContext().GetArrayType(element, Count);
+    auto *element = Element->Generate(builder);
+    return builder.GetContext().GetArrayType(element, Count);
 }
