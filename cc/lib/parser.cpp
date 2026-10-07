@@ -362,19 +362,25 @@ toolkit::result<scc::cc::StatementNodePtr> scc::cc::Parser::ParseVariableStateme
     if (auto res = ParseType() >> type; !res)
         return res;
 
-    std::vector<std::pair<std::string, ExpressionNodePtr>> elements;
+    std::vector<VariableElement> elements;
     do
     {
         std::string name;
         if (auto res = Expect(TokenType::Identifier).extract(&Token::Value) >> name; !res)
             return res;
 
-        ExpressionNodePtr value;
+        ExpressionNodePtr val;
         if (Skip(TokenType::Operator, "="))
-            if (auto res = ParseExpressionNode() >> value; !res)
+            if (auto res = ParseExpressionNode() >> val; !res)
                 return res;
 
-        elements.emplace_back(std::move(name), std::move(value));
+        // TODO: parse array element count
+
+        elements.push_back(
+            {
+                .Name = std::move(name),
+                .Val = std::move(val),
+            });
     }
     while (Skip(TokenType::Other, ","));
 

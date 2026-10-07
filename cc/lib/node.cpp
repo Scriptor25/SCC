@@ -49,7 +49,7 @@ void scc::cc::FunctionNode::Generate(Builder &builder) const
     {
         function = builder.GetModule().CreateFunction(type, Name);
 
-        builder.SetNamed(Name, Value::CreateR(function));
+        builder.SetNamed(Name, Value::CreateR(TODO, function));
     }
 
     if (!Content)
@@ -69,7 +69,7 @@ void scc::cc::FunctionNode::Generate(Builder &builder) const
 
             // TODO: insert alloc at function start
             auto *argument_pointer = builder.GetBuilder().CreateAlloc(argument->GetType());
-            auto argument_value = Value::CreateL(argument_pointer);
+            auto argument_value = Value::CreateL(TODO, argument_pointer);
 
             builder.SetNamed(*name, std::move(argument_value));
         }
@@ -123,7 +123,7 @@ void scc::cc::VariableNode::Generate(Builder &builder) const
 
     auto *variable = builder.GetModule().CreateVariable(type, Name, initializer);
 
-    builder.SetNamed(Name, Value::CreateL(variable));
+    builder.SetNamed(Name, Value::CreateL(TODO, variable));
 }
 
 scc::cc::TypeDefNode::TypeDefNode(Type *type, std::string name)
@@ -316,21 +316,21 @@ scc::cc::VariableStatementNode::VariableStatementNode(
 
 void scc::cc::VariableStatementNode::Generate(Builder &builder) const
 {
-    auto *type = Ty->Generate(builder);
+    auto *ir_type = Ty->Generate(builder);
 
     for (const auto &element : Elements)
     {
         // TODO: insert alloc at function start
-        auto *pointer = builder.GetBuilder().CreateAlloc(type, element.Count);
+        auto *pointer = builder.GetBuilder().CreateAlloc(ir_type, 1);
 
-        if (element.Value)
+        if (element.Val)
         {
-            const auto *value = element.Value->GenerateValue(builder);
+            const auto *val = element.Val->GenerateValue(builder);
 
-            builder.GetBuilder().CreateStore(pointer, value->Load(builder));
+            builder.GetBuilder().CreateStore(pointer, val->Load(builder));
         }
 
-        builder.SetNamed(element.Name, Value::CreateL(pointer));
+        builder.SetNamed(element.Name, Value::CreateL(Ty, pointer));
     }
 }
 
@@ -344,13 +344,18 @@ void scc::cc::SymbolExpressionNode::Generate(Builder &) const
     // noop
 }
 
+scc::cc::Type *scc::cc::SymbolExpressionNode::GetType(Builder &builder) const
+{
+    return builder.GetNamed(Name)->GetType();
+}
+
 int64_t scc::cc::SymbolExpressionNode::EvaluateConstantInteger() const
 {
     Error("TODO");
 }
 
-scc::cc::IntegerExpressionNode::IntegerExpressionNode(const uint64_t value)
-    : Value(value)
+scc::cc::IntegerExpressionNode::IntegerExpressionNode(const uint64_t val)
+    : Val(val)
 {
 }
 
@@ -364,8 +369,8 @@ int64_t scc::cc::IntegerExpressionNode::EvaluateConstantInteger() const
     Error("TODO");
 }
 
-scc::cc::FloatingPointExpressionNode::FloatingPointExpressionNode(const long double value)
-    : Value(value)
+scc::cc::FloatingPointExpressionNode::FloatingPointExpressionNode(const long double val)
+    : Val(val)
 {
 }
 
@@ -379,8 +384,8 @@ int64_t scc::cc::FloatingPointExpressionNode::EvaluateConstantInteger() const
     Error("TODO");
 }
 
-scc::cc::StringExpressionNode::StringExpressionNode(std::string value)
-    : Value(std::move(value))
+scc::cc::StringExpressionNode::StringExpressionNode(std::string val)
+    : Val(std::move(val))
 {
 }
 
@@ -394,8 +399,8 @@ int64_t scc::cc::StringExpressionNode::EvaluateConstantInteger() const
     Error("TODO");
 }
 
-scc::cc::SizeOfTypeExpressionNode::SizeOfTypeExpressionNode(Type *type)
-    : Ty(type)
+scc::cc::SizeOfTypeExpressionNode::SizeOfTypeExpressionNode(Type *ty)
+    : Ty(ty)
 {
 }
 
@@ -409,8 +414,8 @@ int64_t scc::cc::SizeOfTypeExpressionNode::EvaluateConstantInteger() const
     Error("TODO");
 }
 
-scc::cc::SizeOfValueExpressionNode::SizeOfValueExpressionNode(ExpressionNodePtr value)
-    : Value(std::move(value))
+scc::cc::SizeOfValueExpressionNode::SizeOfValueExpressionNode(ExpressionNodePtr val)
+    : Val(std::move(val))
 {
 }
 
@@ -424,8 +429,8 @@ int64_t scc::cc::SizeOfValueExpressionNode::EvaluateConstantInteger() const
     Error("TODO");
 }
 
-scc::cc::CastExpressionNode::CastExpressionNode(Type *type, ExpressionNodePtr operand)
-    : Ty(type),
+scc::cc::CastExpressionNode::CastExpressionNode(Type *ty, ExpressionNodePtr operand)
+    : Ty(ty),
       Operand(std::move(operand))
 {
 }
@@ -471,7 +476,7 @@ scc::cc::Value *scc::cc::CallExpressionNode::GenerateValue(Builder &builder) con
 
     auto *value = builder.GetBuilder().CreateCall(callee_fn_type, callee_value, std::move(arguments));
 
-    return builder.Manage(Value::CreateR(value));
+    return builder.Manage(Value::CreateR(TODO, value));
 }
 
 int64_t scc::cc::CallExpressionNode::EvaluateConstantInteger() const
@@ -479,8 +484,8 @@ int64_t scc::cc::CallExpressionNode::EvaluateConstantInteger() const
     Error("TODO");
 }
 
-scc::cc::SubscriptExpressionNode::SubscriptExpressionNode(ExpressionNodePtr value, ExpressionNodePtr index)
-    : Value(std::move(value)),
+scc::cc::SubscriptExpressionNode::SubscriptExpressionNode(ExpressionNodePtr base, ExpressionNodePtr index)
+    : Base(std::move(base)),
       Index(std::move(index))
 {
 }
@@ -495,8 +500,8 @@ int64_t scc::cc::SubscriptExpressionNode::EvaluateConstantInteger() const
     Error("TODO");
 }
 
-scc::cc::MemberExpressionNode::MemberExpressionNode(ExpressionNodePtr value, std::string name, const bool indirect)
-    : Value(std::move(value)),
+scc::cc::MemberExpressionNode::MemberExpressionNode(ExpressionNodePtr base, std::string name, const bool indirect)
+    : Base(std::move(base)),
       Name(std::move(name)),
       Indirect(indirect)
 {
@@ -574,13 +579,13 @@ scc::cc::Value *scc::cc::TernaryExpressionNode::GenerateValue(Builder &builder) 
     builder.GetBuilder().CreateBranch(condition->Load(builder), then_block, else_block);
 
     builder.GetBuilder().SetInsertBlock(then_block);
-    auto *then_type = Then->GetType(builder);
+    const auto *then_type = Then->GetType(builder);
     auto *then_value = Then->GenerateValue(builder)->Load(builder);
     auto *then_receiver_block = builder.GetBuilder().GetInsertBlock();
     auto *then_terminator = builder.GetBuilder().CreateBranch(end_block);
 
     builder.GetBuilder().SetInsertBlock(else_block);
-    auto *else_type = Then->GetType(builder);
+    const auto *else_type = Then->GetType(builder);
     auto *else_value = Else->GenerateValue(builder)->Load(builder);
     auto *else_receiver_block = builder.GetBuilder().GetInsertBlock();
     auto *else_terminator = builder.GetBuilder().CreateBranch(end_block);
@@ -604,7 +609,7 @@ scc::cc::Value *scc::cc::TernaryExpressionNode::GenerateValue(Builder &builder) 
             { else_receiver_block, else_value },
         });
 
-    return builder.Manage(Value::CreateR(value));
+    return builder.Manage(Value::CreateR(TODO, value));
 }
 
 int64_t scc::cc::TernaryExpressionNode::EvaluateConstantInteger() const

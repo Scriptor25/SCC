@@ -31,13 +31,13 @@ namespace scc::as
         TokenType Type = TokenType::EndOfFile;
         std::string Raw;
         std::string Value;
-        Immediate Immediate = 0;
+        Immediate Imm = 0;
     };
 
     struct EvaluationContext
     {
-        const Platform &Platform;
-        Section *Section;
+        const Platform &Target;
+        Section *S;
     };
 
     class Parser

@@ -154,14 +154,14 @@ scc::as::Token scc::as::Parser::Get()
         case State::Immediate:
             if (!isdigit(m_Buffer, base))
             {
-                const auto immediate = sign
-                                           ? static_cast<Immediate>(std::stoll(value, {}, base))
-                                           : std::stoull(value, {}, base);
+                const auto imm = sign
+                                     ? static_cast<Immediate>(std::stoll(value, {}, base))
+                                     : std::stoull(value, {}, base);
                 return {
                     .Type = TokenType::Immediate,
                     .Raw = std::move(raw),
                     .Value = std::move(value),
-                    .Immediate = immediate,
+                    .Imm = imm,
                 };
             }
 
@@ -180,7 +180,7 @@ scc::as::Token scc::as::Parser::Get()
                     .Type = TokenType::Immediate,
                     .Raw = std::move(raw),
                     .Value = std::move(value),
-                    .Immediate = immediate,
+                    .Imm = immediate,
                 };
             }
 
@@ -434,16 +434,16 @@ toolkit::result<scc::as::OperandPtr> scc::as::Parser::ParseDirectiveOperand()
 
     if (At(TokenType::Immediate))
     {
-        auto immediate = Skip().Immediate;
+        auto value = Skip().Imm;
 
-        return { std::make_unique<ImmediateOperand>(m_Platform, immediate) };
+        return { std::make_unique<ImmediateOperand>(m_Platform, value) };
     }
 
     if (At(TokenType::String))
     {
-        auto string = Skip().Value;
+        auto value = Skip().Value;
 
-        return { std::make_unique<StringOperand>(m_Platform, std::move(string)) };
+        return { std::make_unique<StringOperand>(m_Platform, std::move(value)) };
     }
 
     return toolkit::make_error(
@@ -526,7 +526,7 @@ toolkit::result<scc::as::OperandPtr> scc::as::Parser::ParseAddressOperand()
 
     if (At(TokenType::Immediate))
     {
-        auto value = Skip().Immediate;
+        auto value = Skip().Imm;
 
         return { std::make_unique<ImmediateOperand>(m_Platform, value) };
     }
@@ -587,7 +587,7 @@ toolkit::result<scc::as::OperandPtr> scc::as::Parser::ParseMemoryOperand(bool se
     Immediate displacement{};
     if (At(TokenType::Immediate))
     {
-        displacement = Skip().Immediate;
+        displacement = Skip().Imm;
 
         if (selector && Skip(TokenType::Other, ":"))
         {
@@ -630,7 +630,7 @@ toolkit::result<scc::as::OperandPtr> scc::as::Parser::ParseMemoryOperand(bool se
     Immediate scale{};
     auto set_scale = [&scale](Token &&token) -> toolkit::result<>
     {
-        scale = token.Immediate;
+        scale = token.Imm;
         return {};
     };
 

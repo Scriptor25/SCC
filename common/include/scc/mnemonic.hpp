@@ -4,7 +4,7 @@ namespace scc
 {
     enum class Mnemonic
     {
-#pragma region X86
+        // region X86
 
         /* 8086 */
 
@@ -683,9 +683,9 @@ namespace scc
         X86_FXRSTOR,
         X86_FISTTP,
 
-#pragma endregion
+        // endregion
 
-#pragma region RISCV
+        // region RISCV
 
         RISCV_AND,
         RISCV_OR,
@@ -743,6 +743,6 @@ namespace scc
         RISCV_SLTI,
         RISCV_SLTUI,
 
-#pragma endregion
+        // endregion
     };
 }

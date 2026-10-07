@@ -39,7 +39,7 @@ static toolkit::result<scc::as::OperandPtr> directive_add(
     const auto lhs = operands[0]->GetImmediate();
     const auto rhs = operands[1]->GetImmediate();
 
-    return { std::make_unique<scc::as::ImmediateOperand>(context.Platform, lhs + rhs) };
+    return { std::make_unique<scc::as::ImmediateOperand>(context.Target, lhs + rhs) };
 }
 
 static toolkit::result<scc::as::OperandPtr> directive_sub(
@@ -52,7 +52,7 @@ static toolkit::result<scc::as::OperandPtr> directive_sub(
     const auto lhs = operands[0]->GetImmediate();
     const auto rhs = operands[1]->GetImmediate();
 
-    return { std::make_unique<scc::as::ImmediateOperand>(context.Platform, lhs - rhs) };
+    return { std::make_unique<scc::as::ImmediateOperand>(context.Target, lhs - rhs) };
 }
 
 static toolkit::result<scc::as::OperandPtr> directive_shl(
@@ -65,7 +65,7 @@ static toolkit::result<scc::as::OperandPtr> directive_shl(
     const auto lhs = operands[0]->GetImmediate();
     const auto rhs = operands[1]->GetImmediate();
 
-    return { std::make_unique<scc::as::ImmediateOperand>(context.Platform, lhs << rhs) };
+    return { std::make_unique<scc::as::ImmediateOperand>(context.Target, lhs << rhs) };
 }
 
 static toolkit::result<scc::as::OperandPtr> directive_or(
@@ -78,7 +78,7 @@ static toolkit::result<scc::as::OperandPtr> directive_or(
     const auto lhs = operands[0]->GetImmediate();
     const auto rhs = operands[1]->GetImmediate();
 
-    return { std::make_unique<scc::as::ImmediateOperand>(context.Platform, lhs | rhs) };
+    return { std::make_unique<scc::as::ImmediateOperand>(context.Target, lhs | rhs) };
 }
 
 static toolkit::result<scc::as::OperandPtr> directive_neg(
@@ -90,7 +90,7 @@ static toolkit::result<scc::as::OperandPtr> directive_neg(
 
     const auto val = operands[0]->GetImmediate();
 
-    return { std::make_unique<scc::as::ImmediateOperand>(context.Platform, -val) };
+    return { std::make_unique<scc::as::ImmediateOperand>(context.Target, -val) };
 }
 
 static toolkit::result<scc::as::OperandPtr> directive_length(
@@ -110,7 +110,7 @@ static toolkit::result<scc::as::OperandPtr> directive_length(
 
     auto value = fragment->GetDataSize();
 
-    return { std::make_unique<scc::as::ImmediateOperand>(context.Platform, value) };
+    return { std::make_unique<scc::as::ImmediateOperand>(context.Target, value) };
 }
 
 static toolkit::result<scc::as::OperandPtr> directive_fill(
@@ -121,7 +121,7 @@ static toolkit::result<scc::as::OperandPtr> directive_fill(
     {
         auto count = operands[0]->GetImmediate();
 
-        context.Section->Insert(std::make_unique<scc::as::Fill>(count, 1, 0));
+        context.S->Insert(std::make_unique<scc::as::Fill>(count, 1, 0));
 
         return {};
     }
@@ -131,7 +131,7 @@ static toolkit::result<scc::as::OperandPtr> directive_fill(
         auto count = operands[0]->GetImmediate();
         auto value = operands[1]->GetImmediate();
 
-        context.Section->Insert(std::make_unique<scc::as::Fill>(count, 1, value));
+        context.S->Insert(std::make_unique<scc::as::Fill>(count, 1, value));
 
         return {};
     }
@@ -142,7 +142,7 @@ static toolkit::result<scc::as::OperandPtr> directive_fill(
         auto size = operands[1]->GetImmediate();
         auto value = operands[2]->GetImmediate();
 
-        context.Section->Insert(std::make_unique<scc::as::Fill>(count, size, value));
+        context.S->Insert(std::make_unique<scc::as::Fill>(count, size, value));
 
         return {};
     }
@@ -159,7 +159,7 @@ static toolkit::result<scc::as::OperandPtr> directive_align(
 
     auto alignment = operands[0]->GetImmediate();
 
-    context.Section->Insert(std::make_unique<scc::as::Align>(alignment));
+    context.S->Insert(std::make_unique<scc::as::Align>(alignment));
 
     return {};
 }
@@ -173,7 +173,7 @@ static toolkit::result<scc::as::OperandPtr> directive_skip(
 
     auto count = operands[0]->GetImmediate();
 
-    context.Section->Insert(std::make_unique<scc::as::Fill>(count, 1, 0));
+    context.S->Insert(std::make_unique<scc::as::Fill>(count, 1, 0));
 
     return {};
 }
@@ -194,7 +194,7 @@ static toolkit::result<scc::as::OperandPtr> directive_string(
         data[i] = value[i];
     data[value.size()] = 0;
 
-    context.Section->Insert(std::make_unique<scc::as::Data>(std::move(data)));
+    context.S->Insert(std::make_unique<scc::as::Data>(std::move(data)));
 
     return {};
 }
@@ -210,9 +210,9 @@ static toolkit::result<scc::as::OperandPtr> directive_byte(
 
     auto bytes = scc::ToBytes<1>(
         value,
-        context.Platform.ISA.Endianness == scc::platform::TargetEndianness::LittleEndian);
+        context.Target.ISA.Endianness == scc::platform::TargetEndianness::LittleEndian);
 
-    context.Section->Insert(std::make_unique<scc::as::Data>(bytes));
+    context.S->Insert(std::make_unique<scc::as::Data>(bytes));
 
     return {};
 }
@@ -228,9 +228,9 @@ static toolkit::result<scc::as::OperandPtr> directive_word(
 
     auto bytes = scc::ToBytes<2>(
         value,
-        context.Platform.ISA.Endianness == scc::platform::TargetEndianness::LittleEndian);
+        context.Target.ISA.Endianness == scc::platform::TargetEndianness::LittleEndian);
 
-    context.Section->Insert(std::make_unique<scc::as::Data>(bytes));
+    context.S->Insert(std::make_unique<scc::as::Data>(bytes));
 
     return {};
 }
@@ -246,9 +246,9 @@ static toolkit::result<scc::as::OperandPtr> directive_dword(
 
     auto bytes = scc::ToBytes<4>(
         value,
-        context.Platform.ISA.Endianness == scc::platform::TargetEndianness::LittleEndian);
+        context.Target.ISA.Endianness == scc::platform::TargetEndianness::LittleEndian);
 
-    context.Section->Insert(std::make_unique<scc::as::Data>(bytes));
+    context.S->Insert(std::make_unique<scc::as::Data>(bytes));
 
     return {};
 }
@@ -264,9 +264,9 @@ static toolkit::result<scc::as::OperandPtr> directive_qword(
 
     auto bytes = scc::ToBytes<8>(
         value,
-        context.Platform.ISA.Endianness == scc::platform::TargetEndianness::LittleEndian);
+        context.Target.ISA.Endianness == scc::platform::TargetEndianness::LittleEndian);
 
-    context.Section->Insert(std::make_unique<scc::as::Data>(bytes));
+    context.S->Insert(std::make_unique<scc::as::Data>(bytes));
 
     return {};
 }
@@ -317,8 +317,8 @@ toolkit::result<scc::as::OperandPtr> scc::as::Parser::Evaluate(
 
     return it->second(
         {
-            .Platform = m_Platform,
-            .Section = m_Section,
+            .Target = m_Platform,
+            .S = m_Section,
         },
         operands);
 }

@@ -4,7 +4,7 @@ namespace scc
 {
     enum class Register
     {
-#pragma region X86
+        // region X86
 
         X86_CS,
         X86_DS,
@@ -105,9 +105,9 @@ namespace scc
         X86_R15D,
         X86_R15,
 
-#pragma endregion
+        // endregion
 
-#pragma region RISCV
+        // region RISCV
 
         RISCV_ZERO,
 
@@ -146,6 +146,6 @@ namespace scc
         RISCV_A6,
         RISCV_A7,
 
-#pragma endregion
+        // endregion
     };
 }

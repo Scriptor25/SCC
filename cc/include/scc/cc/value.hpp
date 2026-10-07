@@ -14,21 +14,28 @@ namespace scc::cc
     class Value
     {
     public:
-        static std::unique_ptr<RValue> CreateR(ir::Value *value);
-        static std::unique_ptr<LValue> CreateL(ir::Value *pointer);
+        static std::unique_ptr<RValue> CreateR(Type *type, ir::Value *value);
+        static std::unique_ptr<LValue> CreateL(Type *type, ir::Value *pointer);
 
+        explicit Value(Type *type);
         virtual ~Value() = default;
 
-        virtual ir::Value *Load(Builder &builder) const = 0;
+        [[nodiscard]] Type *GetType() const;
+
+        [[nodiscard]] virtual ir::Value *Load(Builder &builder) const = 0;
+
         virtual void Store(ir::Context &context, ir::Builder &builder, ir::Value *value) const = 0;
+
+    private:
+        Type *m_Type;
     };
 
     class RValue : public Value
     {
     public:
-        explicit RValue(ir::Value *value);
+        explicit RValue(Type *type, ir::Value *value);
 
-        ir::Value *Load(Builder &builder) const override;
+        [[nodiscard]] ir::Value *Load(Builder &builder) const override;
         void Store(ir::Context &context, ir::Builder &builder, ir::Value *value) const override;
 
     private:
@@ -38,9 +45,9 @@ namespace scc::cc
     class LValue : public Value
     {
     public:
-        explicit LValue(ir::Value *pointer);
+        explicit LValue(Type *type, ir::Value *pointer);
 
-        ir::Value *Load(Builder &builder) const override;
+        [[nodiscard]] ir::Value *Load(Builder &builder) const override;
         void Store(ir::Context &context, ir::Builder &builder, ir::Value *value) const override;
 
     private:
