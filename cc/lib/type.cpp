@@ -7,17 +7,23 @@
 
 namespace
 {
-    struct IntegerKindInfo
+    struct IntegerInfo
     {
         bool Signed;
         size_t BitWidth;
         size_t Rank;
         scc::cc::IntegerKind Swap;
     };
+
+    struct FloatingPointInfo
+    {
+        size_t BitWidth;
+        size_t Rank;
+    };
 }
 
 // TODO: depending on platform
-static const std::unordered_map<scc::cc::IntegerKind, IntegerKindInfo> integer_kind_info
+static const std::unordered_map<scc::cc::IntegerKind, IntegerInfo> integer_info
 {
     { scc::cc::IntegerKind::Bool, { false, 1, 1, scc::cc::IntegerKind::Bool } },
     { scc::cc::IntegerKind::Char, { true, 8, 2, scc::cc::IntegerKind::Char } },
@@ -34,42 +40,45 @@ static const std::unordered_map<scc::cc::IntegerKind, IntegerKindInfo> integer_k
 };
 
 // TODO: depending on platform
-static const std::unordered_map<scc::cc::FloatingPointKind, size_t> floating_point_kind_info
+static const std::unordered_map<scc::cc::FloatingPointKind, FloatingPointInfo> floating_point_info
 {
-    { scc::cc::FloatingPointKind::Float, 32 },
-    { scc::cc::FloatingPointKind::Double, 64 },
-    { scc::cc::FloatingPointKind::LongDouble, 64 },
+    { scc::cc::FloatingPointKind::Float, { 32, 1 } },
+    { scc::cc::FloatingPointKind::Double, { 64, 2 } },
+    { scc::cc::FloatingPointKind::LongDouble, { 64, 3 } },
 };
 
-scc::cc::Type *scc::cc::Type::Collapse(Context &context, Type *left, Type *right)
+const scc::cc::Type *scc::cc::Type::Collapse(Context &context, const Type *a, const Type *b)
 {
-    if (left == right)
-        return left;
+    a = a->Decay(context);
+    b = b->Decay(context);
 
-    if (dynamic_cast<VoidType *>(left) || dynamic_cast<VoidType *>(right))
+    if (a == b)
+        return a;
+
+    if (dynamic_cast<const VoidType *>(a) || dynamic_cast<const VoidType *>(b))
         return nullptr;
 
-    if (auto *left_integer = dynamic_cast<IntegerType *>(left))
+    if (auto *a_integer = dynamic_cast<const IntegerType *>(a))
     {
-        if (auto *right_integer = dynamic_cast<IntegerType *>(right))
+        if (auto *b_integer = dynamic_cast<const IntegerType *>(b))
         {
-            if (left_integer->IsSigned() == right_integer->IsSigned())
+            if (a_integer->IsSigned() == b_integer->IsSigned())
             {
-                if (left_integer->GetBitWidth() > right_integer->GetBitWidth())
-                    return left;
-                return right;
+                if (a_integer->GetBitWidth() > b_integer->GetBitWidth())
+                    return a;
+                return b;
             }
 
-            IntegerType *signed_type, *unsigned_type;
-            if (left_integer->IsSigned())
+            const IntegerType *signed_type, *unsigned_type;
+            if (a_integer->IsSigned())
             {
-                signed_type = left_integer;
-                unsigned_type = right_integer;
+                signed_type = a_integer;
+                unsigned_type = b_integer;
             }
             else
             {
-                signed_type = right_integer;
-                unsigned_type = left_integer;
+                signed_type = b_integer;
+                unsigned_type = a_integer;
             }
 
             if (unsigned_type->GetRank() >= signed_type->GetRank())
@@ -81,54 +90,46 @@ scc::cc::Type *scc::cc::Type::Collapse(Context &context, Type *left, Type *right
             return context.GetIntegerType(signed_type->GetSwap());
         }
 
-        if (auto *right_floating_point = dynamic_cast<FloatingPointType *>(right))
-        {
-        }
+        if (auto *b_floating_point = dynamic_cast<const FloatingPointType *>(b))
+            return b_floating_point;
 
-        if (auto *right_enum = dynamic_cast<EnumType *>(right))
-        {
-        }
+        return nullptr;
     }
 
-    if (auto *left_floating_point = dynamic_cast<FloatingPointType *>(left))
+    if (auto *a_floating_point = dynamic_cast<const FloatingPointType *>(a))
     {
-        if (auto *right_integer = dynamic_cast<IntegerType *>(right))
+        if (dynamic_cast<const IntegerType *>(b))
+            return a_floating_point;
+
+        if (auto *b_floating_point = dynamic_cast<const FloatingPointType *>(b))
         {
+            if (a_floating_point->GetRank() > b_floating_point->GetRank())
+                return a_floating_point;
+            return b_floating_point;
         }
 
-        if (auto *right_floating_point = dynamic_cast<FloatingPointType *>(right))
+        return nullptr;
+    }
+
+    if (auto *a_pointer = dynamic_cast<const PointerType *>(a))
+    {
+        if (auto *b_pointer = dynamic_cast<const PointerType *>(b))
         {
-        }
-    }
-
-    if (auto *left_enum = dynamic_cast<EnumType *>(left))
-    {
-    }
-
-    if (auto *left_pointer = dynamic_cast<PointerType *>(left))
-    {
-    }
-
-    if (auto *left_array = dynamic_cast<ArrayType *>(left))
-    {
-        if (auto *right_pointer = dynamic_cast<PointerType *>(right))
-        {
-            if (dynamic_cast<VoidType *>(right_pointer->Element) || left_array->Element == right_pointer->Element)
-                return right_pointer;
+            if (dynamic_cast<const VoidType *>(a_pointer->Element))
+                return a_pointer;
+            if (dynamic_cast<const VoidType *>(b_pointer->Element))
+                return b_pointer;
 
             return nullptr;
         }
+
+        return nullptr;
     }
 
-    IntegerType;
-    FloatingPointType;
-    UnionType;
-    EnumType;
-    PointerType;
-    ArrayType;
+    return nullptr;
 }
 
-size_t scc::cc::VoidType::GetBitWidth(Context &context) const
+size_t scc::cc::VoidType::GetBitWidth(Context &) const
 {
     return 0;
 }
@@ -138,16 +139,21 @@ scc::ir::VoidType *scc::cc::VoidType::Generate(Builder &builder) const
     return builder.GetIRContext().GetVoidType();
 }
 
+const scc::cc::Type *scc::cc::VoidType::Decay(Context &) const
+{
+    return this;
+}
+
 scc::cc::IntegerType::IntegerType(const IntegerKind kind)
     : Kind(kind)
 {
 }
 
-size_t scc::cc::IntegerType::GetBitWidth(Context &context) const
+size_t scc::cc::IntegerType::GetBitWidth(Context &) const
 {
     // TODO: platform dependent
 
-    return integer_kind_info.at(Kind).BitWidth;
+    return integer_info.at(Kind).BitWidth;
 }
 
 scc::ir::IntType *scc::cc::IntegerType::Generate(Builder &builder) const
@@ -157,24 +163,29 @@ scc::ir::IntType *scc::cc::IntegerType::Generate(Builder &builder) const
     return builder.GetIRContext().GetIntNType(bit_width);
 }
 
+const scc::cc::Type *scc::cc::IntegerType::Decay(Context &) const
+{
+    return this;
+}
+
 bool scc::cc::IntegerType::IsSigned() const
 {
-    return integer_kind_info.at(Kind).Signed;
+    return integer_info.at(Kind).Signed;
 }
 
 size_t scc::cc::IntegerType::GetBitWidth() const
 {
-    return integer_kind_info.at(Kind).BitWidth;
+    return integer_info.at(Kind).BitWidth;
 }
 
 size_t scc::cc::IntegerType::GetRank() const
 {
-    return integer_kind_info.at(Kind).Rank;
+    return integer_info.at(Kind).Rank;
 }
 
 scc::cc::IntegerKind scc::cc::IntegerType::GetSwap() const
 {
-    return integer_kind_info.at(Kind).Swap;
+    return integer_info.at(Kind).Swap;
 }
 
 scc::cc::FloatingPointType::FloatingPointType(const FloatingPointKind kind)
@@ -182,9 +193,9 @@ scc::cc::FloatingPointType::FloatingPointType(const FloatingPointKind kind)
 {
 }
 
-size_t scc::cc::FloatingPointType::GetBitWidth(Context &context) const
+size_t scc::cc::FloatingPointType::GetBitWidth(Context &) const
 {
-    return floating_point_kind_info.at(Kind);
+    return floating_point_info.at(Kind).BitWidth;
 }
 
 scc::ir::FloatType *scc::cc::FloatingPointType::Generate(Builder &builder) const
@@ -192,6 +203,23 @@ scc::ir::FloatType *scc::cc::FloatingPointType::Generate(Builder &builder) const
     const auto bit_width = GetBitWidth(builder.GetContext());
 
     return builder.GetIRContext().GetFloatNType(bit_width);
+}
+
+const scc::cc::Type *scc::cc::FloatingPointType::Decay(Context &) const
+{
+    return this;
+}
+
+size_t scc::cc::FloatingPointType::GetBitWidth() const
+{
+    // TODO: platform dependent
+
+    return floating_point_info.at(Kind).BitWidth;
+}
+
+size_t scc::cc::FloatingPointType::GetRank() const
+{
+    return floating_point_info.at(Kind).Rank;
 }
 
 scc::cc::StructType::StructType(std::string name)
@@ -221,6 +249,11 @@ scc::ir::StructType *scc::cc::StructType::Generate(Builder &builder) const
     return builder.GetIRContext().GetStructType(std::move(elements));
 }
 
+const scc::cc::Type *scc::cc::StructType::Decay(Context &) const
+{
+    return this;
+}
+
 scc::cc::UnionType::UnionType(std::string name)
     : Name(std::move(name))
 {
@@ -248,6 +281,11 @@ scc::ir::ArrayType *scc::cc::UnionType::Generate(Builder &builder) const
     return builder.GetIRContext().GetArrayType(element, byte_count);
 }
 
+const scc::cc::Type *scc::cc::UnionType::Decay(Context &) const
+{
+    return this;
+}
+
 scc::cc::EnumType::EnumType(std::string name)
     : Name(std::move(name))
 {
@@ -263,7 +301,12 @@ scc::ir::IntType *scc::cc::EnumType::Generate(Builder &builder) const
     return DetermineType(builder.GetContext())->Generate(builder);
 }
 
-scc::cc::IntegerType *scc::cc::EnumType::DetermineType(Context &context) const
+const scc::cc::Type *scc::cc::EnumType::Decay(Context &context) const
+{
+    return DetermineType(context);
+}
+
+const scc::cc::IntegerType *scc::cc::EnumType::DetermineType(Context &context) const
 {
     if (TypeOverride)
         return TypeOverride;
@@ -332,7 +375,7 @@ scc::cc::IntegerType *scc::cc::EnumType::DetermineType(Context &context) const
     return context.GetIntegerType(kind);
 }
 
-scc::cc::PointerType::PointerType(Type *element)
+scc::cc::PointerType::PointerType(const Type *element)
     : Element(element)
 {
 }
@@ -353,7 +396,12 @@ scc::ir::PointerType *scc::cc::PointerType::Generate(Builder &builder) const
     return builder.GetIRContext().GetPointerType(element);
 }
 
-scc::cc::ArrayType::ArrayType(Type *element, const size_t count)
+const scc::cc::Type *scc::cc::PointerType::Decay(Context &) const
+{
+    return this;
+}
+
+scc::cc::ArrayType::ArrayType(const Type *element, const size_t count)
     : Element(element),
       Count(count)
 {
@@ -372,9 +420,14 @@ scc::ir::ArrayType *scc::cc::ArrayType::Generate(Builder &builder) const
     return builder.GetIRContext().GetArrayType(element, Count);
 }
 
+const scc::cc::Type *scc::cc::ArrayType::Decay(Context &context) const
+{
+    return context.GetPointerType(Element);
+}
+
 scc::cc::FunctionType::FunctionType(
-    Type *result,
-    std::vector<Type *> arguments,
+    const Type *result,
+    std::vector<const Type *> arguments,
     const bool variadic)
     : Result(result),
       Arguments(std::move(arguments)),
@@ -397,4 +450,9 @@ scc::ir::FunctionType *scc::cc::FunctionType::Generate(Builder &builder) const
         arguments[i] = Arguments[i]->Generate(builder);
 
     return builder.GetIRContext().GetFunctionType(result, std::move(arguments), Variadic);
+}
+
+const scc::cc::Type *scc::cc::FunctionType::Decay(Context &) const
+{
+    return this;
 }

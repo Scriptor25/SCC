@@ -15,6 +15,11 @@ scc::ir::Value::~Value()
     ReplaceWith({});
 }
 
+bool scc::ir::Value::CanPrint() const
+{
+    return true;
+}
+
 std::ostream &scc::ir::Value::PrintOperandAssembly(
     std::ostream &stream,
     LoweringContext &context,

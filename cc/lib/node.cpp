@@ -10,11 +10,13 @@
 #include <scc/assert.hpp>
 
 scc::cc::FunctionNode::FunctionNode(
-    Type *result,
+    const bool is_extern,
+    const Type *result,
     std::string name,
     std::vector<FunctionArgument> arguments,
     const bool variadic)
-    : Result(result),
+    : Extern(is_extern),
+      Result(result),
       Name(std::move(name)),
       Arguments(std::move(arguments)),
       Variadic(variadic)
@@ -22,12 +24,14 @@ scc::cc::FunctionNode::FunctionNode(
 }
 
 scc::cc::FunctionNode::FunctionNode(
-    Type *result,
+    const bool is_extern,
+    const Type *result,
     std::string name,
     std::vector<FunctionArgument> arguments,
     const bool variadic,
     std::unique_ptr<StatementNode> content)
-    : Result(result),
+    : Extern(is_extern),
+      Result(result),
       Name(std::move(name)),
       Arguments(std::move(arguments)),
       Variadic(variadic),
@@ -37,7 +41,7 @@ scc::cc::FunctionNode::FunctionNode(
 
 void scc::cc::FunctionNode::Generate(Builder &builder) const
 {
-    std::vector<Type *> argument_types(Arguments.size());
+    std::vector<const Type *> argument_types(Arguments.size());
     for (size_t i = 0; i < Arguments.size(); ++i)
         argument_types[i] = Arguments[i].Ty;
 
@@ -74,8 +78,10 @@ void scc::cc::FunctionNode::Generate(Builder &builder) const
 
             argument->SetName(*name);
 
-            // TODO: insert alloc at function start
-            auto *argument_pointer = builder.GetIRBuilder().CreateAlloc(argument->GetType());
+            auto *argument_pointer = builder.Allocate(argument->GetType(), 1);
+
+            builder.GetIRBuilder().CreateStore(argument_pointer, argument, false);
+
             auto argument_value = Value::CreateL(Arguments[i].Ty, argument_pointer);
 
             builder.SetNamed(*name, std::move(argument_value));
@@ -87,7 +93,7 @@ void scc::cc::FunctionNode::Generate(Builder &builder) const
 
     if (!builder.GetIRBuilder().GetInsertBlock()->GetTerminator())
     {
-        if (dynamic_cast<VoidType *>(Result))
+        if (dynamic_cast<const VoidType *>(Result))
             builder.GetIRBuilder().CreateReturn();
         else
             Error("missing return statement");
@@ -96,14 +102,23 @@ void scc::cc::FunctionNode::Generate(Builder &builder) const
     builder.GetIRBuilder().ClearInsertBlock();
 }
 
-scc::cc::VariableNode::VariableNode(Type *type, std::string name)
-    : Ty(type),
+scc::cc::VariableNode::VariableNode(
+    const bool is_extern,
+    const Type *type,
+    std::string name)
+    : Extern(is_extern),
+      Ty(type),
       Name(std::move(name))
 {
 }
 
-scc::cc::VariableNode::VariableNode(Type *type, std::string name, ExpressionNodePtr value)
-    : Ty(type),
+scc::cc::VariableNode::VariableNode(
+    const bool is_extern,
+    const Type *type,
+    std::string name,
+    ExpressionNodePtr value)
+    : Extern(is_extern),
+      Ty(type),
       Name(std::move(name)),
       Value(std::move(value))
 {
@@ -133,7 +148,7 @@ void scc::cc::VariableNode::Generate(Builder &builder) const
     builder.SetNamed(Name, Value::CreateL(Ty, variable));
 }
 
-scc::cc::TypeDefNode::TypeDefNode(Type *type, std::string name)
+scc::cc::TypeDefNode::TypeDefNode(const Type *type, std::string name)
     : Ty(type),
       Name(std::move(name))
 {
@@ -314,10 +329,12 @@ void scc::cc::SequenceStatementNode::Generate(Builder &builder) const
 }
 
 scc::cc::VariableStatementNode::VariableStatementNode(
-    Type *type,
-    std::vector<VariableElement> elements)
+    const Type *type,
+    std::vector<VariableElement> elements,
+    const bool is_volatile)
     : Ty(type),
-      Elements(std::move(elements))
+      Elements(std::move(elements)),
+      Volatile(is_volatile)
 {
 }
 
@@ -327,14 +344,13 @@ void scc::cc::VariableStatementNode::Generate(Builder &builder) const
 
     for (const auto &element : Elements)
     {
-        // TODO: insert alloc at function start
-        auto *pointer = builder.GetIRBuilder().CreateAlloc(ir_type, 1);
+        auto *pointer = builder.Allocate(ir_type, 1);
 
         if (element.Val)
         {
             const auto *val = element.Val->GenerateValue(builder);
 
-            builder.GetIRBuilder().CreateStore(pointer, val->Load(builder));
+            builder.GetIRBuilder().CreateStore(pointer, val->Load(builder), Volatile);
         }
 
         builder.SetNamed(element.Name, Value::CreateL(Ty, pointer));
@@ -351,12 +367,12 @@ void scc::cc::SymbolExpressionNode::Generate(Builder &) const
     // noop
 }
 
-scc::cc::Type *scc::cc::SymbolExpressionNode::GetType(Builder &builder) const
+const scc::cc::Type *scc::cc::SymbolExpressionNode::GetType(Builder &builder) const
 {
     return builder.GetNamed(Name)->GetType();
 }
 
-scc::cc::Value *scc::cc::SymbolExpressionNode::GenerateValue(Builder &builder) const
+const scc::cc::Value *scc::cc::SymbolExpressionNode::GenerateValue(Builder &builder) const
 {
     return builder.GetNamed(Name);
 }
@@ -376,14 +392,17 @@ void scc::cc::IntegerExpressionNode::Generate(Builder &) const
     // noop
 }
 
-scc::cc::Type *scc::cc::IntegerExpressionNode::GetType(Builder &builder) const
+const scc::cc::Type *scc::cc::IntegerExpressionNode::GetType(Builder &builder) const
 {
     Error("TODO");
 }
 
-scc::cc::Value *scc::cc::IntegerExpressionNode::GenerateValue(Builder &builder) const
+const scc::cc::Value *scc::cc::IntegerExpressionNode::GenerateValue(Builder &builder) const
 {
-    Error("TODO");
+    const auto *type = builder.GetContext().GetIntegerType(IntegerKind::SignedInt);
+    auto *value = builder.GetIRContext().GetInt(type->Generate(builder), Val);
+
+    return builder.Manage(Value::CreateR(type, value));
 }
 
 int64_t scc::cc::IntegerExpressionNode::EvaluateConstantInteger() const
@@ -401,12 +420,12 @@ void scc::cc::FloatingPointExpressionNode::Generate(Builder &) const
     // noop
 }
 
-scc::cc::Type *scc::cc::FloatingPointExpressionNode::GetType(Builder &builder) const
+const scc::cc::Type *scc::cc::FloatingPointExpressionNode::GetType(Builder &builder) const
 {
     Error("TODO");
 }
 
-scc::cc::Value *scc::cc::FloatingPointExpressionNode::GenerateValue(Builder &builder) const
+const scc::cc::Value *scc::cc::FloatingPointExpressionNode::GenerateValue(Builder &builder) const
 {
     Error("TODO");
 }
@@ -426,12 +445,12 @@ void scc::cc::StringExpressionNode::Generate(Builder &) const
     // noop
 }
 
-scc::cc::Type *scc::cc::StringExpressionNode::GetType(Builder &builder) const
+const scc::cc::Type *scc::cc::StringExpressionNode::GetType(Builder &builder) const
 {
     Error("TODO");
 }
 
-scc::cc::Value *scc::cc::StringExpressionNode::GenerateValue(Builder &builder) const
+const scc::cc::Value *scc::cc::StringExpressionNode::GenerateValue(Builder &builder) const
 {
     Error("TODO");
 }
@@ -441,7 +460,7 @@ int64_t scc::cc::StringExpressionNode::EvaluateConstantInteger() const
     Error("TODO");
 }
 
-scc::cc::SizeOfTypeExpressionNode::SizeOfTypeExpressionNode(Type *ty)
+scc::cc::SizeOfTypeExpressionNode::SizeOfTypeExpressionNode(const Type *ty)
     : Ty(ty)
 {
 }
@@ -451,12 +470,12 @@ void scc::cc::SizeOfTypeExpressionNode::Generate(Builder &) const
     // noop
 }
 
-scc::cc::Type *scc::cc::SizeOfTypeExpressionNode::GetType(Builder &builder) const
+const scc::cc::Type *scc::cc::SizeOfTypeExpressionNode::GetType(Builder &builder) const
 {
     Error("TODO");
 }
 
-scc::cc::Value *scc::cc::SizeOfTypeExpressionNode::GenerateValue(Builder &builder) const
+const scc::cc::Value *scc::cc::SizeOfTypeExpressionNode::GenerateValue(Builder &builder) const
 {
     Error("TODO");
 }
@@ -476,12 +495,12 @@ void scc::cc::SizeOfValueExpressionNode::Generate(Builder &) const
     // noop
 }
 
-scc::cc::Type *scc::cc::SizeOfValueExpressionNode::GetType(Builder &builder) const
+const scc::cc::Type *scc::cc::SizeOfValueExpressionNode::GetType(Builder &builder) const
 {
     Error("TODO");
 }
 
-scc::cc::Value *scc::cc::SizeOfValueExpressionNode::GenerateValue(Builder &builder) const
+const scc::cc::Value *scc::cc::SizeOfValueExpressionNode::GenerateValue(Builder &builder) const
 {
     Error("TODO");
 }
@@ -491,7 +510,7 @@ int64_t scc::cc::SizeOfValueExpressionNode::EvaluateConstantInteger() const
     Error("TODO");
 }
 
-scc::cc::CastExpressionNode::CastExpressionNode(Type *ty, ExpressionNodePtr operand)
+scc::cc::CastExpressionNode::CastExpressionNode(const Type *ty, ExpressionNodePtr operand)
     : Ty(ty),
       Operand(std::move(operand))
 {
@@ -502,14 +521,19 @@ void scc::cc::CastExpressionNode::Generate(Builder &) const
     // noop
 }
 
-scc::cc::Type *scc::cc::CastExpressionNode::GetType(Builder &builder) const
+const scc::cc::Type *scc::cc::CastExpressionNode::GetType(Builder &) const
 {
-    Error("TODO");
+    return Ty;
 }
 
-scc::cc::Value *scc::cc::CastExpressionNode::GenerateValue(Builder &builder) const
+const scc::cc::Value *scc::cc::CastExpressionNode::GenerateValue(Builder &builder) const
 {
-    Error("TODO");
+    auto *type = Ty->Generate(builder);
+    const auto *operand = Operand->GenerateValue(builder);
+
+    auto *value = builder.GetIRBuilder().CreateCast(type, operand->Load(builder));
+
+    return builder.Manage(Value::CreateR(Ty, value));
 }
 
 int64_t scc::cc::CastExpressionNode::EvaluateConstantInteger() const
@@ -528,20 +552,20 @@ void scc::cc::CallExpressionNode::Generate(Builder &builder) const
     (void) GenerateValue(builder);
 }
 
-scc::cc::Type *scc::cc::CallExpressionNode::GetType(Builder &builder) const
+const scc::cc::Type *scc::cc::CallExpressionNode::GetType(Builder &builder) const
 {
     Error("TODO");
 }
 
-scc::cc::Value *scc::cc::CallExpressionNode::GenerateValue(Builder &builder) const
+const scc::cc::Value *scc::cc::CallExpressionNode::GenerateValue(Builder &builder) const
 {
     const auto *callee = Callee->GenerateValue(builder);
 
     auto *callee_type = callee->GetType();
-    while (const auto *ptr_type = dynamic_cast<PointerType *>(callee_type))
+    while (const auto *ptr_type = dynamic_cast<const PointerType *>(callee_type))
         callee_type = ptr_type->Element;
 
-    auto *callee_fn_type = dynamic_cast<FunctionType *>(callee_type);
+    auto *callee_fn_type = dynamic_cast<const FunctionType *>(callee_type);
     if (!callee_fn_type)
         Error("invalid callee type");
 
@@ -574,12 +598,12 @@ void scc::cc::SubscriptExpressionNode::Generate(Builder &) const
     // noop
 }
 
-scc::cc::Type *scc::cc::SubscriptExpressionNode::GetType(Builder &builder) const
+const scc::cc::Type *scc::cc::SubscriptExpressionNode::GetType(Builder &builder) const
 {
     Error("TODO");
 }
 
-scc::cc::Value *scc::cc::SubscriptExpressionNode::GenerateValue(Builder &builder) const
+const scc::cc::Value *scc::cc::SubscriptExpressionNode::GenerateValue(Builder &builder) const
 {
     Error("TODO");
 }
@@ -601,12 +625,12 @@ void scc::cc::MemberExpressionNode::Generate(Builder &) const
     // noop
 }
 
-scc::cc::Type *scc::cc::MemberExpressionNode::GetType(Builder &builder) const
+const scc::cc::Type *scc::cc::MemberExpressionNode::GetType(Builder &builder) const
 {
     Error("TODO");
 }
 
-scc::cc::Value *scc::cc::MemberExpressionNode::GenerateValue(Builder &builder) const
+const scc::cc::Value *scc::cc::MemberExpressionNode::GenerateValue(Builder &builder) const
 {
     Error("TODO");
 }
@@ -627,12 +651,12 @@ void scc::cc::UnaryExpressionNode::Generate(Builder &builder) const
     Error("TODO");
 }
 
-scc::cc::Type *scc::cc::UnaryExpressionNode::GetType(Builder &builder) const
+const scc::cc::Type *scc::cc::UnaryExpressionNode::GetType(Builder &builder) const
 {
     Error("TODO");
 }
 
-scc::cc::Value *scc::cc::UnaryExpressionNode::GenerateValue(Builder &builder) const
+const scc::cc::Value *scc::cc::UnaryExpressionNode::GenerateValue(Builder &builder) const
 {
     Error("TODO");
 }
@@ -654,17 +678,335 @@ scc::cc::BinaryExpressionNode::BinaryExpressionNode(
 
 void scc::cc::BinaryExpressionNode::Generate(Builder &builder) const
 {
-    Error("TODO");
+    (void) GenerateValue(builder);
 }
 
-scc::cc::Type *scc::cc::BinaryExpressionNode::GetType(Builder &builder) const
+const scc::cc::Type *scc::cc::BinaryExpressionNode::GetType(Builder &builder) const
 {
     Error("TODO");
 }
 
-scc::cc::Value *scc::cc::BinaryExpressionNode::GenerateValue(Builder &builder) const
+const scc::cc::Value *scc::cc::BinaryExpressionNode::GenerateValue(Builder &builder) const
 {
-    Error("TODO");
+    switch (Operator)
+    {
+    case BinaryOperator::LogicalAnd:
+    {
+        auto *function = builder.GetIRBuilder().GetInsertFunction();
+        auto *next_block = builder.GetIRBuilder().CreateBlock(function, "next");
+        auto *end_block = builder.GetIRBuilder().CreateBlock(function, "end");
+
+        auto *left_value = Left->GenerateValue(builder)->Load(builder);
+        auto *left_block = builder.GetIRBuilder().GetInsertBlock();
+        auto *condition = builder.GetIRBuilder().CreateNotNull(left_value);
+        builder.GetIRBuilder().CreateBranch(condition, next_block, end_block);
+
+        builder.GetIRBuilder().SetInsertBlock(next_block);
+        auto *right_value = Right->GenerateValue(builder)->Load(builder);
+        auto *right_block = builder.GetIRBuilder().GetInsertBlock();
+        builder.GetIRBuilder().CreateBranch(end_block);
+
+        builder.GetIRBuilder().SetInsertBlock(end_block);
+
+        auto *type = builder.GetContext().GetBooleanType();
+        auto *value = builder.GetIRBuilder().CreatePhi(
+            type->Generate(builder),
+            {
+                { left_block, left_value },
+                { right_block, right_value },
+            });
+
+        return builder.Manage(Value::CreateR(type, value));
+    }
+    case BinaryOperator::LogicalOr:
+    {
+        auto *function = builder.GetIRBuilder().GetInsertFunction();
+        auto *next_block = builder.GetIRBuilder().CreateBlock(function, "next");
+        auto *end_block = builder.GetIRBuilder().CreateBlock(function, "end");
+
+        auto *left_value = Left->GenerateValue(builder)->Load(builder);
+        auto *left_block = builder.GetIRBuilder().GetInsertBlock();
+        auto *condition = builder.GetIRBuilder().CreateNotNull(left_value);
+        builder.GetIRBuilder().CreateBranch(condition, end_block, next_block);
+
+        builder.GetIRBuilder().SetInsertBlock(next_block);
+        auto *right_value = Right->GenerateValue(builder)->Load(builder);
+        auto *right_block = builder.GetIRBuilder().GetInsertBlock();
+        builder.GetIRBuilder().CreateBranch(end_block);
+
+        builder.GetIRBuilder().SetInsertBlock(end_block);
+
+        auto *type = builder.GetContext().GetBooleanType();
+        auto *value = builder.GetIRBuilder().CreatePhi(
+            type->Generate(builder),
+            {
+                { left_block, left_value },
+                { right_block, right_value },
+            });
+
+        return builder.Manage(Value::CreateR(type, value));
+    }
+
+    default:
+        break;
+    }
+
+    const auto *left = Left->GenerateValue(builder);
+    const auto *right = Right->GenerateValue(builder);
+
+    const auto *left_type = left->GetType();
+    const auto *right_type = right->GetType();
+
+    auto *type = Type::Collapse(
+        builder.GetContext(),
+        left_type,
+        right_type);
+    Assert(type, "type must not be null");
+
+    // TODO: handle pointer arithmetic
+
+    auto *value_type = type->Generate(builder);
+
+    auto *left_value = left->Load(builder);
+    if (left_type != type)
+        left_value = builder.GetIRBuilder().CreateCast(value_type, left_value);
+
+    auto *right_value = right->Load(builder);
+    if (right_type != type)
+        right_value = builder.GetIRBuilder().CreateCast(value_type, right_value);
+
+    std::vector operands
+    {
+        left_value,
+        right_value,
+    };
+
+    ir::Value *value;
+    switch (Operator)
+    {
+    case BinaryOperator::Assign:
+        value = right_value;
+        break;
+
+    case BinaryOperator::Add:
+    case BinaryOperator::AddAssign:
+        if (dynamic_cast<const IntegerType *>(type))
+            value = builder.GetIRBuilder().CreateIOperatorADD(value_type, std::move(operands));
+        else if (dynamic_cast<const FloatingPointType *>(type))
+            value = builder.GetIRBuilder().CreateFOperatorADD(value_type, std::move(operands));
+        else
+            value = nullptr;
+        break;
+    case BinaryOperator::Subtract:
+    case BinaryOperator::SubtractAssign:
+        if (dynamic_cast<const IntegerType *>(type))
+            value = builder.GetIRBuilder().CreateIOperatorSUB(value_type, std::move(operands));
+        else if (dynamic_cast<const FloatingPointType *>(type))
+            value = builder.GetIRBuilder().CreateFOperatorSUB(value_type, std::move(operands));
+        else
+            value = nullptr;
+        break;
+    case BinaryOperator::Multiply:
+    case BinaryOperator::MultiplyAssign:
+        if (dynamic_cast<const IntegerType *>(type))
+            value = builder.GetIRBuilder().CreateIOperatorMUL(value_type, std::move(operands));
+        else if (dynamic_cast<const FloatingPointType *>(type))
+            value = builder.GetIRBuilder().CreateFOperatorMUL(value_type, std::move(operands));
+        else
+            value = nullptr;
+        break;
+    case BinaryOperator::Divide:
+    case BinaryOperator::DivideAssign:
+        if (const auto *integer_type = dynamic_cast<const IntegerType *>(type))
+        {
+            if (integer_type->IsSigned())
+                value = builder.GetIRBuilder().CreateIOperatorSDIV(value_type, std::move(operands));
+            else
+                value = builder.GetIRBuilder().CreateIOperatorUDIV(value_type, std::move(operands));
+        }
+        else if (dynamic_cast<const FloatingPointType *>(type))
+            value = builder.GetIRBuilder().CreateFOperatorDIV(value_type, std::move(operands));
+        else
+            value = nullptr;
+        break;
+    case BinaryOperator::Remainder:
+    case BinaryOperator::RemainderAssign:
+        if (const auto *integer_type = dynamic_cast<const IntegerType *>(type))
+        {
+            if (integer_type->IsSigned())
+                value = builder.GetIRBuilder().CreateIOperatorSREM(value_type, std::move(operands));
+            else
+                value = builder.GetIRBuilder().CreateIOperatorUREM(value_type, std::move(operands));
+        }
+        else if (dynamic_cast<const FloatingPointType *>(type))
+            value = builder.GetIRBuilder().CreateFOperatorREM(value_type, std::move(operands));
+        else
+            value = nullptr;
+        break;
+
+    case BinaryOperator::ShiftLeft:
+    case BinaryOperator::ShiftLeftAssign:
+        Error("TODO");
+    case BinaryOperator::ShiftRight:
+    case BinaryOperator::ShiftRightAssign:
+        Error("TODO");
+
+    case BinaryOperator::And:
+    case BinaryOperator::AndAssign:
+        if (dynamic_cast<const IntegerType *>(type))
+            value = builder.GetIRBuilder().CreateIOperatorAND(value_type, std::move(operands));
+        else
+            value = nullptr;
+        break;
+    case BinaryOperator::XOr:
+    case BinaryOperator::XOrAssign:
+        if (dynamic_cast<const IntegerType *>(type))
+            value = builder.GetIRBuilder().CreateIOperatorXOR(value_type, std::move(operands));
+        else
+            value = nullptr;
+        break;
+    case BinaryOperator::Or:
+    case BinaryOperator::OrAssign:
+        if (dynamic_cast<const IntegerType *>(type))
+            value = builder.GetIRBuilder().CreateIOperatorOR(value_type, std::move(operands));
+        else
+            value = nullptr;
+        break;
+
+    case BinaryOperator::CompareEqual:
+        if (dynamic_cast<const IntegerType *>(type))
+            value = builder.GetIRBuilder().CreateICompareEQU(value_type, left_value, right_value);
+        else if (dynamic_cast<const FloatingPointType *>(type))
+        {
+            if (true)
+                value = builder.GetIRBuilder().CreateFCompareOEQ(value_type, left_value, right_value);
+            else
+                value = builder.GetIRBuilder().CreateFCompareUEQ(value_type, left_value, right_value);
+        }
+        else
+            value = nullptr;
+        break;
+    case BinaryOperator::CompareNotEqual:
+        if (dynamic_cast<const IntegerType *>(type))
+            value = builder.GetIRBuilder().CreateICompareNEQ(value_type, left_value, right_value);
+        else if (dynamic_cast<const FloatingPointType *>(type))
+        {
+            if (true)
+                value = builder.GetIRBuilder().CreateFCompareONE(value_type, left_value, right_value);
+            else
+                value = builder.GetIRBuilder().CreateFCompareUNE(value_type, left_value, right_value);
+        }
+        else
+            value = nullptr;
+        break;
+    case BinaryOperator::CompareLessThan:
+        if (const auto *integer_type = dynamic_cast<const IntegerType *>(type))
+        {
+            if (integer_type->IsSigned())
+                value = builder.GetIRBuilder().CreateICompareSLT(value_type, left_value, right_value);
+            else
+                value = builder.GetIRBuilder().CreateICompareULT(value_type, left_value, right_value);
+        }
+        else if (dynamic_cast<const FloatingPointType *>(type))
+        {
+            if (true)
+                value = builder.GetIRBuilder().CreateFCompareOLT(value_type, left_value, right_value);
+            else
+                value = builder.GetIRBuilder().CreateFCompareULT(value_type, left_value, right_value);
+        }
+        else
+            value = nullptr;
+        break;
+    case BinaryOperator::CompareLessThanEqual:
+        if (const auto *integer_type = dynamic_cast<const IntegerType *>(type))
+        {
+            if (integer_type->IsSigned())
+                value = builder.GetIRBuilder().CreateICompareSLE(value_type, left_value, right_value);
+            else
+                value = builder.GetIRBuilder().CreateICompareULE(value_type, left_value, right_value);
+        }
+        else if (dynamic_cast<const FloatingPointType *>(type))
+        {
+            if (true)
+                value = builder.GetIRBuilder().CreateFCompareOLE(value_type, left_value, right_value);
+            else
+                value = builder.GetIRBuilder().CreateFCompareULE(value_type, left_value, right_value);
+        }
+        else
+            value = nullptr;
+        break;
+    case BinaryOperator::CompareGreaterThen:
+        if (const auto *integer_type = dynamic_cast<const IntegerType *>(type))
+        {
+            if (integer_type->IsSigned())
+                value = builder.GetIRBuilder().CreateICompareSGT(value_type, left_value, right_value);
+            else
+                value = builder.GetIRBuilder().CreateICompareUGT(value_type, left_value, right_value);
+        }
+        else if (dynamic_cast<const FloatingPointType *>(type))
+        {
+            if (true)
+                value = builder.GetIRBuilder().CreateFCompareOGT(value_type, left_value, right_value);
+            else
+                value = builder.GetIRBuilder().CreateFCompareUGT(value_type, left_value, right_value);
+        }
+        else
+            value = nullptr;
+        break;
+    case BinaryOperator::CompareGreaterThenEqual:
+        if (const auto *integer_type = dynamic_cast<const IntegerType *>(type))
+        {
+            if (integer_type->IsSigned())
+                value = builder.GetIRBuilder().CreateICompareSGE(value_type, left_value, right_value);
+            else
+                value = builder.GetIRBuilder().CreateICompareUGE(value_type, left_value, right_value);
+        }
+        else if (dynamic_cast<const FloatingPointType *>(type))
+        {
+            if (true)
+                value = builder.GetIRBuilder().CreateFCompareOGE(value_type, left_value, right_value);
+            else
+                value = builder.GetIRBuilder().CreateFCompareUGE(value_type, left_value, right_value);
+        }
+        else
+            value = nullptr;
+        break;
+
+    default:
+        Error("TODO");
+    }
+
+    Assert(value, "value must not be null");
+
+    switch (Operator)
+    {
+    case BinaryOperator::Assign:
+    case BinaryOperator::AddAssign:
+    case BinaryOperator::SubtractAssign:
+    case BinaryOperator::MultiplyAssign:
+    case BinaryOperator::DivideAssign:
+    case BinaryOperator::RemainderAssign:
+    case BinaryOperator::ShiftLeftAssign:
+    case BinaryOperator::ShiftRightAssign:
+    case BinaryOperator::AndAssign:
+    case BinaryOperator::XOrAssign:
+    case BinaryOperator::OrAssign:
+        left->Store(builder.GetIRContext(), builder.GetIRBuilder(), value);
+        return left;
+
+    case BinaryOperator::CompareEqual:
+    case BinaryOperator::CompareNotEqual:
+    case BinaryOperator::CompareLessThan:
+    case BinaryOperator::CompareLessThanEqual:
+    case BinaryOperator::CompareGreaterThen:
+    case BinaryOperator::CompareGreaterThenEqual:
+        return builder.Manage(Value::CreateR(builder.GetContext().GetBooleanType(), value));
+
+    default:
+        break;
+    }
+
+    return builder.Manage(Value::CreateR(type, value));
 }
 
 int64_t scc::cc::BinaryExpressionNode::EvaluateConstantInteger() const
@@ -687,12 +1029,18 @@ void scc::cc::TernaryExpressionNode::Generate(Builder &builder) const
     Error("TODO");
 }
 
-scc::cc::Type *scc::cc::TernaryExpressionNode::GetType(Builder &builder) const
+const scc::cc::Type *scc::cc::TernaryExpressionNode::GetType(Builder &builder) const
 {
-    Error("TODO");
+    auto *then_type = Then->GetType(builder);
+    auto *else_type = Else->GetType(builder);
+
+    auto *type = Type::Collapse(builder.GetContext(), then_type, else_type);
+    Assert(type, "failed to collapse ternary operation result types");
+
+    return type;
 }
 
-scc::cc::Value *scc::cc::TernaryExpressionNode::GenerateValue(Builder &builder) const
+const scc::cc::Value *scc::cc::TernaryExpressionNode::GenerateValue(Builder &builder) const
 {
     auto *function = builder.GetIRBuilder().GetInsertFunction();
     auto *then_block = builder.GetIRBuilder().CreateBlock(function, "then");
@@ -709,32 +1057,24 @@ scc::cc::Value *scc::cc::TernaryExpressionNode::GenerateValue(Builder &builder) 
     auto *then_terminator = builder.GetIRBuilder().CreateBranch(end_block);
 
     builder.GetIRBuilder().SetInsertBlock(else_block);
-    auto *else_type = Then->GetType(builder);
+    auto *else_type = Else->GetType(builder);
     auto *else_value = Else->GenerateValue(builder)->Load(builder);
     auto *else_receiver_block = builder.GetIRBuilder().GetInsertBlock();
     auto *else_terminator = builder.GetIRBuilder().CreateBranch(end_block);
 
-    Type *type;
-    if (then_type == else_type)
+    auto *type = Type::Collapse(builder.GetContext(), then_type, else_type);
+    Assert(type, "failed to collapse ternary operation result types");
+
+    if (type != then_type)
     {
-        type = then_type;
+        builder.GetIRBuilder().SetInsertPoint(then_terminator);
+        then_value = builder.GetIRBuilder().CreateCast(type->Generate(builder), then_value);
     }
-    else
+
+    if (type != else_type)
     {
-        type = Type::Collapse(builder.GetContext(), then_type, else_type);
-        Assert(type, "failed to collapse ternary operation result types");
-
-        if (type != then_type)
-        {
-            builder.GetIRBuilder().SetInsertPoint(then_terminator);
-            then_value = builder.GetIRBuilder().CreateCast(type->Generate(builder), then_value);
-        }
-
-        if (type != else_type)
-        {
-            builder.GetIRBuilder().SetInsertPoint(else_terminator);
-            else_value = builder.GetIRBuilder().CreateCast(type->Generate(builder), else_value);
-        }
+        builder.GetIRBuilder().SetInsertPoint(else_terminator);
+        else_value = builder.GetIRBuilder().CreateCast(type->Generate(builder), else_value);
     }
 
     builder.GetIRBuilder().SetInsertBlock(end_block);

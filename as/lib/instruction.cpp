@@ -95,8 +95,6 @@ void scc::as::Instruction::Encode(
     for (auto i = mnemonic->FormBegin; i < mnemonic->FormEnd; ++i)
     {
         auto &form = m_Platform.ISA.Forms[i];
-
-
     }
 
     Print(std::cerr << "TODO: ") << std::endl;

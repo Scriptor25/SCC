@@ -15,6 +15,7 @@ namespace scc::ir
         explicit Value(Type *type);
         virtual ~Value();
 
+        virtual bool CanPrint() const;
         virtual std::ostream &Print(std::ostream &stream) const = 0;
         virtual std::ostream &PrintOperand(std::ostream &stream, bool print_type) const = 0;
 

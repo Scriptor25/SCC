@@ -6,5 +6,5 @@
 
 namespace scc
 {
-    void PrintBinary(std::ostream &stream, std::span<const uint8_t>buffer);
+    void PrintBinary(std::ostream &stream, std::span<const uint8_t> buffer);
 }

@@ -43,7 +43,9 @@ toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseNode()
     if (At(TokenType::Identifier, "typedef"))
         return ParseTypeDefNode();
 
-    Type *type;
+    auto is_extern = Skip(TokenType::Identifier, "extern");
+
+    const Type *type;
     if (auto res = ParseType() >> type; !res)
         return res;
 
@@ -52,12 +54,15 @@ toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseNode()
         return res;
 
     if (At(TokenType::Other, "("))
-        return ParseFunctionNode(type, std::move(name));
+        return ParseFunctionNode(is_extern, type, std::move(name));
 
-    return ParseVariableNode(type, std::move(name));
+    return ParseVariableNode(is_extern, type, std::move(name));
 }
 
-toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseFunctionNode(Type *result, std::string name)
+toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseFunctionNode(
+    bool is_extern,
+    const Type *result,
+    std::string name)
 {
     if (auto res = Expect(TokenType::Other, "("); !res)
         return res;
@@ -77,7 +82,7 @@ toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseFunctionNode(Type *resul
             break;
         }
 
-        Type *argument_type;
+        const Type *argument_type;
         if (auto res = ParseType() >> argument_type; !res)
             return res;
 
@@ -98,6 +103,7 @@ toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseFunctionNode(Type *resul
     if (Skip(TokenType::Other, ";"))
         return {
             std::make_unique<FunctionNode>(
+                is_extern,
                 result,
                 std::move(name),
                 std::move(arguments),
@@ -110,6 +116,7 @@ toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseFunctionNode(Type *resul
 
     return {
         std::make_unique<FunctionNode>(
+            is_extern,
             result,
             std::move(name),
             std::move(arguments),
@@ -118,10 +125,18 @@ toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseFunctionNode(Type *resul
     };
 }
 
-toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseVariableNode(Type *type, std::string name)
+toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseVariableNode(
+    bool is_extern,
+    const Type *type,
+    std::string name)
 {
     if (Skip(TokenType::Other, ";"))
-        return { std::make_unique<VariableNode>(type, std::move(name)) };
+        return {
+            std::make_unique<VariableNode>(
+                is_extern,
+                type,
+                std::move(name))
+        };
 
     ExpressionNodePtr value;
     if (auto res = ParseExpressionNode() >> value; !res)
@@ -130,7 +145,13 @@ toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseVariableNode(Type *type,
     if (auto res = Expect(TokenType::Other, ";"); !res)
         return res;
 
-    return { std::make_unique<VariableNode>(type, std::move(name), std::move(value)) };
+    return {
+        std::make_unique<VariableNode>(
+            is_extern,
+            type,
+            std::move(name),
+            std::move(value))
+    };
 }
 
 toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseTypeDefNode()
@@ -142,7 +163,7 @@ toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseTypeDefNode()
     if (auto res = Expect(TokenType::Identifier, "typedef"); !res)
         return res;
 
-    Type *type;
+    const Type *type;
     if (auto res = ParseType() >> type; !res)
         return res;
 
@@ -379,7 +400,7 @@ toolkit::result<scc::cc::StatementNodePtr> scc::cc::Parser::ParseContinueStateme
 
 toolkit::result<scc::cc::StatementNodePtr> scc::cc::Parser::ParseVariableStatementNode(const bool ignore_end)
 {
-    Type *type;
+    const Type *type;
     if (auto res = ParseType() >> type; !res)
         return res;
 
@@ -409,7 +430,10 @@ toolkit::result<scc::cc::StatementNodePtr> scc::cc::Parser::ParseVariableStateme
         if (auto res = Expect(TokenType::Other, ";"); !res)
             return res;
 
-    return { std::make_unique<VariableStatementNode>(type, std::move(elements)) };
+    // TODO: parse volatility
+    auto is_volatile = false;
+
+    return { std::make_unique<VariableStatementNode>(type, std::move(elements), is_volatile) };
 }
 
 toolkit::result<scc::cc::ExpressionNodePtr> scc::cc::Parser::ParseExpressionNode()
@@ -547,7 +571,21 @@ toolkit::result<scc::cc::ExpressionNodePtr> scc::cc::Parser::ParseOperandExpress
         {
             std::vector<ExpressionNodePtr> arguments;
 
-            // TODO: parse arguments
+            while (!At(TokenType::Other, ")"))
+            {
+                if (!arguments.empty())
+                    if (auto res = Expect(TokenType::Operator, ","); !res)
+                        return res;
+
+                ExpressionNodePtr argument;
+                if (auto res = ParseExpressionNode() >> argument; !res)
+                    return res;
+
+                arguments.push_back(std::move(argument));
+            }
+
+            if (auto res = Expect(TokenType::Other, ")"); !res)
+                return res;
 
             operand = std::make_unique<CallExpressionNode>(std::move(operand), std::move(arguments));
             continue;
@@ -563,7 +601,7 @@ toolkit::result<scc::cc::ExpressionNodePtr> scc::cc::Parser::ParseOperandExpress
             continue;
         }
 
-        if (Skip(TokenType::Other, "."))
+        if (Skip(TokenType::Operator, "."))
         {
             Token token;
             if (auto res = Expect(TokenType::Identifier) >> token; !res)
@@ -575,7 +613,7 @@ toolkit::result<scc::cc::ExpressionNodePtr> scc::cc::Parser::ParseOperandExpress
             continue;
         }
 
-        if (Skip(TokenType::Other, "->"))
+        if (Skip(TokenType::Operator, "->"))
         {
             Token token;
             if (auto res = Expect(TokenType::Identifier) >> token; !res)
@@ -609,6 +647,8 @@ toolkit::result<scc::cc::ExpressionNodePtr> scc::cc::Parser::ParsePrimaryExpress
 
         if (const auto it = operators.find(m_Token.Value); it != operators.end())
         {
+            Skip();
+
             ExpressionNodePtr operand;
             if (auto res = ParseOperandExpressionNode() >> operand; !res)
                 return res;
@@ -625,7 +665,7 @@ toolkit::result<scc::cc::ExpressionNodePtr> scc::cc::Parser::ParsePrimaryExpress
         ExpressionNodePtr node;
         if (CouldBeType())
         {
-            Type *type;
+            const Type *type;
             if (auto res = ParseType() >> type; !res)
                 return res;
 
@@ -652,7 +692,7 @@ toolkit::result<scc::cc::ExpressionNodePtr> scc::cc::Parser::ParsePrimaryExpress
 
         if (CouldBeType())
         {
-            Type *type;
+            const Type *type;
             if (auto res = ParseType() >> type; !res)
                 return res;
 
@@ -708,11 +748,11 @@ toolkit::result<scc::cc::ExpressionNodePtr> scc::cc::Parser::ParsePrimaryExpress
     return toolkit::make_error("TODO");
 }
 
-toolkit::result<scc::cc::Type *> scc::cc::Parser::ParseType()
+toolkit::result<const scc::cc::Type *> scc::cc::Parser::ParseType()
 {
     // TODO: const
 
-    Type *aggregate;
+    const Type *aggregate;
     if (auto res = ParseBaseType() >> aggregate; !res)
         return res;
 
@@ -749,7 +789,7 @@ toolkit::result<scc::cc::Type *> scc::cc::Parser::ParseType()
     return aggregate;
 }
 
-toolkit::result<scc::cc::Type *> scc::cc::Parser::ParseBaseType()
+toolkit::result<const scc::cc::Type *> scc::cc::Parser::ParseBaseType()
 {
     if (At(TokenType::Identifier, "struct"))
         return ParseStructType();
@@ -961,7 +1001,7 @@ toolkit::result<scc::cc::Type *> scc::cc::Parser::ParseBaseType()
     return toolkit::make_error("TODO");
 }
 
-toolkit::result<scc::cc::Type *> scc::cc::Parser::ParseStructType()
+toolkit::result<const scc::cc::Type *> scc::cc::Parser::ParseStructType()
 {
     if (auto res = Expect(TokenType::Identifier, "struct"); !res)
         return res;
@@ -979,7 +1019,7 @@ toolkit::result<scc::cc::Type *> scc::cc::Parser::ParseStructType()
     std::vector<StructElement> elements;
     while (!At(TokenType::Other, "}") && !At(TokenType::None))
     {
-        Type *element_type;
+        const Type *element_type;
         if (auto res = ParseType() >> element_type; !res)
             return res;
 
@@ -1011,20 +1051,16 @@ toolkit::result<scc::cc::Type *> scc::cc::Parser::ParseStructType()
     if (auto res = Expect(TokenType::Other, "}"); !res)
         return res;
 
-    StructType *type;
+    const StructType *type;
     if (name)
-    {
-        type = m_Context.GetStructType(std::move(*name));
-
-        type->Elements = std::move(elements);
-    }
+        type = m_Context.GetStructType(std::move(*name), std::move(elements));
     else
         type = m_Context.GetStructType(std::move(elements));
 
     return type;
 }
 
-toolkit::result<scc::cc::Type *> scc::cc::Parser::ParseUnionType()
+toolkit::result<const scc::cc::Type *> scc::cc::Parser::ParseUnionType()
 {
     if (auto res = Expect(TokenType::Identifier, "union"); !res)
         return res;
@@ -1042,7 +1078,7 @@ toolkit::result<scc::cc::Type *> scc::cc::Parser::ParseUnionType()
     std::vector<UnionElement> elements;
     while (!At(TokenType::Other, "}") && !At(TokenType::None))
     {
-        Type *element_type;
+        const Type *element_type;
         if (auto res = ParseType() >> element_type; !res)
             return res;
 
@@ -1063,21 +1099,16 @@ toolkit::result<scc::cc::Type *> scc::cc::Parser::ParseUnionType()
     if (auto res = Expect(TokenType::Other, "}"); !res)
         return res;
 
-    UnionType *type;
-
+    const UnionType *type;
     if (name)
-    {
-        type = m_Context.GetUnionType(std::move(*name));
-
-        type->Elements = std::move(elements);
-    }
+        type = m_Context.GetUnionType(std::move(*name), std::move(elements));
     else
         type = m_Context.GetUnionType(std::move(elements));
 
     return type;
 }
 
-toolkit::result<scc::cc::Type *> scc::cc::Parser::ParseEnumType()
+toolkit::result<const scc::cc::Type *> scc::cc::Parser::ParseEnumType()
 {
     if (auto res = Expect(TokenType::Identifier, "enum"); !res)
         return res;
@@ -1123,14 +1154,9 @@ toolkit::result<scc::cc::Type *> scc::cc::Parser::ParseEnumType()
     if (auto res = Expect(TokenType::Other, "}"); !res)
         return res;
 
-    EnumType *type;
-
+    const EnumType *type;
     if (name)
-    {
-        type = m_Context.GetEnumType(std::move(*name));
-
-        type->Elements = std::move(elements);
-    }
+        type = m_Context.GetEnumType(std::move(*name), std::move(elements));
     else
         type = m_Context.GetEnumType(std::move(elements));
 
@@ -1281,6 +1307,8 @@ scc::cc::Token scc::cc::Parser::Next()
         { "<<", { '=' } },
         { ">", { '=', '>' } },
         { ">>", { '=' } },
+        { ".", { '.' } },
+        { "..", { '.' } },
     };
 
     while (m_Buffer >= 0)
@@ -1324,6 +1352,7 @@ scc::cc::Token scc::cc::Parser::Next()
             case '=':
             case '<':
             case '>':
+            case '.':
                 m_Buffer = push(true);
                 state = State::Operator;
                 break;

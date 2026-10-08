@@ -38,6 +38,8 @@ namespace scc::cc
         [[nodiscard]] ir::Module &GetIRModule() const;
         [[nodiscard]] ir::Builder &GetIRBuilder() const;
 
+        ir::Value *Allocate(ir::Type *type, uint64_t count, std::string name = {}) const;
+
         Value *Manage(ValuePtr value);
 
         void PushFrame(

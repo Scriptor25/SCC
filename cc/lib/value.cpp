@@ -5,54 +5,54 @@
 
 #include <scc/assert.hpp>
 
-std::unique_ptr<scc::cc::RValue> scc::cc::Value::CreateR(Type *type, ir::Value *value)
+std::unique_ptr<scc::cc::RValue> scc::cc::Value::CreateR(const Type *type, ir::Value *value)
 {
     return std::make_unique<RValue>(type, value);
 }
 
-std::unique_ptr<scc::cc::LValue> scc::cc::Value::CreateL(Type *type, ir::Value *pointer)
+std::unique_ptr<scc::cc::LValue> scc::cc::Value::CreateL(const Type *type, ir::Value *pointer)
 {
     return std::make_unique<LValue>(type, pointer);
 }
 
-scc::cc::Value::Value(Type *type)
+scc::cc::Value::Value(const Type *type)
     : m_Type(type)
 {
 }
 
-scc::cc::Type *scc::cc::Value::GetType() const
+const scc::cc::Type *scc::cc::Value::GetType() const
 {
     return m_Type;
 }
 
-scc::cc::RValue::RValue(Type *type, ir::Value *value)
+scc::cc::RValue::RValue(const Type *type, ir::Value *value)
     : Value(type),
       m_Value(value)
 {
 }
 
-scc::ir::Value *scc::cc::RValue::Load(Builder &builder) const
+scc::ir::Value *scc::cc::RValue::Load(Builder &, bool) const
 {
     return m_Value;
 }
 
-void scc::cc::RValue::Store(ir::Context &context, ir::Builder &builder, ir::Value *value) const
+void scc::cc::RValue::Store(ir::Context &, ir::Builder &, ir::Value *, bool) const
 {
     Error("rvalue is immutable");
 }
 
-scc::cc::LValue::LValue(Type *type, ir::Value *pointer)
+scc::cc::LValue::LValue(const Type *type, ir::Value *pointer)
     : Value(type),
       m_Pointer(pointer)
 {
 }
 
-scc::ir::Value *scc::cc::LValue::Load(Builder &builder) const
+scc::ir::Value *scc::cc::LValue::Load(Builder &builder, const bool is_volatile) const
 {
-    return builder.GetIRBuilder().CreateLoad(m_Pointer);
+    return builder.GetIRBuilder().CreateLoad(m_Pointer, is_volatile);
 }
 
-void scc::cc::LValue::Store(ir::Context &context, ir::Builder &builder, ir::Value *value) const
+void scc::cc::LValue::Store(ir::Context &, ir::Builder &builder, ir::Value *value, const bool is_volatile) const
 {
-    builder.CreateStore(m_Pointer, value);
+    builder.CreateStore(m_Pointer, value, is_volatile);
 }

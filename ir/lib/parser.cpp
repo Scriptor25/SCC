@@ -713,23 +713,27 @@ scc::ir::Instruction *scc::ir::Parser::ParseStoreInstruction()
 {
     Expect(TokenType::Identifier, "store");
 
+    const auto is_volatile = Skip(TokenType::Identifier, "volatile");
+
     auto *pointer_type = ParseType();
     auto *pointer = ParseValue(pointer_type);
 
     auto *value_type = pointer_type->GetElement();
     auto *value = ParseValue(value_type);
 
-    return m_Builder.CreateStore(pointer, value);
+    return m_Builder.CreateStore(pointer, value, is_volatile);
 }
 
 scc::ir::Instruction *scc::ir::Parser::ParseLoadInstruction(std::string name)
 {
     Expect(TokenType::Identifier, "load");
 
+    const auto is_volatile = Skip(TokenType::Identifier, "volatile");
+
     auto *pointer_type = ParseType();
     auto *pointer = ParseValue(pointer_type);
 
-    return m_Builder.CreateLoad(pointer, std::move(name));
+    return m_Builder.CreateLoad(pointer, is_volatile, std::move(name));
 }
 
 scc::ir::Instruction *scc::ir::Parser::ParseICompareInstruction(std::string name)

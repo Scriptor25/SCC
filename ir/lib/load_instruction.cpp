@@ -8,9 +8,11 @@ scc::ir::LoadInstruction::LoadInstruction(
     Type *type,
     Block *block,
     std::string name,
-    Value *pointer)
+    Value *pointer,
+    bool is_volatile)
     : Instruction(type, block, std::move(name)),
-      m_Pointer(pointer)
+      m_Pointer(pointer),
+      m_Volatile(is_volatile)
 {
     m_Pointer->Use(this);
 }
@@ -41,12 +43,19 @@ void scc::ir::LoadInstruction::Replace(Value *value, Value *with)
     }
 }
 
+bool scc::ir::LoadInstruction::CanPrint() const
+{
+    return IsUsed() || m_Volatile;
+}
+
 std::ostream &scc::ir::LoadInstruction::Print(std::ostream &stream) const
 {
     if (IsUsed())
         stream << '%' << m_Name << " = ";
+    else if (!m_Volatile)
+        return stream;
 
-    return m_Pointer->PrintOperand(stream << "load ", true);
+    return m_Pointer->PrintOperand(stream << "load " << (m_Volatile ? "volatile " : ""), true);
 }
 
 std::ostream &scc::ir::LoadInstruction::PrintAssembly(std::ostream &stream, LoweringContext &context) const

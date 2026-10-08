@@ -73,6 +73,7 @@ void scc::ir::Builder::SetInsertBlock(Block *block)
     Assert(block, "block must not be null");
 
     m_InsertBlock = block;
+    m_InsertPoint = nullptr;
 }
 
 void scc::ir::Builder::SetInsertPoint(Instruction *instruction)
@@ -86,14 +87,32 @@ void scc::ir::Builder::SetInsertPoint(Instruction *instruction)
     m_InsertPoint = instruction;
 }
 
+void scc::ir::Builder::SetInsertPointAfterAllocations(Function *function)
+{
+    Assert(function, "function must not be null");
+
+    auto *block = function->GetEntryBlock();
+
+    Assert(block, "function entry block must not be null");
+
+    m_InsertBlock = block;
+    m_InsertPoint = block->GetAfterAllocations();
+}
+
 void scc::ir::Builder::ClearInsertBlock()
 {
     m_InsertBlock = nullptr;
+    m_InsertPoint = nullptr;
 }
 
 scc::ir::Block *scc::ir::Builder::GetInsertBlock() const
 {
     return m_InsertBlock;
+}
+
+scc::ir::Instruction *scc::ir::Builder::GetInsertPoint() const
+{
+    return m_InsertPoint;
 }
 
 scc::ir::Function *scc::ir::Builder::GetInsertFunction() const
@@ -117,7 +136,24 @@ scc::ir::Value *scc::ir::Builder::CreateEmpty(Type *type, std::string name) cons
 {
     Assert(m_InsertBlock, "insert block must not be null");
 
+    if (name.empty())
+        name = m_InsertBlock->GenerateName();
+
     return m_InsertBlock->CreateEmpty(type, std::move(name));
+}
+
+scc::ir::NotNullInstruction *scc::ir::Builder::CreateNotNull(Value *value, std::string name)
+{
+    Assert(value, "value must not be null");
+
+    if (name.empty())
+        name = m_InsertBlock->GenerateName();
+
+    return Create<NotNullInstruction>(
+        m_Context.GetInt1Type(),
+        m_InsertBlock,
+        std::move(name),
+        value);
 }
 
 scc::ir::IOperatorInstruction *scc::ir::Builder::CreateIOperator(
@@ -133,6 +169,9 @@ scc::ir::IOperatorInstruction *scc::ir::Builder::CreateIOperator(
 
     for (const auto *operand : operands)
         assert_type_match(operand->GetType(), type);
+
+    if (name.empty())
+        name = m_InsertBlock->GenerateName();
 
     return Create<IOperatorInstruction>(
         type,
@@ -236,6 +275,9 @@ scc::ir::FOperatorInstruction *scc::ir::Builder::CreateFOperator(
     for (const auto *operand : operands)
         assert_type_match(operand->GetType(), type);
 
+    if (name.empty())
+        name = m_InsertBlock->GenerateName();
+
     return Create<FOperatorInstruction>(
         type,
         m_InsertBlock,
@@ -299,6 +341,9 @@ scc::ir::ICompareInstruction *scc::ir::Builder::CreateICompare(
 
     assert_type_match(lhs->GetType(), type);
     assert_type_match(rhs->GetType(), type);
+
+    if (name.empty())
+        name = m_InsertBlock->GenerateName();
 
     return Create<ICompareInstruction>(
         m_Context.GetInt1Type(),
@@ -414,6 +459,9 @@ scc::ir::FCompareInstruction *scc::ir::Builder::CreateFCompare(
 
     assert_type_match(lhs->GetType(), type);
     assert_type_match(rhs->GetType(), type);
+
+    if (name.empty())
+        name = m_InsertBlock->GenerateName();
 
     return Create<FCompareInstruction>(
         m_Context.GetInt1Type(),
@@ -538,6 +586,9 @@ scc::ir::PhiInstruction *scc::ir::Builder::CreatePhi(
     for (const auto *value : nodes | std::views::values)
         assert_type_match(value->GetType(), type);
 
+    if (name.empty())
+        name = m_InsertBlock->GenerateName();
+
     return Create<PhiInstruction>(
         type,
         m_InsertBlock,
@@ -550,6 +601,9 @@ scc::ir::AllocInstruction *scc::ir::Builder::CreateAlloc(Type *type, uint64_t co
     Assert(type, "type must not be null");
     Assert(count, "count must not be 0");
 
+    if (name.empty())
+        name = m_InsertBlock->GenerateName();
+
     return Create<AllocInstruction>(
         m_Context.GetPointerType(type),
         m_InsertBlock,
@@ -557,7 +611,7 @@ scc::ir::AllocInstruction *scc::ir::Builder::CreateAlloc(Type *type, uint64_t co
         count);
 }
 
-scc::ir::LoadInstruction *scc::ir::Builder::CreateLoad(Value *pointer, std::string name)
+scc::ir::LoadInstruction *scc::ir::Builder::CreateLoad(Value *pointer, bool is_volatile, std::string name)
 {
     Assert(pointer, "pointer must not be null");
 
@@ -566,14 +620,18 @@ scc::ir::LoadInstruction *scc::ir::Builder::CreateLoad(Value *pointer, std::stri
 
     auto *element_type = pointer_type->GetElement();
 
+    if (name.empty())
+        name = m_InsertBlock->GenerateName();
+
     return Create<LoadInstruction>(
         element_type,
         m_InsertBlock,
         std::move(name),
-        pointer);
+        pointer,
+        is_volatile);
 }
 
-scc::ir::StoreInstruction *scc::ir::Builder::CreateStore(Value *pointer, Value *value)
+scc::ir::StoreInstruction *scc::ir::Builder::CreateStore(Value *pointer, Value *value, bool is_volatile)
 {
     Assert(pointer, "pointer must not be null");
     Assert(value, "value must not be null");
@@ -590,7 +648,8 @@ scc::ir::StoreInstruction *scc::ir::Builder::CreateStore(Value *pointer, Value *
         m_Context.GetVoidType(),
         m_InsertBlock,
         pointer,
-        value);
+        value,
+        is_volatile);
 }
 
 scc::ir::ElementPointerInstruction *scc::ir::Builder::CreateElementPointer(
@@ -628,6 +687,9 @@ scc::ir::ElementPointerInstruction *scc::ir::Builder::CreateElementPointer(
         }
     }
 
+    if (name.empty())
+        name = m_InsertBlock->GenerateName();
+
     return Create<ElementPointerInstruction>(
         m_Context.GetPointerType(pointer_type),
         m_InsertBlock,
@@ -657,6 +719,9 @@ scc::ir::ElementPointerInstruction *scc::ir::Builder::CreateElementPointer(
         pointer_type = pointer_type->GetElement(index);
         values[i] = m_Context.GetInt64(index);
     }
+
+    if (name.empty())
+        name = m_InsertBlock->GenerateName();
 
     return Create<ElementPointerInstruction>(
         m_Context.GetPointerType(pointer_type),
@@ -692,6 +757,9 @@ scc::ir::CallInstruction *scc::ir::Builder::CreateCall(
     for (size_t i = 0; i < count; ++i)
         assert_type_match(arguments[i]->GetType(), function_type->GetArgument(i));
 
+    if (name.empty())
+        name = m_InsertBlock->GenerateName();
+
     return Create<CallInstruction>(
         function_type->GetResult(),
         m_InsertBlock,
@@ -713,6 +781,9 @@ scc::ir::CastInstruction *scc::ir::Builder::CreateCast(
     auto *value_type = value->GetType();
 
     Assert(value_type->GetKind() == Kind::Pointer, "type {} is not a kind of pointer", value_type);
+
+    if (name.empty())
+        name = m_InsertBlock->GenerateName();
 
     return Create<CastInstruction>(
         type,

@@ -23,28 +23,30 @@ namespace scc::cc
 
     struct ExpressionNode : Node
     {
-        [[nodiscard]] virtual Type *GetType(Builder &builder) const = 0;
+        [[nodiscard]] virtual const Type *GetType(Builder &builder) const = 0;
 
-        [[nodiscard]] virtual Value *GenerateValue(Builder &builder) const = 0;
+        [[nodiscard]] virtual const Value *GenerateValue(Builder &builder) const = 0;
 
         [[nodiscard]] virtual int64_t EvaluateConstantInteger() const = 0;
     };
 
     struct FunctionArgument
     {
-        Type *Ty{};
+        const Type *Ty{};
         std::optional<std::string> Name;
     };
 
     struct FunctionNode : Node
     {
         explicit FunctionNode(
-            Type *result,
+            bool is_extern,
+            const Type *result,
             std::string name,
             std::vector<FunctionArgument> arguments,
             bool variadic);
         explicit FunctionNode(
-            Type *result,
+            bool is_extern,
+            const Type *result,
             std::string name,
             std::vector<FunctionArgument> arguments,
             bool variadic,
@@ -56,7 +58,8 @@ namespace scc::cc
         // TODO: attributes
         // TODO: modifiers
 
-        Type *Result;
+        bool Extern;
+        const Type *Result;
         std::string Name;
         std::vector<FunctionArgument> Arguments;
         bool Variadic;
@@ -65,8 +68,15 @@ namespace scc::cc
 
     struct VariableNode : Node
     {
-        explicit VariableNode(Type *type, std::string name);
-        explicit VariableNode(Type *type, std::string name, ExpressionNodePtr value);
+        explicit VariableNode(
+            bool is_extern,
+            const Type *type,
+            std::string name);
+        explicit VariableNode(
+            bool is_extern,
+            const Type *type,
+            std::string name,
+            ExpressionNodePtr value);
 
         void Generate(Builder &builder) const override;
 
@@ -74,18 +84,19 @@ namespace scc::cc
         // TODO: attributes
         // TODO: modifiers
 
-        Type *Ty;
+        bool Extern;
+        const Type *Ty;
         std::string Name;
         ExpressionNodePtr Value;
     };
 
     struct TypeDefNode : Node
     {
-        explicit TypeDefNode(Type *type, std::string name);
+        explicit TypeDefNode(const Type *type, std::string name);
 
         void Generate(Builder &builder) const override;
 
-        Type *Ty;
+        const Type *Ty;
         std::string Name;
     };
 
@@ -193,13 +204,15 @@ namespace scc::cc
     struct VariableStatementNode : StatementNode
     {
         explicit VariableStatementNode(
-            Type *type,
-            std::vector<VariableElement> elements);
+            const Type *type,
+            std::vector<VariableElement> elements,
+            bool is_volatile);
 
         void Generate(Builder &builder) const override;
 
-        Type *Ty;
+        const Type *Ty;
         std::vector<VariableElement> Elements;
+        bool Volatile;
     };
 
     struct SymbolExpressionNode : ExpressionNode
@@ -208,9 +221,9 @@ namespace scc::cc
 
         void Generate(Builder &builder) const override;
 
-        [[nodiscard]] Type *GetType(Builder &builder) const override;
+        [[nodiscard]] const Type *GetType(Builder &builder) const override;
 
-        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
+        [[nodiscard]] const Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -223,9 +236,9 @@ namespace scc::cc
 
         void Generate(Builder &builder) const override;
 
-        [[nodiscard]] Type *GetType(Builder &builder) const override;
+        [[nodiscard]] const Type *GetType(Builder &builder) const override;
 
-        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
+        [[nodiscard]] const Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -238,9 +251,9 @@ namespace scc::cc
 
         void Generate(Builder &builder) const override;
 
-        [[nodiscard]] Type *GetType(Builder &builder) const override;
+        [[nodiscard]] const Type *GetType(Builder &builder) const override;
 
-        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
+        [[nodiscard]] const Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -253,9 +266,9 @@ namespace scc::cc
 
         void Generate(Builder &builder) const override;
 
-        [[nodiscard]] Type *GetType(Builder &builder) const override;
+        [[nodiscard]] const Type *GetType(Builder &builder) const override;
 
-        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
+        [[nodiscard]] const Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -264,17 +277,17 @@ namespace scc::cc
 
     struct SizeOfTypeExpressionNode : ExpressionNode
     {
-        explicit SizeOfTypeExpressionNode(Type *ty);
+        explicit SizeOfTypeExpressionNode(const Type *ty);
 
         void Generate(Builder &builder) const override;
 
-        [[nodiscard]] Type *GetType(Builder &builder) const override;
+        [[nodiscard]] const Type *GetType(Builder &builder) const override;
 
-        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
+        [[nodiscard]] const Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
-        Type *Ty;
+        const Type *Ty;
     };
 
     struct SizeOfValueExpressionNode : ExpressionNode
@@ -283,9 +296,9 @@ namespace scc::cc
 
         void Generate(Builder &builder) const override;
 
-        [[nodiscard]] Type *GetType(Builder &builder) const override;
+        [[nodiscard]] const Type *GetType(Builder &builder) const override;
 
-        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
+        [[nodiscard]] const Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -294,17 +307,17 @@ namespace scc::cc
 
     struct CastExpressionNode : ExpressionNode
     {
-        explicit CastExpressionNode(Type *ty, ExpressionNodePtr operand);
+        explicit CastExpressionNode(const Type *ty, ExpressionNodePtr operand);
 
         void Generate(Builder &builder) const override;
 
-        [[nodiscard]] Type *GetType(Builder &builder) const override;
+        [[nodiscard]] const Type *GetType(Builder &builder) const override;
 
-        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
+        [[nodiscard]] const Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
-        Type *Ty;
+        const Type *Ty;
         ExpressionNodePtr Operand;
     };
 
@@ -314,9 +327,9 @@ namespace scc::cc
 
         void Generate(Builder &builder) const override;
 
-        [[nodiscard]] Type *GetType(Builder &builder) const override;
+        [[nodiscard]] const Type *GetType(Builder &builder) const override;
 
-        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
+        [[nodiscard]] const Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -330,9 +343,9 @@ namespace scc::cc
 
         void Generate(Builder &builder) const override;
 
-        [[nodiscard]] Type *GetType(Builder &builder) const override;
+        [[nodiscard]] const Type *GetType(Builder &builder) const override;
 
-        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
+        [[nodiscard]] const Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -346,9 +359,9 @@ namespace scc::cc
 
         void Generate(Builder &builder) const override;
 
-        [[nodiscard]] Type *GetType(Builder &builder) const override;
+        [[nodiscard]] const Type *GetType(Builder &builder) const override;
 
-        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
+        [[nodiscard]] const Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -377,9 +390,9 @@ namespace scc::cc
 
         void Generate(Builder &builder) const override;
 
-        [[nodiscard]] Type *GetType(Builder &builder) const override;
+        [[nodiscard]] const Type *GetType(Builder &builder) const override;
 
-        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
+        [[nodiscard]] const Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -401,17 +414,9 @@ namespace scc::cc
         And,
         XOr,
         Or,
-        LogicalAnd,
-        LogicalOr,
-
-        CompareEqual,
-        CompareNotEqual,
-        CompareLessThan,
-        CompareLessThanEqual,
-        CompareGreaterThen,
-        CompareGreaterThenEqual,
 
         Assign,
+
         AddAssign,
         SubtractAssign,
         MultiplyAssign,
@@ -422,6 +427,16 @@ namespace scc::cc
         AndAssign,
         XOrAssign,
         OrAssign,
+
+        LogicalAnd,
+        LogicalOr,
+
+        CompareEqual,
+        CompareNotEqual,
+        CompareLessThan,
+        CompareLessThanEqual,
+        CompareGreaterThen,
+        CompareGreaterThenEqual,
     };
 
     struct BinaryExpressionNode : ExpressionNode
@@ -433,9 +448,9 @@ namespace scc::cc
 
         void Generate(Builder &builder) const override;
 
-        [[nodiscard]] Type *GetType(Builder &builder) const override;
+        [[nodiscard]] const Type *GetType(Builder &builder) const override;
 
-        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
+        [[nodiscard]] const Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 
@@ -453,9 +468,9 @@ namespace scc::cc
 
         void Generate(Builder &builder) const override;
 
-        [[nodiscard]] Type *GetType(Builder &builder) const override;
+        [[nodiscard]] const Type *GetType(Builder &builder) const override;
 
-        [[nodiscard]] Value *GenerateValue(Builder &builder) const override;
+        [[nodiscard]] const Value *GenerateValue(Builder &builder) const override;
 
         [[nodiscard]] int64_t EvaluateConstantInteger() const override;
 

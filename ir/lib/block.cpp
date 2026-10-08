@@ -52,7 +52,8 @@ std::ostream &scc::ir::Block::Print(std::ostream &stream) const
     }
 
     for (auto &instruction : m_Instructions)
-        instruction->Print(stream << std::endl << "    ");
+        if (instruction->CanPrint())
+            instruction->Print(stream << std::endl << "    ");
 
     return stream;
 }
@@ -195,4 +196,25 @@ std::unordered_set<scc::ir::Block *> scc::ir::Block::GetSuccessors() const
     }
 
     return {};
+}
+
+std::string scc::ir::Block::GenerateName() const
+{
+    return m_Function->GenerateName();
+}
+
+scc::ir::Instruction *scc::ir::Block::GetAfterAllocations() const
+{
+    for (auto it = m_Instructions.begin(); it != m_Instructions.end(); ++it)
+        if (dynamic_cast<AllocInstruction *>(it->get()))
+        {
+            if (const auto next = it + 1; next != m_Instructions.end())
+            {
+                if (dynamic_cast<AllocInstruction *>(next->get()))
+                    continue;
+                return next->get();
+            }
+            break;
+        }
+    return nullptr;
 }

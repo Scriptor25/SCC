@@ -13,12 +13,14 @@ namespace scc::cc
 {
     struct Type
     {
-        static Type *Collapse(Context &context, Type *left, Type *right);
+        static const Type *Collapse(Context &context, const Type *a, const Type *b);
 
         virtual ~Type() = default;
 
         [[nodiscard]] virtual size_t GetBitWidth(Context &context) const = 0;
         [[nodiscard]] virtual ir::Type *Generate(Builder &builder) const = 0;
+
+        [[nodiscard]] virtual const Type *Decay(Context &context) const = 0;
     };
 
     struct VoidType : Type
@@ -27,6 +29,8 @@ namespace scc::cc
 
         [[nodiscard]] size_t GetBitWidth(Context &context) const override;
         [[nodiscard]] ir::VoidType *Generate(Builder &builder) const override;
+
+        [[nodiscard]] const Type *Decay(Context &context) const override;
     };
 
     enum class IntegerKind
@@ -52,6 +56,8 @@ namespace scc::cc
         [[nodiscard]] size_t GetBitWidth(Context &context) const override;
         [[nodiscard]] ir::IntType *Generate(Builder &builder) const override;
 
+        [[nodiscard]] const Type *Decay(Context &context) const override;
+
         [[nodiscard]] bool IsSigned() const;
         [[nodiscard]] size_t GetBitWidth() const;
         [[nodiscard]] size_t GetRank() const;
@@ -74,12 +80,17 @@ namespace scc::cc
         [[nodiscard]] size_t GetBitWidth(Context &context) const override;
         [[nodiscard]] ir::FloatType *Generate(Builder &builder) const override;
 
+        [[nodiscard]] const Type *Decay(Context &context) const override;
+
+        [[nodiscard]] size_t GetBitWidth() const;
+        [[nodiscard]] size_t GetRank() const;
+
         FloatingPointKind Kind;
     };
 
     struct StructElement
     {
-        Type *Ty{};
+        const Type *Ty{};
         std::optional<std::string> Name;
         std::optional<uint8_t> Bits;
     };
@@ -92,13 +103,15 @@ namespace scc::cc
         [[nodiscard]] size_t GetBitWidth(Context &context) const override;
         [[nodiscard]] ir::StructType *Generate(Builder &builder) const override;
 
+        [[nodiscard]] const Type *Decay(Context &context) const override;
+
         std::optional<std::string> Name;
         std::vector<StructElement> Elements;
     };
 
     struct UnionElement
     {
-        Type *Ty{};
+        const Type *Ty{};
         std::optional<std::string> Name;
     };
 
@@ -109,6 +122,8 @@ namespace scc::cc
 
         [[nodiscard]] size_t GetBitWidth(Context &context) const override;
         [[nodiscard]] ir::ArrayType *Generate(Builder &builder) const override;
+
+        [[nodiscard]] const Type *Decay(Context &context) const override;
 
         std::optional<std::string> Name;
         std::vector<UnionElement> Elements;
@@ -128,44 +143,52 @@ namespace scc::cc
         [[nodiscard]] size_t GetBitWidth(Context &context) const override;
         [[nodiscard]] ir::IntType *Generate(Builder &builder) const override;
 
-        [[nodiscard]] IntegerType *DetermineType(Context &context) const;
+        [[nodiscard]] const Type *Decay(Context &context) const override;
+
+        [[nodiscard]] const IntegerType *DetermineType(Context &context) const;
 
         std::optional<std::string> Name;
         std::vector<EnumElement> Elements;
-        IntegerType *TypeOverride{};
+        const IntegerType *TypeOverride{};
     };
 
     struct PointerType : Type
     {
         explicit PointerType() = default;
-        explicit PointerType(Type *element);
+        explicit PointerType(const Type *element);
 
         [[nodiscard]] size_t GetBitWidth(Context &context) const override;
         [[nodiscard]] ir::PointerType *Generate(Builder &builder) const override;
 
-        Type *Element{};
+        [[nodiscard]] const Type *Decay(Context &context) const override;
+
+        const Type *Element{};
     };
 
     struct ArrayType : Type
     {
-        explicit ArrayType(Type *element, size_t count);
+        explicit ArrayType(const Type *element, size_t count);
 
         [[nodiscard]] size_t GetBitWidth(Context &context) const override;
         [[nodiscard]] ir::ArrayType *Generate(Builder &builder) const override;
 
-        Type *Element{};
+        [[nodiscard]] const Type *Decay(Context &context) const override;
+
+        const Type *Element{};
         size_t Count;
     };
 
     struct FunctionType : Type
     {
-        explicit FunctionType(Type *result, std::vector<Type *> arguments, bool variadic);
+        explicit FunctionType(const Type *result, std::vector<const Type *> arguments, bool variadic);
 
         [[nodiscard]] size_t GetBitWidth(Context &context) const override;
         [[nodiscard]] ir::FunctionType *Generate(Builder &builder) const override;
 
-        Type *Result;
-        std::vector<Type *> Arguments;
+        [[nodiscard]] const Type *Decay(Context &context) const override;
+
+        const Type *Result;
+        std::vector<const Type *> Arguments;
         bool Variadic;
     };
 }

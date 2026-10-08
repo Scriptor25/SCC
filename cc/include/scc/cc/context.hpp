@@ -17,26 +17,29 @@ namespace scc::cc
 
         const Platform &GetPlatform() const;
 
-        VoidType *GetVoidType();
-        IntegerType *GetBooleanType();
-        IntegerType *GetIntegerType(IntegerKind kind);
-        FloatingPointType *GetFloatingPointType(FloatingPointKind kind);
-        StructType *GetStructType(std::string name);
-        StructType *GetStructType(std::vector<StructElement> elements);
-        UnionType *GetUnionType(std::string name);
-        UnionType *GetUnionType(std::vector<UnionElement> elements);
-        EnumType *GetEnumType(std::string name);
-        EnumType *GetEnumType(std::vector<EnumElement> elements);
+        const VoidType *GetVoidType();
+        const IntegerType *GetBooleanType();
+        const IntegerType *GetIntegerType(IntegerKind kind);
+        const FloatingPointType *GetFloatingPointType(FloatingPointKind kind);
+        const StructType *GetStructType(std::string name);
+        const StructType *GetStructType(std::vector<StructElement> elements);
+        const StructType *GetStructType(std::string name, std::vector<StructElement> elements);
+        const UnionType *GetUnionType(std::string name);
+        const UnionType *GetUnionType(std::vector<UnionElement> elements);
+        const UnionType *GetUnionType(std::string name, std::vector<UnionElement> elements);
+        const EnumType *GetEnumType(std::string name);
+        const EnumType *GetEnumType(std::vector<EnumElement> elements);
+        const EnumType *GetEnumType(std::string name, std::vector<EnumElement> elements);
 
-        PointerType *GetPointerType();
-        PointerType *GetPointerType(Type *element);
-        ArrayType *GetArrayType(Type *element);
-        ArrayType *GetArrayType(Type *element, size_t count);
+        const PointerType *GetPointerType();
+        const PointerType *GetPointerType(const Type *element);
+        const ArrayType *GetArrayType(const Type *element);
+        const ArrayType *GetArrayType(const Type *element, size_t count);
 
-        FunctionType *GetFunctionType(Type *result, std::vector<Type *> arguments, bool variadic);
+        const FunctionType *GetFunctionType(const Type *result, std::vector<const Type *> arguments, bool variadic);
 
-        void SetNamedType(const std::string &name, Type *type);
-        [[nodiscard]] Type *GetNamedType(const std::string &name) const;
+        void SetNamedType(const std::string &name, const Type *type);
+        [[nodiscard]] const Type *GetNamedType(const std::string &name) const;
 
     private:
         const Platform &m_Platform;
@@ -50,11 +53,11 @@ namespace scc::cc
         std::unordered_map<std::string, std::unique_ptr<UnionType>> m_NamedUnionTypes;
         std::unordered_map<std::string, std::unique_ptr<EnumType>> m_NamedEnumTypes;
 
-        std::unordered_map<Type *, std::unique_ptr<PointerType>> m_PointerTypes;
-        std::unordered_map<Type *, std::unordered_map<size_t, std::unique_ptr<ArrayType>>> m_ArrayTypes;
+        std::unordered_map<const Type *, std::unique_ptr<PointerType>> m_PointerTypes;
+        std::unordered_map<const Type *, std::unordered_map<size_t, std::unique_ptr<ArrayType>>> m_ArrayTypes;
 
         std::unordered_map<
-            Type *,
+            const Type *,
             std::unordered_map<
                 bool,
                 std::unordered_map<
@@ -68,6 +71,6 @@ namespace scc::cc
             >
         > m_FunctionTypes;
 
-        std::unordered_map<std::string, Type *> m_NamedTypes;
+        std::unordered_map<std::string, const Type *> m_NamedTypes;
     };
 }

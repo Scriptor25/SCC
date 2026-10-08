@@ -18,8 +18,8 @@ int fib(int n)
     return a;
 }
 
-extern int atoi(const char *);
-extern int printf(const char *, ...);
+extern int atoi(char *);
+extern int printf(char *, ...);
 
 int main(int, char **argv)
 {

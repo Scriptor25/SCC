@@ -90,6 +90,13 @@ scc::ir::Block *scc::ir::Function::CreateBlock(std::string name)
     return m_Blocks.back().get();
 }
 
+scc::ir::Block *scc::ir::Function::GetEntryBlock() const
+{
+    if (m_Blocks.empty())
+        return nullptr;
+    return m_Blocks.front().get();
+}
+
 scc::ir::Block *scc::ir::Function::FindBlock(const std::string &name) const
 {
     for (auto &block : m_Blocks)
@@ -147,4 +154,37 @@ std::unordered_set<scc::ir::Block *> scc::ir::Function::GetPredecessors(const Bl
             predecessors.insert(entry.get());
 
     return predecessors;
+}
+
+std::string scc::ir::Function::GenerateName() const
+{
+    for (size_t i = 0;; ++i)
+    {
+        auto name = std::to_string(i);
+
+        auto found = false;
+        for (auto &argument : m_Arguments)
+            if (argument->GetName() == name)
+            {
+                found = true;
+                break;
+            }
+
+        for (auto &block : m_Blocks)
+            if (block->FindValue(name))
+            {
+                found = true;
+                break;
+            }
+
+        for (auto &empty : m_Empties)
+            if (empty->GetName() == name)
+            {
+                found = true;
+                break;
+            }
+
+        if (!found)
+            return std::move(name);
+    }
 }

@@ -38,7 +38,7 @@ int main(int argc, const char **argv)
     scc::ir::Module ir_module;
     scc::ir::Builder ir_builder(ir_context);
 
-    scc::cc::Context context;
+    scc::cc::Context context(platform);
     scc::cc::Builder builder(
         context,
         ir_context,
@@ -51,7 +51,7 @@ int main(int argc, const char **argv)
 
     ir_module.Print(std::cout);
 
-    ir_module.PrintAssembly(std::cout, platform);
+    // ir_module.PrintAssembly(std::cout, platform);
 
     return 0;
 }

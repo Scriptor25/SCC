@@ -39,8 +39,8 @@ namespace scc::cc
 
         [[nodiscard]] toolkit::result<NodePtr> ParseNode();
 
-        [[nodiscard]] toolkit::result<NodePtr> ParseFunctionNode(Type *result, std::string name);
-        [[nodiscard]] toolkit::result<NodePtr> ParseVariableNode(Type *type, std::string name);
+        [[nodiscard]] toolkit::result<NodePtr> ParseFunctionNode(bool is_extern, const Type *result, std::string name);
+        [[nodiscard]] toolkit::result<NodePtr> ParseVariableNode(bool is_extern, const Type *type, std::string name);
 
         [[nodiscard]] toolkit::result<NodePtr> ParseTypeDefNode();
 
@@ -63,11 +63,11 @@ namespace scc::cc
         [[nodiscard]] toolkit::result<ExpressionNodePtr> ParseOperandExpressionNode();
         [[nodiscard]] toolkit::result<ExpressionNodePtr> ParsePrimaryExpressionNode();
 
-        [[nodiscard]] toolkit::result<Type *> ParseType();
-        [[nodiscard]] toolkit::result<Type *> ParseBaseType();
-        [[nodiscard]] toolkit::result<Type *> ParseStructType();
-        [[nodiscard]] toolkit::result<Type *> ParseUnionType();
-        [[nodiscard]] toolkit::result<Type *> ParseEnumType();
+        [[nodiscard]] toolkit::result<const Type *> ParseType();
+        [[nodiscard]] toolkit::result<const Type *> ParseBaseType();
+        [[nodiscard]] toolkit::result<const Type *> ParseStructType();
+        [[nodiscard]] toolkit::result<const Type *> ParseUnionType();
+        [[nodiscard]] toolkit::result<const Type *> ParseEnumType();
 
         [[nodiscard]] bool CouldBeType() const;
 

@@ -49,6 +49,10 @@ namespace scc::ir
         [[nodiscard]] std::unordered_set<Block *> GetPredecessors() const;
         [[nodiscard]] std::unordered_set<Block *> GetSuccessors() const;
 
+        [[nodiscard]] std::string GenerateName() const;
+
+        Instruction *GetAfterAllocations() const;
+
     private:
         std::string m_Name;
         Function *m_Function;

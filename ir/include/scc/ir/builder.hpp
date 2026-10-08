@@ -34,13 +34,17 @@ namespace scc::ir
 
         void SetInsertBlock(Block *block);
         void SetInsertPoint(Instruction *instruction);
+        void SetInsertPointAfterAllocations(Function *function);
         void ClearInsertBlock();
 
         [[nodiscard]] Block *GetInsertBlock() const;
+        [[nodiscard]] Instruction *GetInsertPoint() const;
         [[nodiscard]] Function *GetInsertFunction() const;
         [[nodiscard]] Type *GetInsertFunctionResult() const;
 
         Value *CreateEmpty(Type *type, std::string name = {}) const;
+
+        NotNullInstruction *CreateNotNull(Value *value, std::string name = {});
 
         IOperatorInstruction *CreateIOperator(
             IOperator operator_,
@@ -129,10 +133,12 @@ namespace scc::ir
             std::string name = {});
         LoadInstruction *CreateLoad(
             Value *pointer,
+            bool is_volatile,
             std::string name = {});
         StoreInstruction *CreateStore(
             Value *pointer,
-            Value *value);
+            Value *value,
+            bool is_volatile);
 
         ElementPointerInstruction *CreateElementPointer(
             Value *pointer,

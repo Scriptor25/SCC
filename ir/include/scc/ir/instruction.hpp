@@ -343,12 +343,14 @@ namespace scc::ir
             Type *type,
             Block *block,
             std::string name,
-            Value *pointer);
+            Value *pointer,
+            bool is_volatile);
         ~LoadInstruction() override;
 
         void DropAll() override;
         void Replace(Value *value, Value *with) override;
 
+        bool CanPrint() const override;
         std::ostream &Print(std::ostream &stream) const override;
 
         std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
@@ -357,6 +359,7 @@ namespace scc::ir
 
     private:
         Value *m_Pointer;
+        bool m_Volatile;
     };
 
     class StoreInstruction : public Instruction
@@ -366,7 +369,8 @@ namespace scc::ir
             Type *type,
             Block *block,
             Value *pointer,
-            Value *value);
+            Value *value,
+            bool is_volatile);
         ~StoreInstruction() override;
 
         void DropAll() override;
@@ -382,6 +386,7 @@ namespace scc::ir
     private:
         Value *m_Pointer;
         Value *m_Value;
+        bool m_Volatile;
     };
 
     class ElementPointerInstruction : public Instruction
@@ -447,6 +452,29 @@ namespace scc::ir
             std::string name,
             Value *value);
         ~CastInstruction() override;
+
+        void DropAll() override;
+        void Replace(Value *value, Value *with) override;
+
+        std::ostream &Print(std::ostream &stream) const override;
+
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
+
+        [[nodiscard]] Value *GetValue() const;
+
+    private:
+        Value *m_Value;
+    };
+
+    class NotNullInstruction : public Instruction
+    {
+    public:
+        explicit NotNullInstruction(
+            Type *type,
+            Block *block,
+            std::string name,
+            Value *value);
+        ~NotNullInstruction() override;
 
         void DropAll() override;
         void Replace(Value *value, Value *with) override;

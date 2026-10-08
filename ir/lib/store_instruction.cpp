@@ -8,10 +8,12 @@ scc::ir::StoreInstruction::StoreInstruction(
     Type *type,
     Block *block,
     Value *pointer,
-    Value *value)
+    Value *value,
+    const bool is_volatile)
     : Instruction(type, block),
       m_Pointer(pointer),
-      m_Value(value)
+      m_Value(value),
+      m_Volatile(is_volatile)
 {
     m_Pointer->Use(this);
     m_Value->Use(this);
@@ -59,7 +61,9 @@ void scc::ir::StoreInstruction::Replace(Value *value, Value *with)
 
 std::ostream &scc::ir::StoreInstruction::Print(std::ostream &stream) const
 {
-    return m_Value->PrintOperand(m_Pointer->PrintOperand(stream << "store ", true) << ", ", false);
+    return m_Value->PrintOperand(
+        m_Pointer->PrintOperand(stream << "store " << (m_Volatile ? "volatile " : ""), true) << ", ",
+        false);
 }
 
 std::ostream &scc::ir::StoreInstruction::PrintAssembly(std::ostream &stream, LoweringContext &context) const

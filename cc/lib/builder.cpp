@@ -38,6 +38,24 @@ scc::ir::Builder &scc::cc::Builder::GetIRBuilder() const
     return m_IRBuilder;
 }
 
+scc::ir::Value *scc::cc::Builder::Allocate(ir::Type *type, const uint64_t count, std::string name) const
+{
+    auto *function = m_IRBuilder.GetInsertFunction();
+    auto *block = m_IRBuilder.GetInsertBlock();
+    auto *point = m_IRBuilder.GetInsertPoint();
+
+    m_IRBuilder.SetInsertPointAfterAllocations(function);
+
+    auto *pointer = m_IRBuilder.CreateAlloc(type, count, std::move(name));
+
+    if (point)
+        m_IRBuilder.SetInsertPoint(point);
+    else
+        m_IRBuilder.SetInsertBlock(block);
+
+    return pointer;
+}
+
 scc::cc::Value *scc::cc::Builder::Manage(ValuePtr value)
 {
     auto *ptr = value.get();
@@ -63,7 +81,7 @@ void scc::cc::Builder::PopFrame()
 
 scc::ir::Block *scc::cc::Builder::GetHead() const
 {
-    for (auto i = m_Stack.back().Depth; i > 0; --i)
+    for (auto i = m_Stack.back().Depth + 1; i > 0; --i)
         if (auto &frame = m_Stack[i - 1]; frame.Head)
             return frame.Head;
     return nullptr;
@@ -71,7 +89,7 @@ scc::ir::Block *scc::cc::Builder::GetHead() const
 
 scc::ir::Block *scc::cc::Builder::GetTail() const
 {
-    for (auto i = m_Stack.back().Depth; i > 0; --i)
+    for (auto i = m_Stack.back().Depth + 1; i > 0; --i)
         if (auto &frame = m_Stack[i - 1]; frame.Tail)
             return frame.Tail;
     return nullptr;
@@ -88,7 +106,7 @@ void scc::cc::Builder::SetNamed(const std::string &name, ValuePtr value)
 
 scc::cc::Value *scc::cc::Builder::GetNamed(const std::string &name) const
 {
-    for (auto i = m_Stack.back().Depth; i > 0; --i)
+    for (auto i = m_Stack.back().Depth + 1; i > 0; --i)
     {
         auto &frame = m_Stack[i - 1];
         if (const auto it = frame.Named.find(name); it != frame.Named.end())

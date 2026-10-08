@@ -25,6 +25,7 @@ namespace scc::ir
         void InsertBlock(std::unique_ptr<Block> block);
         Block *CreateBlock(std::string name);
 
+        Block *GetEntryBlock() const;
         [[nodiscard]] Block *FindBlock(const std::string &name) const;
 
         Value *CreateEmpty(Type *type, std::string name);
@@ -35,6 +36,8 @@ namespace scc::ir
         [[nodiscard]] Argument *GetArgument(unsigned index) const;
 
         [[nodiscard]] std::unordered_set<Block *> GetPredecessors(const Block *block) const;
+
+        [[nodiscard]] std::string GenerateName() const;
 
     private:
         Type *m_Result;

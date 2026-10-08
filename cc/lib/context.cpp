@@ -12,7 +12,7 @@ const scc::Platform &scc::cc::Context::GetPlatform() const
     return m_Platform;
 }
 
-scc::cc::VoidType *scc::cc::Context::GetVoidType()
+const scc::cc::VoidType *scc::cc::Context::GetVoidType()
 {
     if (!m_VoidType)
         m_VoidType = std::make_unique<VoidType>();
@@ -20,12 +20,12 @@ scc::cc::VoidType *scc::cc::Context::GetVoidType()
     return m_VoidType.get();
 }
 
-scc::cc::IntegerType *scc::cc::Context::GetBooleanType()
+const scc::cc::IntegerType *scc::cc::Context::GetBooleanType()
 {
     return GetIntegerType(IntegerKind::Bool);
 }
 
-scc::cc::IntegerType *scc::cc::Context::GetIntegerType(IntegerKind kind)
+const scc::cc::IntegerType *scc::cc::Context::GetIntegerType(IntegerKind kind)
 {
     auto &ref = m_IntegerTypes[kind];
 
@@ -35,7 +35,7 @@ scc::cc::IntegerType *scc::cc::Context::GetIntegerType(IntegerKind kind)
     return ref.get();
 }
 
-scc::cc::FloatingPointType *scc::cc::Context::GetFloatingPointType(FloatingPointKind kind)
+const scc::cc::FloatingPointType *scc::cc::Context::GetFloatingPointType(FloatingPointKind kind)
 {
     auto &ref = m_FloatingPointTypes[kind];
 
@@ -45,7 +45,7 @@ scc::cc::FloatingPointType *scc::cc::Context::GetFloatingPointType(FloatingPoint
     return ref.get();
 }
 
-scc::cc::StructType *scc::cc::Context::GetStructType(std::string name)
+const scc::cc::StructType *scc::cc::Context::GetStructType(std::string name)
 {
     auto &ref = m_NamedStructTypes[name];
 
@@ -55,12 +55,17 @@ scc::cc::StructType *scc::cc::Context::GetStructType(std::string name)
     return ref.get();
 }
 
-scc::cc::StructType *scc::cc::Context::GetStructType(std::vector<StructElement> elements)
+const scc::cc::StructType *scc::cc::Context::GetStructType(std::vector<StructElement> elements)
 {
     Error("TODO");
 }
 
-scc::cc::UnionType *scc::cc::Context::GetUnionType(std::string name)
+const scc::cc::StructType *scc::cc::Context::GetStructType(std::string name, std::vector<StructElement> elements)
+{
+    Error("TODO");
+}
+
+const scc::cc::UnionType *scc::cc::Context::GetUnionType(std::string name)
 {
     auto &ref = m_NamedUnionTypes[name];
 
@@ -70,12 +75,17 @@ scc::cc::UnionType *scc::cc::Context::GetUnionType(std::string name)
     return ref.get();
 }
 
-scc::cc::UnionType *scc::cc::Context::GetUnionType(std::vector<UnionElement> elements)
+const scc::cc::UnionType *scc::cc::Context::GetUnionType(std::vector<UnionElement> elements)
 {
     Error("TODO");
 }
 
-scc::cc::EnumType *scc::cc::Context::GetEnumType(std::string name)
+const scc::cc::UnionType *scc::cc::Context::GetUnionType(std::string name, std::vector<UnionElement> elements)
+{
+    Error("TODO");
+}
+
+const scc::cc::EnumType *scc::cc::Context::GetEnumType(std::string name)
 {
     auto &ref = m_NamedEnumTypes[name];
 
@@ -85,17 +95,22 @@ scc::cc::EnumType *scc::cc::Context::GetEnumType(std::string name)
     return ref.get();
 }
 
-scc::cc::EnumType *scc::cc::Context::GetEnumType(std::vector<EnumElement> elements)
+const scc::cc::EnumType *scc::cc::Context::GetEnumType(std::vector<EnumElement> elements)
 {
     Error("TODO");
 }
 
-scc::cc::PointerType *scc::cc::Context::GetPointerType()
+const scc::cc::EnumType *scc::cc::Context::GetEnumType(std::string name, std::vector<EnumElement> elements)
+{
+    Error("TODO");
+}
+
+const scc::cc::PointerType *scc::cc::Context::GetPointerType()
 {
     return GetPointerType(nullptr);
 }
 
-scc::cc::PointerType *scc::cc::Context::GetPointerType(Type *element)
+const scc::cc::PointerType *scc::cc::Context::GetPointerType(const Type *element)
 {
     auto &ref = m_PointerTypes[element];
 
@@ -105,12 +120,12 @@ scc::cc::PointerType *scc::cc::Context::GetPointerType(Type *element)
     return ref.get();
 }
 
-scc::cc::ArrayType *scc::cc::Context::GetArrayType(Type *element)
+const scc::cc::ArrayType *scc::cc::Context::GetArrayType(const Type *element)
 {
     return GetArrayType(element, 0);
 }
 
-scc::cc::ArrayType *scc::cc::Context::GetArrayType(Type *element, size_t count)
+const scc::cc::ArrayType *scc::cc::Context::GetArrayType(const Type *element, size_t count)
 {
     auto &ref = m_ArrayTypes[element][count];
 
@@ -120,7 +135,10 @@ scc::cc::ArrayType *scc::cc::Context::GetArrayType(Type *element, size_t count)
     return ref.get();
 }
 
-scc::cc::FunctionType *scc::cc::Context::GetFunctionType(Type *result, std::vector<Type *> arguments, bool variadic)
+const scc::cc::FunctionType *scc::cc::Context::GetFunctionType(
+    const Type *result,
+    std::vector<const Type *> arguments,
+    bool variadic)
 {
     auto &types = m_FunctionTypes[result][variadic][arguments.size()];
     for (const auto &type : types)
@@ -144,12 +162,12 @@ scc::cc::FunctionType *scc::cc::Context::GetFunctionType(Type *result, std::vect
     return ptr;
 }
 
-void scc::cc::Context::SetNamedType(const std::string &name, Type *type)
+void scc::cc::Context::SetNamedType(const std::string &name, const Type *type)
 {
     m_NamedTypes[name] = type;
 }
 
-scc::cc::Type *scc::cc::Context::GetNamedType(const std::string &name) const
+const scc::cc::Type *scc::cc::Context::GetNamedType(const std::string &name) const
 {
     if (const auto it = m_NamedTypes.find(name); it != m_NamedTypes.end())
         return it->second;
