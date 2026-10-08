@@ -2,6 +2,16 @@
 
 #include <scc/assert.hpp>
 
+scc::cc::Context::Context(const Platform &platform)
+    : m_Platform(platform)
+{
+}
+
+const scc::Platform &scc::cc::Context::GetPlatform() const
+{
+    return m_Platform;
+}
+
 scc::cc::VoidType *scc::cc::Context::GetVoidType()
 {
     if (!m_VoidType)
@@ -108,6 +118,30 @@ scc::cc::ArrayType *scc::cc::Context::GetArrayType(Type *element, size_t count)
         ref = std::make_unique<ArrayType>(element, count);
 
     return ref.get();
+}
+
+scc::cc::FunctionType *scc::cc::Context::GetFunctionType(Type *result, std::vector<Type *> arguments, bool variadic)
+{
+    auto &types = m_FunctionTypes[result][variadic][arguments.size()];
+    for (const auto &type : types)
+    {
+        size_t i;
+        for (i = 0; i < arguments.size(); ++i)
+            if (type->Arguments[i] != arguments[i])
+                break;
+        if (i < arguments.size())
+            continue;
+
+        return type.get();
+    }
+
+    auto type = std::make_unique<FunctionType>(result, std::move(arguments), variadic);
+
+    auto *ptr = type.get();
+
+    types.push_back(std::move(type));
+
+    return ptr;
 }
 
 void scc::cc::Context::SetNamedType(const std::string &name, Type *type)

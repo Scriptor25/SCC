@@ -34,6 +34,10 @@ namespace scc::ir
         [[nodiscard]] Instruction *GetInstruction(size_t index) const;
 
         Instruction *Insert(std::unique_ptr<Instruction> instruction);
+        Instruction *InsertBefore(std::unique_ptr<Instruction> instruction, Instruction *before);
+
+        void SubstituteNamed(Instruction *instruction) const;
+
         void Erase(const Instruction *instruction);
 
         Value *CreateEmpty(Type *type, std::string name) const;

@@ -39,7 +39,11 @@ int main(int argc, const char **argv)
     scc::ir::Builder ir_builder(ir_context);
 
     scc::cc::Context context;
-    scc::cc::Builder builder(ir_context, ir_module, ir_builder);
+    scc::cc::Builder builder(
+        context,
+        ir_context,
+        ir_module,
+        ir_builder);
 
     scc::cc::Parser parser(in, context, builder);
 

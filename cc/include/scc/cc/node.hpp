@@ -17,13 +17,9 @@ namespace scc::cc
         virtual void Generate(Builder &builder) const = 0;
     };
 
-    using NodePtr = std::unique_ptr<Node>;
-
     struct StatementNode : Node
     {
     };
-
-    using StatementNodePtr = std::unique_ptr<StatementNode>;
 
     struct ExpressionNode : Node
     {
@@ -33,8 +29,6 @@ namespace scc::cc
 
         [[nodiscard]] virtual int64_t EvaluateConstantInteger() const = 0;
     };
-
-    using ExpressionNodePtr = std::unique_ptr<ExpressionNode>;
 
     struct FunctionArgument
     {
@@ -47,11 +41,13 @@ namespace scc::cc
         explicit FunctionNode(
             Type *result,
             std::string name,
-            std::vector<FunctionArgument> arguments);
+            std::vector<FunctionArgument> arguments,
+            bool variadic);
         explicit FunctionNode(
             Type *result,
             std::string name,
             std::vector<FunctionArgument> arguments,
+            bool variadic,
             std::unique_ptr<StatementNode> content);
 
         void Generate(Builder &builder) const override;
@@ -63,6 +59,7 @@ namespace scc::cc
         Type *Result;
         std::string Name;
         std::vector<FunctionArgument> Arguments;
+        bool Variadic;
         std::unique_ptr<StatementNode> Content;
     };
 

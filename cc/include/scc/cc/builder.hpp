@@ -15,6 +15,8 @@ namespace scc::cc
 {
     struct Frame
     {
+        size_t Depth;
+
         ir::Block *Head;
         ir::Block *Tail;
 
@@ -26,13 +28,15 @@ namespace scc::cc
     {
     public:
         explicit Builder(
-            ir::Context &context,
-            ir::Module &module,
-            ir::Builder &builder);
+            Context &context,
+            ir::Context &ir_context,
+            ir::Module &ir_module,
+            ir::Builder &ir_builder);
 
-        [[nodiscard]] ir::Context &GetContext() const;
-        [[nodiscard]] ir::Module &GetModule() const;
-        [[nodiscard]] ir::Builder &GetBuilder() const;
+        [[nodiscard]] Context &GetContext() const;
+        [[nodiscard]] ir::Context &GetIRContext() const;
+        [[nodiscard]] ir::Module &GetIRModule() const;
+        [[nodiscard]] ir::Builder &GetIRBuilder() const;
 
         Value *Manage(ValuePtr value);
 
@@ -45,12 +49,13 @@ namespace scc::cc
         [[nodiscard]] ir::Block *GetTail() const;
 
         void SetNamed(const std::string &name, ValuePtr value);
-        [[nodiscard]] const Value *GetNamed(const std::string &name) const;
+        [[nodiscard]] Value *GetNamed(const std::string &name) const;
 
     private:
-        ir::Context &m_Context;
-        ir::Module &m_Module;
-        ir::Builder &m_Builder;
+        Context &m_Context;
+        ir::Context &m_IRContext;
+        ir::Module &m_IRModule;
+        ir::Builder &m_IRBuilder;
 
         std::vector<Frame> m_Stack;
     };

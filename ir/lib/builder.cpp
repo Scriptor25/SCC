@@ -18,7 +18,8 @@ static void assert_type_match(scc::ir::Type *a, scc::ir::Type *b)
 
 scc::ir::Builder::Builder(Context &context)
     : m_Context(context),
-      m_InsertBlock()
+      m_InsertBlock(),
+      m_InsertPoint()
 {
 }
 
@@ -74,9 +75,20 @@ void scc::ir::Builder::SetInsertBlock(Block *block)
     m_InsertBlock = block;
 }
 
+void scc::ir::Builder::SetInsertPoint(Instruction *instruction)
+{
+    Assert(instruction, "instruction must not be null");
+
+    auto *block = instruction->GetBlock();
+    Assert(block, "instruction is not inserted into any block");
+
+    m_InsertBlock = block;
+    m_InsertPoint = instruction;
+}
+
 void scc::ir::Builder::ClearInsertBlock()
 {
-    m_InsertBlock = {};
+    m_InsertBlock = nullptr;
 }
 
 scc::ir::Block *scc::ir::Builder::GetInsertBlock() const

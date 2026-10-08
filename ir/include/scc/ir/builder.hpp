@@ -33,6 +33,7 @@ namespace scc::ir
             std::string name) const;
 
         void SetInsertBlock(Block *block);
+        void SetInsertPoint(Instruction *instruction);
         void ClearInsertBlock();
 
         [[nodiscard]] Block *GetInsertBlock() const;
@@ -162,7 +163,10 @@ namespace scc::ir
             auto instruction = std::make_unique<T>(std::forward<Args>(args)...);
             auto *ptr = instruction.get();
 
-            m_InsertBlock->Insert(std::move(instruction));
+            if (m_InsertPoint)
+                (void) m_InsertBlock->InsertBefore(std::move(instruction), m_InsertPoint);
+            else
+                (void) m_InsertBlock->Insert(std::move(instruction));
 
             return ptr;
         }
@@ -170,5 +174,6 @@ namespace scc::ir
     private:
         Context &m_Context;
         Block *m_InsertBlock;
+        Instruction *m_InsertPoint;
     };
 }

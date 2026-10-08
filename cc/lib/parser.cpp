@@ -63,11 +63,19 @@ toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseFunctionNode(Type *resul
         return res;
 
     std::vector<FunctionArgument> arguments;
+    auto variadic = false;
+
     while (!At(TokenType::Other, ")") && !At(TokenType::None))
     {
         if (!arguments.empty())
             if (auto res = Expect(TokenType::Other, ","); !res)
                 return res;
+
+        if (Skip(TokenType::Operator, "..."))
+        {
+            variadic = true;
+            break;
+        }
 
         Type *argument_type;
         if (auto res = ParseType() >> argument_type; !res)
@@ -88,13 +96,26 @@ toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseFunctionNode(Type *resul
         return res;
 
     if (Skip(TokenType::Other, ";"))
-        return { std::make_unique<FunctionNode>(result, std::move(name), std::move(arguments)) };
+        return {
+            std::make_unique<FunctionNode>(
+                result,
+                std::move(name),
+                std::move(arguments),
+                variadic)
+        };
 
     StatementNodePtr content;
     if (auto res = ParseSequenceStatementNode() >> content; !res)
         return res;
 
-    return { std::make_unique<FunctionNode>(result, std::move(name), std::move(arguments), std::move(content)) };
+    return {
+        std::make_unique<FunctionNode>(
+            result,
+            std::move(name),
+            std::move(arguments),
+            variadic,
+            std::move(content))
+    };
 }
 
 toolkit::result<scc::cc::NodePtr> scc::cc::Parser::ParseVariableNode(Type *type, std::string name)

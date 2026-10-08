@@ -98,18 +98,46 @@ scc::ir::Instruction *scc::ir::Block::Insert(std::unique_ptr<Instruction> instru
 
     auto *ptr = instruction.get();
 
+    SubstituteNamed(ptr);
+
+    m_Instructions.push_back(std::move(instruction));
+
+    return ptr;
+}
+
+scc::ir::Instruction *scc::ir::Block::InsertBefore(std::unique_ptr<Instruction> instruction, Instruction *before)
+{
+    Assert(!!instruction, "instruction must not be null");
+    Assert(!!before, "before must not be null");
+
+    auto *ptr = instruction.get();
+
+    SubstituteNamed(ptr);
+
+    auto inserted = false;
+    for (auto it = m_Instructions.begin(); it != m_Instructions.end(); ++it)
+        if (it->get() == before)
+        {
+            m_Instructions.insert(it, std::move(instruction));
+            inserted = true;
+            break;
+        }
+
+    Assert(inserted, "before is not in instruction list");
+
+    return ptr;
+}
+
+void scc::ir::Block::SubstituteNamed(Instruction *instruction) const
+{
     if (auto &name = instruction->GetName(); !name.empty())
         if (auto *value = m_Function->FindValue(name))
         {
             auto *empty = dynamic_cast<EmptyValue *>(value);
             Assert(empty, "value %{} does already exist and is not empty", name);
 
-            empty->ReplaceWith(ptr);
+            empty->ReplaceWith(instruction);
         }
-
-    m_Instructions.push_back(std::move(instruction));
-
-    return ptr;
 }
 
 void scc::ir::Block::Erase(const Instruction *instruction)

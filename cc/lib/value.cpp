@@ -49,7 +49,7 @@ scc::cc::LValue::LValue(Type *type, ir::Value *pointer)
 
 scc::ir::Value *scc::cc::LValue::Load(Builder &builder) const
 {
-    return builder.GetBuilder().CreateLoad(m_Pointer);
+    return builder.GetIRBuilder().CreateLoad(m_Pointer);
 }
 
 void scc::cc::LValue::Store(ir::Context &context, ir::Builder &builder, ir::Value *value) const

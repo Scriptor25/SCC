@@ -2,7 +2,7 @@
 
 #include <scc/cc/type.hpp>
 
-#include <scc/ir/ir.hpp>
+#include <scc/common.hpp>
 
 #include <memory>
 #include <string>
@@ -13,7 +13,9 @@ namespace scc::cc
     class Context
     {
     public:
-        explicit Context() = default;
+        explicit Context(const Platform &platform);
+
+        const Platform &GetPlatform() const;
 
         VoidType *GetVoidType();
         IntegerType *GetBooleanType();
@@ -31,10 +33,14 @@ namespace scc::cc
         ArrayType *GetArrayType(Type *element);
         ArrayType *GetArrayType(Type *element, size_t count);
 
+        FunctionType *GetFunctionType(Type *result, std::vector<Type *> arguments, bool variadic);
+
         void SetNamedType(const std::string &name, Type *type);
         [[nodiscard]] Type *GetNamedType(const std::string &name) const;
 
     private:
+        const Platform &m_Platform;
+
         std::unique_ptr<VoidType> m_VoidType;
 
         std::unordered_map<IntegerKind, std::unique_ptr<IntegerType>> m_IntegerTypes;
@@ -46,6 +52,21 @@ namespace scc::cc
 
         std::unordered_map<Type *, std::unique_ptr<PointerType>> m_PointerTypes;
         std::unordered_map<Type *, std::unordered_map<size_t, std::unique_ptr<ArrayType>>> m_ArrayTypes;
+
+        std::unordered_map<
+            Type *,
+            std::unordered_map<
+                bool,
+                std::unordered_map<
+                    size_t,
+                    std::vector<
+                        std::unique_ptr<
+                            FunctionType
+                        >
+                    >
+                >
+            >
+        > m_FunctionTypes;
 
         std::unordered_map<std::string, Type *> m_NamedTypes;
     };

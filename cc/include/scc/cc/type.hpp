@@ -2,7 +2,6 @@
 
 #include <scc/cc/cc.hpp>
 
-#include <scc/ir/context.hpp>
 #include <scc/ir/type.hpp>
 
 #include <cstdint>
@@ -14,9 +13,11 @@ namespace scc::cc
 {
     struct Type
     {
+        static Type *Collapse(Context &context, Type *left, Type *right);
+
         virtual ~Type() = default;
 
-        [[nodiscard]] virtual size_t GetBits() const = 0;
+        [[nodiscard]] virtual size_t GetBitWidth(Context &context) const = 0;
         [[nodiscard]] virtual ir::Type *Generate(Builder &builder) const = 0;
     };
 
@@ -24,8 +25,8 @@ namespace scc::cc
     {
         explicit VoidType() = default;
 
-        [[nodiscard]] size_t GetBits() const override;
-        [[nodiscard]] ir::Type *Generate(Builder &builder) const override;
+        [[nodiscard]] size_t GetBitWidth(Context &context) const override;
+        [[nodiscard]] ir::VoidType *Generate(Builder &builder) const override;
     };
 
     enum class IntegerKind
@@ -48,8 +49,13 @@ namespace scc::cc
     {
         explicit IntegerType(IntegerKind kind);
 
-        [[nodiscard]] size_t GetBits() const override;
-        [[nodiscard]] ir::Type *Generate(Builder &builder) const override;
+        [[nodiscard]] size_t GetBitWidth(Context &context) const override;
+        [[nodiscard]] ir::IntType *Generate(Builder &builder) const override;
+
+        [[nodiscard]] bool IsSigned() const;
+        [[nodiscard]] size_t GetBitWidth() const;
+        [[nodiscard]] size_t GetRank() const;
+        [[nodiscard]] IntegerKind GetSwap() const;
 
         IntegerKind Kind;
     };
@@ -65,8 +71,8 @@ namespace scc::cc
     {
         explicit FloatingPointType(FloatingPointKind kind);
 
-        [[nodiscard]] size_t GetBits() const override;
-        [[nodiscard]] ir::Type *Generate(Builder &builder) const override;
+        [[nodiscard]] size_t GetBitWidth(Context &context) const override;
+        [[nodiscard]] ir::FloatType *Generate(Builder &builder) const override;
 
         FloatingPointKind Kind;
     };
@@ -83,8 +89,8 @@ namespace scc::cc
         explicit StructType() = default;
         explicit StructType(std::string name);
 
-        [[nodiscard]] size_t GetBits() const override;
-        [[nodiscard]] ir::Type *Generate(Builder &builder) const override;
+        [[nodiscard]] size_t GetBitWidth(Context &context) const override;
+        [[nodiscard]] ir::StructType *Generate(Builder &builder) const override;
 
         std::optional<std::string> Name;
         std::vector<StructElement> Elements;
@@ -101,8 +107,8 @@ namespace scc::cc
         explicit UnionType() = default;
         explicit UnionType(std::string name);
 
-        [[nodiscard]] size_t GetBits() const override;
-        [[nodiscard]] ir::Type *Generate(Builder &builder) const override;
+        [[nodiscard]] size_t GetBitWidth(Context &context) const override;
+        [[nodiscard]] ir::ArrayType *Generate(Builder &builder) const override;
 
         std::optional<std::string> Name;
         std::vector<UnionElement> Elements;
@@ -119,10 +125,10 @@ namespace scc::cc
         explicit EnumType() = default;
         explicit EnumType(std::string name);
 
-        [[nodiscard]] size_t GetBits() const override;
-        [[nodiscard]] ir::Type *Generate(Builder &builder) const override;
+        [[nodiscard]] size_t GetBitWidth(Context &context) const override;
+        [[nodiscard]] ir::IntType *Generate(Builder &builder) const override;
 
-        [[nodiscard]] std::pair<bool, size_t> DetermineType() const;
+        [[nodiscard]] IntegerType *DetermineType(Context &context) const;
 
         std::optional<std::string> Name;
         std::vector<EnumElement> Elements;
@@ -134,8 +140,8 @@ namespace scc::cc
         explicit PointerType() = default;
         explicit PointerType(Type *element);
 
-        [[nodiscard]] size_t GetBits() const override;
-        [[nodiscard]] ir::Type *Generate(Builder &builder) const override;
+        [[nodiscard]] size_t GetBitWidth(Context &context) const override;
+        [[nodiscard]] ir::PointerType *Generate(Builder &builder) const override;
 
         Type *Element{};
     };
@@ -144,10 +150,22 @@ namespace scc::cc
     {
         explicit ArrayType(Type *element, size_t count);
 
-        [[nodiscard]] size_t GetBits() const override;
-        [[nodiscard]] ir::Type *Generate(Builder &builder) const override;
+        [[nodiscard]] size_t GetBitWidth(Context &context) const override;
+        [[nodiscard]] ir::ArrayType *Generate(Builder &builder) const override;
 
         Type *Element{};
         size_t Count;
+    };
+
+    struct FunctionType : Type
+    {
+        explicit FunctionType(Type *result, std::vector<Type *> arguments, bool variadic);
+
+        [[nodiscard]] size_t GetBitWidth(Context &context) const override;
+        [[nodiscard]] ir::FunctionType *Generate(Builder &builder) const override;
+
+        Type *Result;
+        std::vector<Type *> Arguments;
+        bool Variadic;
     };
 }

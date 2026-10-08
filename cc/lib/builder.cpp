@@ -1,12 +1,14 @@
 #include <scc/cc/builder.hpp>
 
 scc::cc::Builder::Builder(
-    ir::Context &context,
-    ir::Module &module,
-    ir::Builder &builder)
+    Context &context,
+    ir::Context &ir_context,
+    ir::Module &ir_module,
+    ir::Builder &ir_builder)
     : m_Context(context),
-      m_Module(module),
-      m_Builder(builder)
+      m_IRContext(ir_context),
+      m_IRModule(ir_module),
+      m_IRBuilder(ir_builder)
 {
     m_Stack.push_back(
         {
@@ -16,19 +18,24 @@ scc::cc::Builder::Builder(
         });
 }
 
-scc::ir::Context &scc::cc::Builder::GetContext() const
+scc::cc::Context &scc::cc::Builder::GetContext() const
 {
     return m_Context;
 }
 
-scc::ir::Module &scc::cc::Builder::GetModule() const
+scc::ir::Context &scc::cc::Builder::GetIRContext() const
 {
-    return m_Module;
+    return m_IRContext;
 }
 
-scc::ir::Builder &scc::cc::Builder::GetBuilder() const
+scc::ir::Module &scc::cc::Builder::GetIRModule() const
 {
-    return m_Builder;
+    return m_IRModule;
+}
+
+scc::ir::Builder &scc::cc::Builder::GetIRBuilder() const
+{
+    return m_IRBuilder;
 }
 
 scc::cc::Value *scc::cc::Builder::Manage(ValuePtr value)
@@ -40,24 +47,12 @@ scc::cc::Value *scc::cc::Builder::Manage(ValuePtr value)
 
 void scc::cc::Builder::PushFrame(ir::Block *head, ir::Block *tail)
 {
-    std::unordered_map<std::string, ValuePtr> named;
-    if (!m_Stack.empty())
-    {
-        const auto &frame = m_Stack.back();
-
-        if (!head)
-            head = frame.Head;
-        if (!tail)
-            tail = frame.Tail;
-
-        named = frame.Named;
-    }
-
     m_Stack.push_back(
         {
+            .Depth = m_Stack.size(),
             .Head = head,
             .Tail = tail,
-            .Named = std::move(named),
+            .Named = {},
         });
 }
 
@@ -68,22 +63,36 @@ void scc::cc::Builder::PopFrame()
 
 scc::ir::Block *scc::cc::Builder::GetHead() const
 {
-    return m_Stack.back().Head;
+    for (auto i = m_Stack.back().Depth; i > 0; --i)
+        if (auto &frame = m_Stack[i - 1]; frame.Head)
+            return frame.Head;
+    return nullptr;
 }
 
 scc::ir::Block *scc::cc::Builder::GetTail() const
 {
-    return m_Stack.back().Tail;
+    for (auto i = m_Stack.back().Depth; i > 0; --i)
+        if (auto &frame = m_Stack[i - 1]; frame.Tail)
+            return frame.Tail;
+    return nullptr;
 }
 
 void scc::cc::Builder::SetNamed(const std::string &name, ValuePtr value)
 {
-    m_Stack.back().Named[name] = std::move(value);
+    auto &frame = m_Stack.back();
+    if (frame.Named.contains(name))
+        Error("duplicate named value {} in frame", name);
+
+    frame.Named[name] = std::move(value);
 }
 
-const scc::cc::Value *scc::cc::Builder::GetNamed(const std::string &name) const
+scc::cc::Value *scc::cc::Builder::GetNamed(const std::string &name) const
 {
-    if (const auto it = m_Stack.back().Named.find(name); it != m_Stack.back().Named.end())
-        return it->second.get();
+    for (auto i = m_Stack.back().Depth; i > 0; --i)
+    {
+        auto &frame = m_Stack[i - 1];
+        if (const auto it = frame.Named.find(name); it != frame.Named.end())
+            return it->second.get();
+    }
     return nullptr;
 }
