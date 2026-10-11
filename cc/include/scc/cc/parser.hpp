@@ -17,6 +17,85 @@ namespace scc::cc
         String,
         Operator,
         Other,
+
+        Comma,
+        Semicolon,
+        Colon,
+
+        LeftParenthesis,
+        RightParenthesis,
+
+        LeftBrace,
+        RightBrace,
+
+        LeftBracket,
+        RightBracket,
+
+        // C90 keywords
+
+        KeywordAuto,
+        KeywordBreak,
+        KeywordCase,
+        KeywordChar,
+        KeywordConst,
+        KeywordContinue,
+        KeywordDefault,
+        KeywordDo,
+        KeywordDouble,
+        KeywordElse,
+        KeywordEnum,
+        KeywordExtern,
+        KeywordFloat,
+        KeywordFor,
+        KeywordGoto,
+        KeywordIf,
+        KeywordInt,
+        KeywordLong,
+        KeywordRegister,
+        KeywordReturn,
+        KeywordShort,
+        KeywordSigned,
+        KeywordSizeof,
+        KeywordStatic,
+        KeywordStruct,
+        KeywordSwitch,
+        KeywordTypedef,
+        KeywordUnion,
+        KeywordUnsigned,
+        KeywordVoid,
+        KeywordVolatile,
+        KeywordWhile,
+
+        // C99 keywords
+
+        KeywordInline,
+        KeywordRestrict,
+        KeywordBool,
+        KeywordComplex,
+        KeywordImaginary,
+
+        // C11 keywords
+
+        KeywordAlignas,
+        KeywordAlignof,
+        KeywordAtomic,
+        KeywordGeneric,
+        KeywordNoreturn,
+        KeywordStaticAssert,
+        KeywordThreadLocal,
+
+        // C23 keywords
+
+        KeywordConstexpr,
+        KeywordFalse,
+        KeywordNullptr,
+        KeywordTrue,
+        KeywordTypeof,
+        KeywordTypeofUnqual,
+        KeywordBitInt,
+        KeywordDecimal32,
+        KeywordDecimal64,
+        KeywordDecimal128,
     };
 
     struct Token
@@ -39,8 +118,8 @@ namespace scc::cc
 
         [[nodiscard]] toolkit::result<NodePtr> ParseNode();
 
-        [[nodiscard]] toolkit::result<NodePtr> ParseFunctionNode(bool is_extern, const Type *result, std::string name);
-        [[nodiscard]] toolkit::result<NodePtr> ParseVariableNode(bool is_extern, const Type *type, std::string name);
+        [[nodiscard]] toolkit::result<NodePtr> ParseFunctionNode(bool is_extern, QualifiedType result, std::string name);
+        [[nodiscard]] toolkit::result<NodePtr> ParseVariableNode(bool is_extern, QualifiedType type, std::string name);
 
         [[nodiscard]] toolkit::result<NodePtr> ParseTypeDefNode();
 
@@ -63,11 +142,11 @@ namespace scc::cc
         [[nodiscard]] toolkit::result<ExpressionNodePtr> ParseOperandExpressionNode();
         [[nodiscard]] toolkit::result<ExpressionNodePtr> ParsePrimaryExpressionNode();
 
-        [[nodiscard]] toolkit::result<const Type *> ParseType();
-        [[nodiscard]] toolkit::result<const Type *> ParseBaseType();
-        [[nodiscard]] toolkit::result<const Type *> ParseStructType();
-        [[nodiscard]] toolkit::result<const Type *> ParseUnionType();
-        [[nodiscard]] toolkit::result<const Type *> ParseEnumType();
+        [[nodiscard]] toolkit::result<QualifiedType> ParseType();
+        [[nodiscard]] toolkit::result<QualifiedType> ParseBaseType();
+        [[nodiscard]] toolkit::result<QualifiedType> ParseStructType(bool constness);
+        [[nodiscard]] toolkit::result<QualifiedType> ParseUnionType(bool constness);
+        [[nodiscard]] toolkit::result<QualifiedType> ParseEnumType(bool constness);
 
         [[nodiscard]] bool CouldBeType() const;
 

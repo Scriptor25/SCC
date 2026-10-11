@@ -112,3 +112,24 @@ std::ostream &scc::ir::Module::PrintAssembly(std::ostream &stream, const Platfor
 
     return stream;
 }
+
+std::string scc::ir::Module::GenerateSymbolName() const
+{
+    for (size_t i = 0;; ++i)
+    {
+        auto name = std::to_string(i);
+
+        bool found{};
+        for (auto &symbol : m_Symbols)
+            if (symbol->GetName() == name)
+            {
+                found = true;
+                break;
+            }
+
+        if (found)
+            continue;
+
+        return name;
+    }
+}

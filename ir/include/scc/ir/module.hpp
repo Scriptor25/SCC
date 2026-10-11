@@ -33,6 +33,8 @@ namespace scc::ir
         std::ostream &Print(std::ostream &stream) const;
         std::ostream &PrintAssembly(std::ostream &stream, const Platform &platform) const;
 
+        [[nodiscard]] std::string GenerateSymbolName() const;
+
     private:
         std::string m_Name;
         std::vector<std::unique_ptr<Global>> m_Symbols;

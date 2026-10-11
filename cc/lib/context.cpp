@@ -27,149 +27,281 @@ const scc::cc::IntegerType *scc::cc::Context::GetBooleanType()
 
 const scc::cc::IntegerType *scc::cc::Context::GetIntegerType(IntegerKind kind)
 {
-    auto &ref = m_IntegerTypes[kind];
+    for (const auto &type : m_IntegerTypes)
+        if (type->IKind == kind)
+            return type.get();
 
-    if (!ref)
-        ref = std::make_unique<IntegerType>(kind);
+    auto type = std::make_unique<IntegerType>(kind);
 
-    return ref.get();
+    const auto *ptr = type.get();
+    m_IntegerTypes.push_back(std::move(type));
+    return ptr;
 }
 
 const scc::cc::FloatingPointType *scc::cc::Context::GetFloatingPointType(FloatingPointKind kind)
 {
-    auto &ref = m_FloatingPointTypes[kind];
+    for (const auto &type : m_FloatingPointTypes)
+        if (type->FKind == kind)
+            return type.get();
 
-    if (!ref)
-        ref = std::make_unique<FloatingPointType>(kind);
+    auto type = std::make_unique<FloatingPointType>(kind);
 
-    return ref.get();
+    const auto *ptr = type.get();
+    m_FloatingPointTypes.push_back(std::move(type));
+    return ptr;
 }
 
 const scc::cc::StructType *scc::cc::Context::GetStructType(std::string name)
 {
-    auto &ref = m_NamedStructTypes[name];
+    for (const auto &type : m_StructTypes)
+        if (type->Name == name)
+            return type.get();
 
-    if (!ref)
-        ref = std::make_unique<StructType>(std::move(name));
+    auto type = std::make_unique<StructType>(std::move(name));
 
-    return ref.get();
+    const auto *ptr = type.get();
+    m_StructTypes.push_back(std::move(type));
+    return ptr;
 }
 
 const scc::cc::StructType *scc::cc::Context::GetStructType(std::vector<StructElement> elements)
 {
-    Error("TODO");
+    for (const auto &type : m_StructTypes)
+    {
+        if (type->Name)
+            continue;
+        if (type->Elements.size() != elements.size())
+            continue;
+
+        size_t i;
+        for (i = 0; i < type->Elements.size(); ++i)
+            if (type->Elements[i] != elements[i])
+                break;
+
+        if (i == type->Elements.size())
+            return type.get();
+    }
+
+    auto type = std::make_unique<StructType>(std::move(elements));
+
+    const auto *ptr = type.get();
+    m_StructTypes.push_back(std::move(type));
+    return ptr;
 }
 
-const scc::cc::StructType *scc::cc::Context::GetStructType(std::string name, std::vector<StructElement> elements)
+const scc::cc::StructType *scc::cc::Context::GetStructType(
+    std::string name,
+    std::vector<StructElement> elements)
 {
-    Error("TODO");
+    for (const auto &type : m_StructTypes)
+        if (type->Name == name)
+        {
+            Assert(type->Elements.empty(), "type elements must be empty");
+            type->Elements = std::move(elements);
+            return type.get();
+        }
+
+    auto type = std::make_unique<StructType>(std::move(name), std::move(elements));
+
+    const auto *ptr = type.get();
+    m_StructTypes.push_back(std::move(type));
+    return ptr;
 }
 
 const scc::cc::UnionType *scc::cc::Context::GetUnionType(std::string name)
 {
-    auto &ref = m_NamedUnionTypes[name];
+    for (const auto &type : m_UnionTypes)
+        if (type->Name == name)
+            return type.get();
 
-    if (!ref)
-        ref = std::make_unique<UnionType>(std::move(name));
+    auto type = std::make_unique<UnionType>(std::move(name));
 
-    return ref.get();
+    const auto *ptr = type.get();
+    m_UnionTypes.push_back(std::move(type));
+    return ptr;
 }
 
 const scc::cc::UnionType *scc::cc::Context::GetUnionType(std::vector<UnionElement> elements)
 {
-    Error("TODO");
+    for (const auto &type : m_UnionTypes)
+    {
+        if (type->Name)
+            continue;
+        if (type->Elements.size() != elements.size())
+            continue;
+
+        size_t i;
+        for (i = 0; i < type->Elements.size(); ++i)
+            if (type->Elements[i] != elements[i])
+                break;
+
+        if (i == type->Elements.size())
+            return type.get();
+    }
+
+    auto type = std::make_unique<UnionType>(std::move(elements));
+
+    const auto *ptr = type.get();
+    m_UnionTypes.push_back(std::move(type));
+    return ptr;
 }
 
-const scc::cc::UnionType *scc::cc::Context::GetUnionType(std::string name, std::vector<UnionElement> elements)
+const scc::cc::UnionType *scc::cc::Context::GetUnionType(
+    std::string name,
+    std::vector<UnionElement> elements)
 {
-    Error("TODO");
+    for (const auto &type : m_UnionTypes)
+        if (type->Name == name)
+        {
+            Assert(type->Elements.empty(), "type elements must be empty");
+            type->Elements = std::move(elements);
+            return type.get();
+        }
+
+    auto type = std::make_unique<UnionType>(std::move(name), std::move(elements));
+
+    const auto *ptr = type.get();
+    m_UnionTypes.push_back(std::move(type));
+    return ptr;
 }
 
 const scc::cc::EnumType *scc::cc::Context::GetEnumType(std::string name)
 {
-    auto &ref = m_NamedEnumTypes[name];
+    for (const auto &type : m_EnumTypes)
+        if (type->Name == name)
+            return type.get();
 
-    if (!ref)
-        ref = std::make_unique<EnumType>(std::move(name));
+    auto type = std::make_unique<EnumType>(std::move(name));
 
-    return ref.get();
+    const auto *ptr = type.get();
+    m_EnumTypes.push_back(std::move(type));
+    return ptr;
 }
 
 const scc::cc::EnumType *scc::cc::Context::GetEnumType(std::vector<EnumElement> elements)
 {
-    Error("TODO");
+    for (const auto &type : m_EnumTypes)
+    {
+        if (type->Name)
+            continue;
+        if (type->Elements.size() != elements.size())
+            continue;
+
+        size_t i;
+        for (i = 0; i < type->Elements.size(); ++i)
+            if (type->Elements[i] != elements[i])
+                break;
+
+        if (i == type->Elements.size())
+            return type.get();
+    }
+
+    auto type = std::make_unique<EnumType>(std::move(elements));
+
+    const auto *ptr = type.get();
+    m_EnumTypes.push_back(std::move(type));
+    return ptr;
 }
 
-const scc::cc::EnumType *scc::cc::Context::GetEnumType(std::string name, std::vector<EnumElement> elements)
+const scc::cc::EnumType *scc::cc::Context::GetEnumType(
+    std::string name,
+    std::vector<EnumElement> elements)
 {
-    Error("TODO");
+    for (const auto &type : m_EnumTypes)
+        if (type->Name == name)
+        {
+            Assert(type->Elements.empty(), "type elements must be empty");
+            type->Elements = std::move(elements);
+            return type.get();
+        }
+
+    auto type = std::make_unique<EnumType>(std::move(name), std::move(elements));
+
+    const auto *ptr = type.get();
+    m_EnumTypes.push_back(std::move(type));
+    return ptr;
 }
 
-const scc::cc::PointerType *scc::cc::Context::GetPointerType()
+const scc::cc::PointerType *scc::cc::Context::GetVoidPointerType(const bool is_const)
 {
-    return GetPointerType(nullptr);
+    return GetPointerType(
+        {
+            .Base = GetVoidType(),
+            .Const = is_const,
+        });
 }
 
-const scc::cc::PointerType *scc::cc::Context::GetPointerType(const Type *element)
+const scc::cc::PointerType *scc::cc::Context::GetPointerType(QualifiedType element)
 {
-    auto &ref = m_PointerTypes[element];
+    for (const auto &type : m_PointerTypes)
+        if (type->Element == element)
+            return type.get();
 
-    if (!ref)
-        ref = std::make_unique<PointerType>(element);
+    auto type = std::make_unique<PointerType>(element);
 
-    return ref.get();
+    const auto *ptr = type.get();
+    m_PointerTypes.push_back(std::move(type));
+    return ptr;
 }
 
-const scc::cc::ArrayType *scc::cc::Context::GetArrayType(const Type *element)
+const scc::cc::ArrayType *scc::cc::Context::GetArrayType(const QualifiedType element)
 {
-    return GetArrayType(element, 0);
+    return GetArrayType(element, ~size_t{});
 }
 
-const scc::cc::ArrayType *scc::cc::Context::GetArrayType(const Type *element, size_t count)
+const scc::cc::ArrayType *scc::cc::Context::GetArrayType(
+    QualifiedType element,
+    size_t count)
 {
-    auto &ref = m_ArrayTypes[element][count];
+    for (const auto &type : m_ArrayTypes)
+        if (type->Element == element && type->Count == count)
+            return type.get();
 
-    if (!ref)
-        ref = std::make_unique<ArrayType>(element, count);
+    auto type = std::make_unique<ArrayType>(element, count);
 
-    return ref.get();
+    const auto *ptr = type.get();
+    m_ArrayTypes.push_back(std::move(type));
+    return ptr;
 }
 
 const scc::cc::FunctionType *scc::cc::Context::GetFunctionType(
-    const Type *result,
-    std::vector<const Type *> arguments,
+    QualifiedType result,
+    std::vector<QualifiedType> arguments,
     bool variadic)
 {
-    auto &types = m_FunctionTypes[result][variadic][arguments.size()];
-    for (const auto &type : types)
+    for (const auto &type : m_FunctionTypes)
     {
-        size_t i;
-        for (i = 0; i < arguments.size(); ++i)
-            if (type->Arguments[i] != arguments[i])
-                break;
-        if (i < arguments.size())
+        if (type->Result != result)
+            continue;
+        if (type->Variadic != variadic)
+            continue;
+        if (type->Arguments.size() != arguments.size())
             continue;
 
-        return type.get();
+        size_t i;
+        for (i = 0; i < type->Arguments.size(); ++i)
+            if (type->Arguments[i] != arguments[i])
+                break;
+
+        if (i == type->Arguments.size())
+            return type.get();
     }
 
     auto type = std::make_unique<FunctionType>(result, std::move(arguments), variadic);
 
-    auto *ptr = type.get();
-
-    types.push_back(std::move(type));
-
+    const auto *ptr = type.get();
+    m_FunctionTypes.push_back(std::move(type));
     return ptr;
 }
 
-void scc::cc::Context::SetNamedType(const std::string &name, const Type *type)
+void scc::cc::Context::SetNamedType(const std::string &name, QualifiedType type)
 {
     m_NamedTypes[name] = type;
 }
 
-const scc::cc::Type *scc::cc::Context::GetNamedType(const std::string &name) const
+scc::cc::QualifiedType scc::cc::Context::GetNamedType(const std::string &name) const
 {
     if (const auto it = m_NamedTypes.find(name); it != m_NamedTypes.end())
         return it->second;
-    return nullptr;
+    return {};
 }

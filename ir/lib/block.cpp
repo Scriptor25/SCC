@@ -198,7 +198,7 @@ std::unordered_set<scc::ir::Block *> scc::ir::Block::GetSuccessors() const
     return {};
 }
 
-std::string scc::ir::Block::GenerateName() const
+std::string scc::ir::Block::GenerateValueName() const
 {
     return m_Function->GenerateName();
 }

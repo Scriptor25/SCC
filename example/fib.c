@@ -12,21 +12,24 @@ int fib(int n)
         a = b;
         b = c;
 
-        i = i + 1;
+        ++i;
     }
 
     return a;
 }
 
-extern int atoi(char *);
-extern int printf(char *, ...);
+extern int atoi(const char *);
+extern int printf(const char *, ...);
 
-int main(int, char **argv)
+int main(int argc, const char **argv)
 {
-    char **np = argv + 1;
-    char *ns = *np;
-    int n = atoi(ns);
+    if (argc != 2)
+        return -1;
+
+    int n = atoi(argv[1]);
     int r = fib(n);
-    printf("fib(%d) = %d\x0d\x0a", n, r);
+
+    printf("fib(%d) = %d\r\n", n, r);
+
     return r;
 }

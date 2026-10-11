@@ -488,4 +488,27 @@ namespace scc::ir
     private:
         Value *m_Value;
     };
+
+    class PointerDifferenceInstruction : public Instruction
+    {
+    public:
+        explicit PointerDifferenceInstruction(
+            Type *type,
+            Block *block,
+            std::string name,
+            Value *left,
+            Value *right);
+        ~PointerDifferenceInstruction() override;
+
+        void DropAll() override;
+        void Replace(Value *value, Value *with) override;
+
+        std::ostream &Print(std::ostream &stream) const override;
+
+        std::ostream &PrintAssembly(std::ostream &stream, LoweringContext &context) const override;
+
+    private:
+        Value *m_Left;
+        Value *m_Right;
+    };
 }

@@ -22,8 +22,8 @@ namespace scc::ir
 
         [[nodiscard]] Variable *CreateString(
             Module &module,
-            std::string name,
-            std::string_view value) const;
+            std::string_view value,
+            std::string name = {}) const;
 
         [[nodiscard]] Block *CreateBlock(
             Function *function,
@@ -45,6 +45,12 @@ namespace scc::ir
         Value *CreateEmpty(Type *type, std::string name = {}) const;
 
         NotNullInstruction *CreateNotNull(Value *value, std::string name = {});
+
+        PointerDifferenceInstruction *CreatePointerDifference(
+            Type *type,
+            Value *left,
+            Value *right,
+            std::string name = {});
 
         IOperatorInstruction *CreateIOperator(
             IOperator operator_,
@@ -145,9 +151,9 @@ namespace scc::ir
             std::vector<Value *> indices,
             std::string name = {});
 
-        ElementPointerInstruction *CreateElementPointer(
+        ElementPointerInstruction *CreateConstantElementPointer(
             Value *pointer,
-            const std::vector<size_t> &indices,
+            const std::vector<int64_t> &indices,
             std::string name = {});
 
         CallInstruction *CreateCall(

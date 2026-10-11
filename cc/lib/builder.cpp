@@ -56,6 +56,18 @@ scc::ir::Value *scc::cc::Builder::Allocate(ir::Type *type, const uint64_t count,
     return pointer;
 }
 
+scc::ir::Value *scc::cc::Builder::Negative(ir::Value *value) const
+{
+    Assert(value, "value must not be null");
+
+    auto *type = dynamic_cast<ir::IntType *>(value->GetType());
+    Assert(type, "value type must not be null");
+
+    auto *zero = m_IRContext.GetInt(type, 0);
+
+    return m_IRBuilder.CreateIOperatorSUB(type, { zero, value });
+}
+
 scc::cc::Value *scc::cc::Builder::Manage(ValuePtr value)
 {
     auto *ptr = value.get();

@@ -40,6 +40,8 @@ namespace scc::cc
 
         ir::Value *Allocate(ir::Type *type, uint64_t count, std::string name = {}) const;
 
+        ir::Value *Negative(ir::Value *value) const;
+
         Value *Manage(ValuePtr value);
 
         void PushFrame(

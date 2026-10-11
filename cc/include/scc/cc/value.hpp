@@ -8,19 +8,16 @@
 
 namespace scc::cc
 {
-    class RValue;
-    class LValue;
+    struct RValue;
+    struct LValue;
 
-    class Value
+    struct Value
     {
-    public:
-        static std::unique_ptr<RValue> CreateR(const Type *type, ir::Value *value);
-        static std::unique_ptr<LValue> CreateL(const Type *type, ir::Value *pointer);
+        static std::unique_ptr<RValue> CreateR(QualifiedType type, ir::Value *value);
+        static std::unique_ptr<LValue> CreateL(QualifiedType type, ir::Value *pointer);
 
-        explicit Value(const Type *type);
+        explicit Value(QualifiedType type);
         virtual ~Value() = default;
-
-        [[nodiscard]] const Type *GetType() const;
 
         [[nodiscard]] virtual ir::Value *Load(Builder &builder, bool is_volatile = false) const = 0;
 
@@ -30,31 +27,30 @@ namespace scc::cc
             ir::Value *value,
             bool is_volatile = false) const = 0;
 
-    private:
-        const Type *m_Type;
+        [[nodiscard]] virtual ir::Value *Reference() const = 0;
+
+        QualifiedType Ty;
     };
 
-    class RValue : public Value
+    struct RValue : Value
     {
-    public:
-        explicit RValue(const Type *type, ir::Value *value);
+        explicit RValue(QualifiedType type, ir::Value *val);
 
         [[nodiscard]] ir::Value *Load(Builder &builder, bool is_volatile) const override;
         void Store(ir::Context &context, ir::Builder &builder, ir::Value *value, bool is_volatile) const override;
+        [[nodiscard]] ir::Value *Reference() const override;
 
-    private:
-        ir::Value *m_Value;
+        ir::Value *Val;
     };
 
-    class LValue : public Value
+    struct LValue : Value
     {
-    public:
-        explicit LValue(const Type *type, ir::Value *pointer);
+        explicit LValue(QualifiedType type, ir::Value *ptr);
 
         [[nodiscard]] ir::Value *Load(Builder &builder, bool is_volatile) const override;
         void Store(ir::Context &context, ir::Builder &builder, ir::Value *value, bool is_volatile) const override;
+        [[nodiscard]] ir::Value *Reference() const override;
 
-    private:
-        ir::Value *m_Pointer;
+        ir::Value *Ptr;
     };
 }
